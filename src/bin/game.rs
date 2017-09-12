@@ -6,14 +6,17 @@ use lobby::Lobby;
 use hardback_server::RealDecisionMaker;
 use std;
 use std::net::SocketAddr;
-pub fn run(game_rx: std::sync::mpsc::Receiver<(SocketAddr,
-                                               mpsc::Sender<OwnedMessage>,
-                                               Option<OwnedMessage>)>) {
+pub enum Game_Rx_Type {
+    Sender(SocketAddr, mpsc::Sender<OwnedMessage>),
+    Message(SocketAddr, OwnedMessage),
+}
+pub fn run(game_rx: std::sync::mpsc::Receiver<Game_Rx_Type>) {
     let mut server_data = ServerData::new();
     loop {
-        while let Ok((addr, _sender)) = game_rx.try_recv() {
+        while let Ok(Game_Rx_Type::Sender(addr, _sender)) = game_rx.try_recv() {
+            let j = format!("{}", addr);
             let con = Connection::new(_sender);
-            server_data.connections.insert(addr, con);
+            server_data.connections.insert(j, con);
         }
     }
 }
