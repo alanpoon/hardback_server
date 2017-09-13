@@ -25,9 +25,18 @@ pub struct Player {
     thugs: Vec<i32>,
     actions: Vec<i32>,
 }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GameCommand {
+    pub words: Vec<i32>,
+    pub inks: Vec<i32>,
+    pub inkremovers: Vec<i32>,
+    pub buy: Option<i32>,
+}
+
 CGM_receive_msg!{
     rename:{
     },optional:{
+    (gamecommand,set_gamecommand,GameCommand),
    (newTable,set_new_table,bool),
     (ready,set_ready,bool),
     (joinTable,set_join_table,i32),
