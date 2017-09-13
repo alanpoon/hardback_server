@@ -5,6 +5,7 @@ pub extern crate hardback_server;
 
 mod handler;
 pub mod game;
+#[allow(non_snake_case)]
 pub mod lobby;
 pub use hardback_server as server_lib;
 const CONNECTION: &'static str = "127.0.0.1:8080";

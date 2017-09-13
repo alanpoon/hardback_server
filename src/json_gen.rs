@@ -8,7 +8,7 @@ fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Optio
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TableInfo {
-    pub numberOfPlayers: usize,
+    pub numberOfPlayers: i32,
     pub players: Vec<String>,
 }
 #[derive(Serialize, Deserialize,Debug, Clone)]
@@ -24,4 +24,18 @@ pub struct Player {
     holdings: Vec<i32>,
     thugs: Vec<i32>,
     actions: Vec<i32>,
+}
+CGM_receive_msg!{
+    rename:{
+    },optional:{
+   (newTable,set_new_table,bool),
+    (ready,set_ready,bool),
+    (joinTable,set_join_table,i32),
+    (changePlayers,set_change_player,i32),
+    (leaveTable,set_leave_table,bool),
+    (joinLobby,set_join_lobby,bool),
+    (namechange,set_name_change,String),
+    (chat,set_chat,String),
+    (location,set_location,String),
+    },rename_optional:{},else:{}
 }

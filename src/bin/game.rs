@@ -4,6 +4,7 @@ use websocket::message::OwnedMessage;
 use lobby::{Table, Lobby};
 use server_lib::RealDecisionMaker;
 use std;
+use std::collections::HashMap;
 use server_lib::json_gen::*;
 pub enum GameRxType {
     Sender(String, mpsc::Sender<OwnedMessage>),
@@ -11,6 +12,7 @@ pub enum GameRxType {
 }
 pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
     let mut lobby = Lobby::new();
+    let mut tables = HashMap::new();
     let mut last_update = std::time::Instant::now();
     loop {
         let sixteen_ms = std::time::Duration::from_millis(16);
@@ -24,6 +26,9 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
             let con = Connection::new(_sender, addr.clone());
             lobby.connections.insert(addr, con);
         }
+        while let Ok(GameRxType::Message(addr, msg)) = game_rx.try_recv() {
+            lobby.from_json(addr, msg, &mut tables);
+        }
         last_update = std::time::Instant::now();
         println!("connections len:{:?}", lobby.connections.len());
     }
@@ -32,7 +37,8 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
 pub struct Connection {
     pub addr: String,
     pub name: String,
-    pub table: Option<Table>,
+    pub table: Option<i32>,
+    pub player_num: Option<usize>,
     pub ready: bool,
     pub decider: Option<RealDecisionMaker>,
     pub sender: mpsc::Sender<OwnedMessage>,
@@ -43,49 +49,10 @@ impl Connection {
             addr: addr,
             name: "defaultname".to_owned(),
             table: None,
+            player_num: None,
             ready: false,
             decider: None,
             sender: sender,
         }
-    }
-    pub fn get_table(&self) -> Option<Table> {
-        self.table.clone()
-    }
-    pub fn set_table(&mut self, table: Option<Table>) {
-        self.table = table;
-    }
-    pub fn is_ready(&self) -> bool {
-        self.ready
-    }
-    pub fn set_ready(&mut self, ready: bool) {
-        self.ready = ready;
-        if ready {
-            let mut starting = true;
-            if let Some(ref mut t) = (*self).table {
-                for (_, con) in t.get_players() {
-                    starting = con.is_ready();
-                }
-                if starting {}
-            }
-        }
-    }
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-    pub fn send_lobby(&self, chat_str: String) {
-        let g = format!("{{chat:{},location:'lobby'}}", chat_str);
-        self.sender
-            .clone()
-            .send(OwnedMessage::Text(g))
-            .wait()
-            .unwrap();
-    }
-    pub fn send_chat(&self, chat_str: String) {
-        let g = format!("{{chat:{},location:'table'}}", chat_str);
-        self.sender
-            .clone()
-            .send(OwnedMessage::Text(g))
-            .wait()
-            .unwrap();
     }
 }
