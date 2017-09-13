@@ -4,11 +4,9 @@ use tokio_core::reactor::Core;
 use websocket::message::OwnedMessage;
 use websocket::server::InvalidConnection;
 use websocket::async::Server;
-use websocket::Message;
-use std::net::{SocketAddr, SocketAddrV4};
 use std;
-use game::Game_Rx_Type;
-pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<Game_Rx_Type>) {
+use game::GameRxType;
+pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
     let mut core = Core::new().unwrap();
     let handle = core.handle();
 
@@ -24,10 +22,11 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<Game_Rx_Type>) {
         .map_err(|InvalidConnection { error, .. }| error)
         .for_each(|(upgrade, addr)| {
             // accept the request to be a ws connection
-            let addrz = addr.clone();
             let (ch_sender, ch_receiver) = mpsc::channel(2);
              let game_rx_c=game_rx.clone();
-              game_rx.clone().send(Game_Rx_Type::Sender(addr,ch_sender)).unwrap();
+             let f =format!("{}",addr);
+               let addrz =addr.clone();
+              game_rx.clone().send(GameRxType::Sender(f,ch_sender)).unwrap();
             let f = upgrade
                 .accept()
                 .and_then(move|(duplex, _)| {
@@ -36,16 +35,15 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<Game_Rx_Type>) {
                     let (to_client, from_client) = duplex.split();
                     let reader = from_client.for_each(move |msg| {
                     // ... convert it to a string for display in the GUI...
-                    let content = match msg {
-                        OwnedMessage::Close(e) => Some(Message::from(OwnedMessage::Close(e))),
-                        OwnedMessage::Ping(d) => Some(Message::from(OwnedMessage::Ping(d))),
+                     match msg {
+                        OwnedMessage::Close(_) => {},
+                        OwnedMessage::Ping(_) =>{},
                         OwnedMessage::Text(f) => {
-                            // let  addrz:SocketAddr = "127.0.0.1:8080".parse().unwrap();
-                            game_rx_c.send(Game_Rx_Type::Message(addrz,OwnedMessage::Text(f))).unwrap();
-                            None
-                        }
-                        _ => None,
-                    };
+                            let j = format!("{}",addrz);
+                            game_rx_c.send(GameRxType::Message(j,OwnedMessage::Text(f))).unwrap();
+                                }
+                        _ => {},
+                    }
                     // ... and send that string _to_ the GUI.
 
                     Ok(())

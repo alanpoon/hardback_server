@@ -1,48 +1,46 @@
 use futures::sync::mpsc;
-use futures::sync::oneshot;
+use futures::{Future, Sink};
 use websocket::message::OwnedMessage;
-use std::collections::HashMap;
-use lobby::Lobby;
-use hardback_server::RealDecisionMaker;
+use lobby::{Table, Lobby};
+use server_lib::RealDecisionMaker;
 use std;
-use std::net::SocketAddr;
-pub enum Game_Rx_Type {
-    Sender(SocketAddr, mpsc::Sender<OwnedMessage>),
-    Message(SocketAddr, OwnedMessage),
+use server_lib::json_gen::*;
+pub enum GameRxType {
+    Sender(String, mpsc::Sender<OwnedMessage>),
+    Message(String, OwnedMessage),
 }
-pub fn run(game_rx: std::sync::mpsc::Receiver<Game_Rx_Type>) {
-    let mut server_data = ServerData::new();
+pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
+    let mut lobby = Lobby::new();
+    let mut last_update = std::time::Instant::now();
     loop {
-        while let Ok(Game_Rx_Type::Sender(addr, _sender)) = game_rx.try_recv() {
-            let j = format!("{}", addr);
-            let con = Connection::new(_sender);
-            server_data.connections.insert(j, con);
-        }
-    }
-}
-pub struct ServerData {
-    connections: HashMap<String, Connection>,
-    lobbies: HashMap<String, Lobby>,
-}
-impl ServerData {
-    pub fn new() -> Self {
-        ServerData {
-            connections: HashMap::new(),
-            lobbies: HashMap::new(),
-        }
+        let sixteen_ms = std::time::Duration::from_millis(16);
+        let now = std::time::Instant::now();
+        let duration_since_last_update = now.duration_since(last_update);
 
+        if duration_since_last_update < sixteen_ms {
+            std::thread::sleep(sixteen_ms - duration_since_last_update);
+        }
+        while let Ok(GameRxType::Sender(addr, _sender)) = game_rx.try_recv() {
+            let con = Connection::new(_sender, addr.clone());
+            lobby.connections.insert(addr, con);
+        }
+        last_update = std::time::Instant::now();
+        println!("connections len:{:?}", lobby.connections.len());
     }
 }
+#[derive(Clone)]
 pub struct Connection {
-    name: String,
-    table: Option<i32>,
-    ready: bool,
-    decider: Option<RealDecisionMaker>,
-    sender: mpsc::Sender<OwnedMessage>,
+    pub addr: String,
+    pub name: String,
+    pub table: Option<Table>,
+    pub ready: bool,
+    pub decider: Option<RealDecisionMaker>,
+    pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl Connection {
-    pub fn new(sender: mpsc::Sender<OwnedMessage>) -> Connection {
+    pub fn new(sender: mpsc::Sender<OwnedMessage>, addr: String) -> Connection {
         Connection {
+            addr: addr,
             name: "defaultname".to_owned(),
             table: None,
             ready: false,
@@ -50,6 +48,44 @@ impl Connection {
             sender: sender,
         }
     }
-
-    pub fn sendLobby(&self) {}
+    pub fn get_table(&self) -> Option<Table> {
+        self.table.clone()
+    }
+    pub fn set_table(&mut self, table: Option<Table>) {
+        self.table = table;
+    }
+    pub fn is_ready(&self) -> bool {
+        self.ready
+    }
+    pub fn set_ready(&mut self, ready: bool) {
+        self.ready = ready;
+        if ready {
+            let mut starting = true;
+            if let Some(ref mut t) = (*self).table {
+                for (_, con) in t.get_players() {
+                    starting = con.is_ready();
+                }
+                if starting {}
+            }
+        }
+    }
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+    pub fn send_lobby(&self, chat_str: String) {
+        let g = format!("{{chat:{},location:'lobby'}}", chat_str);
+        self.sender
+            .clone()
+            .send(OwnedMessage::Text(g))
+            .wait()
+            .unwrap();
+    }
+    pub fn send_chat(&self, chat_str: String) {
+        let g = format!("{{chat:{},location:'table'}}", chat_str);
+        self.sender
+            .clone()
+            .send(OwnedMessage::Text(g))
+            .wait()
+            .unwrap();
+    }
 }

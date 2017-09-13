@@ -1,18 +1,12 @@
 extern crate websocket;
 extern crate futures;
 extern crate tokio_core;
-extern crate hardback_server;
+pub extern crate hardback_server;
 
-use websocket::message::OwnedMessage;
-use websocket::server::InvalidConnection;
-use websocket::async::Server;
-
-use tokio_core::reactor::Core;
-use futures::{Future, Sink, Stream};
-use futures::sync::mpsc;
 mod handler;
 pub mod game;
 pub mod lobby;
+pub use hardback_server as server_lib;
 const CONNECTION: &'static str = "127.0.0.1:8080";
 fn main() {
 
