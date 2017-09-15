@@ -11,6 +11,10 @@ pub struct TableInfo {
     pub numberOfPlayers: i32,
     pub players: Vec<String>,
 }
+#[derive(Serialize,Deserialize,Debug,Clone)]
+pub struct PrivateInformation {
+
+}
 #[derive(Serialize, Deserialize,Debug, Clone)]
 pub struct Player {
     name: String,
@@ -48,4 +52,21 @@ CGM_codec!{
     (chat,set_chat,String),
     (location,set_location,String),
     },rename_optional:{},else:{}
+}
+CGM_codec!{
+    structname:ClientReceivedMsg,
+   rename:{
+    },optional:{
+    (tables,set_tables,Vec<TableInfo>),
+    (tablenumber,set_tablenumber,i32),
+    (players,set_players,Vec<Player>),
+    (privateInformation,set_private_information,PrivateInformation),
+    (request,set_request,String),
+    (reason,set_reason,String),
+    (optional,set_optional,bool),
+    (location,set_location,String),
+    (sender,set_sender,String),
+    (message,set_message,String),
+    (log,set_log,String),
+    },rename_optional:{ (type_name,set_type_name,String,"type"),},else:{}
 }
