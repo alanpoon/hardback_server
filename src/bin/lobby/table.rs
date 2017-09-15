@@ -10,11 +10,11 @@ pub struct Table {
     pub tx: Option<mpsc::Sender<(i32, GameCommand)>>,
 }
 impl Table {
-    pub fn new(player: Connection) -> Table {
+    pub fn new(players: Vec<Connection>,numberOfPlayer:i32) -> Table {
         Table {
-            players: vec![player],
-            numberOfPlayer: 3,
-            tx: None,
+            players: players,
+            numberOfPlayer: numberOfPlayer,
+            tx:None
         }
     }
     pub fn start_game(&mut self) {

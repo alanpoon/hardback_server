@@ -24,8 +24,6 @@ impl Lobby {
             c.table = Some(table_n);
             c.player_num = Some(0);
         }
-        let new_table = Table::new(player.clone());
-        tables.insert(self.table_index, new_table);
         self.table_index += 1;
     }
     pub fn remove_table(&mut self, table_num: i32, tables: &mut HashMap<i32, Table>) {
@@ -36,7 +34,6 @@ impl Lobby {
                      con.player_num = None;
                  })
             .collect::<Vec<()>>();
-        tables.remove(&table_num);
     }
     pub fn remove_connection(&mut self, player: Connection) {
         self.connections.remove(&player.addr);
@@ -67,60 +64,60 @@ impl Lobby {
                         self.make_table(con.clone(), tables);
                     }
                 } else if let Some(Some(_ready)) = ready {
-                    let selfc = self.clone();
+                      let mut tl=None;
+                      let mut number_of_player=0;
                     if let Some(con) = self.connections.get_mut(&addr) {
-                        con.ready = _ready;
+                        tl = con.table;
+                        number_of_player= con.number_of_player;                       
+                        con.ready=_ready;
+                    }
                         if _ready {
-                            let iter_lobby = selfc.connections.iter();
+                            let iter_lobby = self.connections.iter();
+                            if let Some(table_n)= tl{
+                                let mut vec_z= vec![];
                             if iter_lobby.filter(|&(_, c)| {
-                                                     (c.table == con.table) & (c.ready == false)
+                                vec_z.push(c.clone());
+                                                     (c.table == tl) 
+                                                 }).filter(|&(_,c)|{
+                                                    c.ready == false
                                                  })
                                    .count() == 0 {
-                                if let Some(table_n) = con.table {
+                                       tables.insert(table_n,Table::new(vec_z,number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
                                         t.start_game();
                                     }
-                                }
+                                
 
                             }
-                        }
+                            }
+
+                        
                     }
                 } else if let Some(Some(_joinTable)) = joinTable {
                     if let Some(con) = self.connections.get_mut(&addr) {
                         con.table = Some(_joinTable);
-                        if let Some(t) = tables.get_mut(&_joinTable) {
-                            con.player_num = Some(t.players.len() - 1);
-                            t.players.push(con.clone());
-                        }
                     }
                 } else if let Some(Some(_changePlayers)) = changePlayers {
+                    let mut tl=None;
                     if let Some(con) = self.connections.get(&addr) {
-                        if let Some(table_num) = con.table {
-                            if let Some(t) = tables.get_mut(&table_num) {
-                                t.numberOfPlayer = _changePlayers;
-                            }
-                        }
+                        tl = con.table;
                     }
+                      let iter_lobby = self.connections.iter_mut();
+                               iter_lobby.filter(|&(_, ref c)| {
+                                                     c.table == tl
+                                                 }).map(|(_,c)|{
+                                                     c.number_of_player = _changePlayers.clone()
+                                                 }).collect::<Vec<()>>();
                 } else if let Some(Some(_leaveTable)) = leaveTable {
                     if let Some(con) = self.connections.get_mut(&addr) {
-                        if let (Some(table_num), Some(player_num)) = (con.table, con.player_num) {
-                            if let Some(t) = tables.get_mut(&table_num) {
-                                t.players.remove(player_num);
-                            }
-                        }
                         con.table = None;
                         con.player_num = None;
-
+                        con.number_of_player=3;
                     }
 
                 } else if let Some(Some(_namechange)) = namechange {
                     if let Some(con) = self.connections.get_mut(&addr) {
-                        con.name = _namechange.clone();
-                        if let (Some(table_num), Some(player_num)) = (con.table, con.player_num) {
-                            if let Some(t) = tables.get_mut(&table_num) {
-                                t.players[player_num].name = _namechange;
-                            }
-                        }
+                        con.name = _namechange;
                     }
                 } else if let (Some(Some(_chat)), Some(Some(_location))) = (chat, location) {
                     if let Some(con) = self.connections.get(&addr) {

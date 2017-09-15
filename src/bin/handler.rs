@@ -30,7 +30,6 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
             let f = upgrade
                 .accept()
                 .and_then(move|(duplex, _)| {
-                     
                     // simple echo server impl
                     let (to_client, from_client) = duplex.split();
                     let reader = from_client.for_each(move |msg| {
