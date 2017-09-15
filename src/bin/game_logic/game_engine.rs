@@ -1,5 +1,5 @@
 use std::sync::mpsc;
-use json_gen::*;
+use server_lib::codec::*;
 pub struct GameEngine {}
 impl GameEngine {
     pub fn new() -> Self {

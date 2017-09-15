@@ -5,7 +5,7 @@ use game::Connection;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
-use server_lib::json_gen::*;
+use server_lib::codec::*;
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
@@ -50,7 +50,7 @@ impl Lobby {
                      msg: OwnedMessage,
                      tables: &mut HashMap<i32, Table>) {
         if let OwnedMessage::Text(z) = msg {
-            if let Ok(ReceivedMsg { gamecommand,
+            if let Ok(ServerReceivedMsg { gamecommand,
                                     newTable,
                                     ready,
                                     joinTable,
@@ -59,7 +59,7 @@ impl Lobby {
                                     joinLobby,
                                     namechange,
                                     chat,
-                                    location }) = ReceivedMsg::deserialize_receive(&z) {
+                                    location }) = ServerReceivedMsg::deserialize_receive(&z) {
 
                 if let Some(Some(_)) = newTable {
                     let con_c = self.clone();
@@ -87,7 +87,7 @@ impl Lobby {
                     }
                 } else if let Some(Some(_joinTable)) = joinTable {
                     if let Some(con) = self.connections.get_mut(&addr) {
-                        con.table = (Some(_joinTable));
+                        con.table = Some(_joinTable);
                         if let Some(t) = tables.get_mut(&_joinTable) {
                             con.player_num = Some(t.players.len() - 1);
                             t.players.push(con.clone());

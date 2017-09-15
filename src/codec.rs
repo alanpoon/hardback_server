@@ -33,7 +33,8 @@ pub struct GameCommand {
     pub buy: Option<i32>,
 }
 
-CGM_receive_msg!{
+CGM_codec!{
+    structname:ServerReceivedMsg,
     rename:{
     },optional:{
     (gamecommand,set_gamecommand,GameCommand),

@@ -1,8 +1,8 @@
 use game::Connection;
 use lobby::Lobby;
 use std::sync::mpsc;
-use server_lib::json_gen::*;
-use server_lib::game_engine::GameEngine;
+use server_lib::codec::*;
+use game_logic::GameEngine;
 use std;
 pub struct Table {
     pub players: Vec<Connection>,

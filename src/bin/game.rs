@@ -5,7 +5,7 @@ use lobby::{Table, Lobby};
 use server_lib::RealDecisionMaker;
 use std;
 use std::collections::HashMap;
-use server_lib::json_gen::*;
+use server_lib::codec::*;
 pub enum GameRxType {
     Sender(String, mpsc::Sender<OwnedMessage>),
     Message(String, OwnedMessage),
