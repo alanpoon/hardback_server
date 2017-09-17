@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
 use server_lib::codec::*;
+
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
@@ -46,107 +47,122 @@ impl Lobby {
                      addr: String,
                      msg: OwnedMessage,
                      tables: &mut HashMap<i32, Table>) {
-        if let OwnedMessage::Text(z) = msg {
-            if let Ok(ServerReceivedMsg { gamecommand,
-                                    newTable,
-                                    ready,
-                                    joinTable,
-                                    changePlayers,
-                                    leaveTable,
-                                    joinLobby,
-                                    namechange,
-                                    chat,
-                                    location }) = ServerReceivedMsg::deserialize_receive(&z) {
 
-                if let Some(Some(_)) = newTable {
-                    let con_c = self.clone();
-                    if let Some(con) = con_c.connections.get(&addr) {
-                        self.make_table(con.clone(), tables);
-                    }
-                } else if let Some(Some(_ready)) = ready {
-                      let mut tl=None;
-                      let mut number_of_player=0;
-                    if let Some(con) = self.connections.get_mut(&addr) {
-                        tl = con.table;
-                        number_of_player= con.number_of_player;                       
-                        con.ready=_ready;
-                    }
+        if let OwnedMessage::Text(z) = msg {
+            match ServerReceivedMsg::deserialize_receive(&z) {
+                Ok(ServerReceivedMsg { gamecommand,
+                                       newTable,
+                                       ready,
+                                       joinTable,
+                                       changePlayers,
+                                       leaveTable,
+                                       joinLobby,
+                                       namechange,
+                                       chat,
+                                       location }) => {
+                    if let Some(Some(_)) = newTable {
+                        let con_c = self.clone();
+                        if let Some(con) = con_c.connections.get(&addr) {
+                            self.make_table(con.clone(), tables);
+                        }
+                    } else if let Some(Some(_ready)) = ready {
+                        let mut tl = None;
+                        let mut number_of_player = 0;
+                        if let Some(con) = self.connections.get_mut(&addr) {
+                            tl = con.table;
+                            number_of_player = con.number_of_player;
+                            con.ready = _ready;
+                        }
                         if _ready {
                             let iter_lobby = self.connections.iter();
-                            if let Some(table_n)= tl{
-                                let mut vec_z= vec![];
-                            if iter_lobby.filter(|&(_, c)| {
-                                vec_z.push(c.clone());
-                                                     (c.table == tl) 
-                                                 }).filter(|&(_,c)|{
-                                                    c.ready == false
-                                                 })
-                                   .count() == 0 {
-                                       tables.insert(table_n,Table::new(vec_z,number_of_player));
+                            if let Some(table_n) = tl {
+                                let mut vec_z = vec![];
+                                if iter_lobby.filter(|&(_, c)| {
+                                                         vec_z.push(c.clone());
+                                                         (c.table == tl)
+                                                     })
+                                       .filter(|&(_, c)| c.ready == false)
+                                       .count() == 0 {
+                                    tables.insert(table_n, Table::new(vec_z, number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
                                         t.start_game();
                                     }
-                                
 
+
+                                }
                             }
-                            }
 
-                        
-                    }
-                } else if let Some(Some(_joinTable)) = joinTable {
-                    if let Some(con) = self.connections.get_mut(&addr) {
-                        con.table = Some(_joinTable);
-                    }
-                } else if let Some(Some(_changePlayers)) = changePlayers {
-                    let mut tl=None;
-                    if let Some(con) = self.connections.get(&addr) {
-                        tl = con.table;
-                    }
-                      let iter_lobby = self.connections.iter_mut();
-                               iter_lobby.filter(|&(_, ref c)| {
-                                                     c.table == tl
-                                                 }).map(|(_,c)|{
-                                                     c.number_of_player = _changePlayers.clone()
-                                                 }).collect::<Vec<()>>();
-                } else if let Some(Some(_leaveTable)) = leaveTable {
-                    if let Some(con) = self.connections.get_mut(&addr) {
-                        con.table = None;
-                        con.player_num = None;
-                        con.number_of_player=3;
-                    }
 
-                } else if let Some(Some(_namechange)) = namechange {
-                    if let Some(con) = self.connections.get_mut(&addr) {
-                        con.name = _namechange;
+                        }
+                    } else if let Some(Some(_joinTable)) = joinTable {
+                        if let Some(con) = self.connections.get_mut(&addr) {
+                            con.table = Some(_joinTable);
+                        }
+                    } else if let Some(Some(_changePlayers)) = changePlayers {
+                        let mut tl = None;
+                        if let Some(con) = self.connections.get(&addr) {
+                            tl = con.table;
+                        }
+                        let iter_lobby = self.connections.iter_mut();
+                        iter_lobby.filter(|&(_, ref c)| c.table == tl)
+                            .map(|(_, c)| c.number_of_player = _changePlayers.clone())
+                            .collect::<Vec<()>>();
+                    } else if let Some(Some(_leaveTable)) = leaveTable {
+                        if let Some(con) = self.connections.get_mut(&addr) {
+                            con.table = None;
+                            con.player_num = None;
+                            con.number_of_player = 3;
+                        }
+
+                    } else if let Some(Some(_namechange)) = namechange {
+                        if let Some(con) = self.connections.get_mut(&addr) {
+                            con.name = _namechange;
+                        }
                     }
-                } else if let (Some(Some(_chat)), Some(Some(_location))) = (chat, location) {
-                    if let Some(con) = self.connections.get(&addr) {
-                        let iter_lobby = (*self).connections.iter();
+                    if let (Some(Some(_chat)), Some(Some(_location))) = (chat, location) {
+                        let mut table_n = None;
+                        let mut sender_n = "defaultname";
+                        if let Some(con) = self.connections.get(&addr) {
+                            table_n = con.table;
+                            sender_n = con.name
+                        }
+                        let g = json!({
+                            "chat": _chat.clone(),
+                            "location":_location.clone(),
+                            "type_name":"chat",
+                            "sender":sender_n
+                            });
+                        let iter_lobby = self.connections.iter();
                         iter_lobby.filter(|&(_, c)| if _location == "lobby" {
                                               c.table == None
                                           } else {
-                                              c.table == con.table
+                                              c.table == table_n
                                           })
                             .map(|(_, c)| {
+                                println!("uii{}", c.addr);
                                 c.sender
                                     .clone()
-                                    .send(OwnedMessage::Text(_chat.clone()))
+                                    .send(OwnedMessage::Text(g.to_string()))
                                     .wait()
                                     .unwrap();
                             })
                             .collect::<Vec<()>>();
-                    }
 
-                } else if let Some(Some(_gamecommand)) = gamecommand {
-                    if let Some(con) = self.connections.get_mut(&addr) {
-                        if let (Some(table_num), Some(_player_num)) = (con.table, con.player_num) {
-                            if let Some(t) = tables.get_mut(&table_num) {
-                                if let Some(ref txx) = t.tx {
-                                    txx.send((_player_num as i32, _gamecommand)).unwrap();
+                    } else if let Some(Some(_gamecommand)) = gamecommand {
+                        if let Some(con) = self.connections.get_mut(&addr) {
+                            if let (Some(table_num), Some(_player_num)) =
+                                (con.table, con.player_num) {
+                                if let Some(t) = tables.get_mut(&table_num) {
+                                    if let Some(ref txx) = t.tx {
+                                        txx.send((_player_num as i32, _gamecommand)).unwrap();
+                                    }
                                 }
                             }
                         }
                     }
+                }
+                Err(e) => {
+                    println!("e{:?}", e);
                 }
             }
 

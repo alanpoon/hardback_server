@@ -22,15 +22,22 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
         if duration_since_last_update < sixteen_ms {
             std::thread::sleep(sixteen_ms - duration_since_last_update);
         }
-        while let Ok(GameRxType::Sender(addr, _sender)) = game_rx.try_recv() {
-            let con = Connection::new(_sender, addr.clone());
-            lobby.connections.insert(addr, con);
+        while let Ok(z) = game_rx.try_recv() {
+            match z {
+                GameRxType::Sender(addr, _sender) => {
+                    let con = Connection::new(_sender, addr.clone());
+                    println!("found connection");
+                    lobby.connections.insert(addr, con);
+                }
+                GameRxType::Message(addr, msg) => {
+                    println!("zz,{:?}", msg.clone());
+                    lobby.from_json(addr, msg, &mut tables);
+                }
+            }
+
         }
-        while let Ok(GameRxType::Message(addr, msg)) = game_rx.try_recv() {
-            lobby.from_json(addr, msg, &mut tables);
-        }
+
         last_update = std::time::Instant::now();
-        println!("connections len:{:?}", lobby.connections.len());
     }
 }
 #[derive(Clone)]
@@ -39,7 +46,7 @@ pub struct Connection {
     pub name: String,
     pub table: Option<i32>,
     pub player_num: Option<usize>,
-    pub number_of_player:i32,
+    pub number_of_player: i32,
     pub ready: bool,
     pub decider: Option<RealDecisionMaker>,
     pub sender: mpsc::Sender<OwnedMessage>,
@@ -51,7 +58,7 @@ impl Connection {
             name: "defaultname".to_owned(),
             table: None,
             player_num: None,
-            number_of_player:3,
+            number_of_player: 3,
             ready: false,
             decider: None,
             sender: sender,

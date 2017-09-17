@@ -1,5 +1,6 @@
 use serde_json;
 use serde::{Deserialize, Deserializer};
+use cards;
 fn deserialize_optional_field<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
     where D: Deserializer<'de>,
           T: Deserialize<'de>
@@ -12,9 +13,7 @@ pub struct TableInfo {
     pub players: Vec<String>,
 }
 #[derive(Serialize,Deserialize,Debug,Clone)]
-pub struct PrivateInformation {
-
-}
+pub struct PrivateInformation {}
 #[derive(Serialize, Deserialize,Debug, Clone)]
 pub struct Player {
     name: String,
@@ -29,11 +28,12 @@ pub struct Player {
     thugs: Vec<i32>,
     actions: Vec<i32>,
 }
+
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameCommand {
-    pub words: Vec<i32>,
-    pub inks: Vec<i32>,
-    pub inkremovers: Vec<i32>,
+    pub formed_word:Option<Vec<cards::Card>>,
+    pub hand: Vec<cards::Card>,
     pub buy: Option<i32>,
 }
 

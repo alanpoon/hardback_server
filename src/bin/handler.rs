@@ -19,8 +19,13 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
     // a from_client of incoming connections
     let f = server.incoming()
         // we don't wanna save the from_client if it drops
-        .map_err(|InvalidConnection { error, .. }| error)
+        .map_err(|InvalidConnection { error, .. }| 
+        {
+            println!("err{:?}",error);
+            error
+        })
         .for_each(|(upgrade, addr)| {
+            println!("con{}",addr);
             // accept the request to be a ws connection
             let (ch_sender, ch_receiver) = mpsc::channel(2);
              let game_rx_c=game_rx.clone();
@@ -33,6 +38,7 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
                     // simple echo server impl
                     let (to_client, from_client) = duplex.split();
                     let reader = from_client.for_each(move |msg| {
+                    
                     // ... convert it to a string for display in the GUI...
                      match msg {
                         OwnedMessage::Close(_) => {},
@@ -40,6 +46,7 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
                         OwnedMessage::Text(f) => {
                             let j = format!("{}",addrz);
                             game_rx_c.send(GameRxType::Message(j,OwnedMessage::Text(f))).unwrap();
+
                                 }
                         _ => {},
                     }
@@ -51,6 +58,7 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
             .fold(to_client, |to_client, msg| {
                 let h= msg.clone();
                // h.add_private(addr);
+               println!("h {:?}",msg);
                  to_client.send(h)
             })
             .map(|_| ());
