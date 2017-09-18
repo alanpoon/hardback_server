@@ -124,7 +124,7 @@ impl Lobby {
                         let mut sender_n = "defaultname";
                         if let Some(con) = self.connections.get(&addr) {
                             table_n = con.table;
-                            sender_n = con.name
+                            sender_n = &con.name
                         }
                         let g = json!({
                             "chat": _chat.clone(),

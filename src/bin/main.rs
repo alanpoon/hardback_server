@@ -2,6 +2,8 @@ extern crate websocket;
 extern crate futures;
 extern crate tokio_core;
 extern crate rust_wordnik;
+#[macro_use]
+extern crate serde_json;
 pub extern crate hardback_server;
 
 mod handler;
