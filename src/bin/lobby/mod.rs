@@ -5,8 +5,9 @@ use game::Connection;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
+use game_logic::board::BoardStruct;
 use server_lib::codec::*;
-
+use server_lib::cards;
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
@@ -46,7 +47,8 @@ impl Lobby {
     pub fn from_json(&mut self,
                      addr: String,
                      msg: OwnedMessage,
-                     tables: &mut HashMap<i32, Table>) {
+                     tables: &mut HashMap<i32, Table>,
+                     cardmeta: &[cards::ListCard<BoardStruct>; 180]) {
 
         if let OwnedMessage::Text(z) = msg {
             match ServerReceivedMsg::deserialize_receive(&z) {
@@ -85,7 +87,7 @@ impl Lobby {
                                        .count() == 0 {
                                     tables.insert(table_n, Table::new(vec_z, number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
-                                        t.start_game();
+                                        t.start_game(cardmeta);
                                     }
 
 

@@ -12,6 +12,7 @@ tokio-core ="0.1.9"
 websocket = { version ="0.20.2"}
 cardgame_macros = {path="../cardgame_macros"}
 rust_wordnik = {path="../rust-wordnik"}
+rand = "0.3.16"
 
 [lib]
 name = "hardback_server"

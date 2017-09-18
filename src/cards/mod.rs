@@ -1,14 +1,14 @@
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Card{
-    pub letter:String,
-    pub index:i32,
-    pub inked:bool,
+pub struct Card {
+    pub letter: String,
+    pub index: usize,
+    pub inked: bool,
 }
-impl Card{
-    pub fn inked(&mut self){
+impl Card {
+    pub fn inked(&mut self) {
         self.inked = true;
     }
- /*   pub fn wild_with(&mut self,l:& str){
+    /*   pub fn wild_with(&mut self,l:& str){
         self.letter = l;
     }
 */
@@ -17,40 +17,37 @@ impl Card{
 #[derive(Clone,Debug,PartialEq,Eq,Hash)]
 pub enum GIVEABLE {
     NONE,
-    VP(i32),
-    COIN(i32),
-    VPCOIN(i32,i32),
-    COININK(i32),
-    VPINK(i32),
-    VPORCOIN(i32),
-    VPORCOININK(i32),
+    VP(usize),
+    COIN(usize),
+    VPCOIN(usize, usize),
+    COININK(usize),
+    VPINK(usize),
+    VPORCOIN(usize),
+    VPORCOININK(usize),
     INK,
-  
 }
 #[derive(Clone,Debug)]
-pub enum Genre{
+pub enum Genre {
     MYSTERY,
     HORROR,
     ADVENTURE,
     ROMANCE,
-    NONE
+    NONE,
 }
 
 pub struct ListCard<T> {
-    pub id:i32,
-    pub letter:&'static str,
-    pub cost:i32,
-    pub purchase_giveables:GIVEABLE,
-    pub giveables:GIVEABLE,
-    pub genre_giveables:GIVEABLE,
-    pub trash:GIVEABLE,
-    pub genre:Genre,
-    pub rotated:bool,
-    pub customfn:Option<Box<Fn(&mut T, i32)>>
+    pub id: usize,
+    pub letter: &'static str,
+    pub cost: usize,
+    pub purchase_giveables: GIVEABLE,
+    pub giveables: GIVEABLE,
+    pub genre_giveables: GIVEABLE,
+    pub trash: GIVEABLE,
+    pub genre: Genre,
+    pub rotated: bool,
+    pub customfn: Option<Box<Fn(&mut T, usize)>>,
 }
-pub trait Board{
-
-}
+pub trait Board {}
 macro_rules! listcard_map {
     (structtype:$s_alias:ty,
 cards:{  $(($id:expr,$letter:expr,$cost:expr,$purchase_giveables:expr,$giveables:expr,$genre_giveables:expr,$trash:expr,$genre:expr,$rotated:expr,$customfn:expr)),* $(,)*
@@ -72,7 +69,7 @@ cards:{  $(($id:expr,$letter:expr,$cost:expr,$purchase_giveables:expr,$giveables
          ];
          cards
     }}
-pub fn populate<T:Board>() -> [ListCard<T>;180]{
+pub fn populate<T: Board>() -> [ListCard<T>; 180] {
     listcard_map!{
         structtype:T,
         cards:{
