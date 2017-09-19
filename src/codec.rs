@@ -25,7 +25,7 @@ pub struct Player {
     pub ink: usize,
     pub remover: usize,
     pub arranged: Vec<usize>,
-    pub wild: Vec<usize>,
+    pub wild: Vec<Option<String>>,
     pub inked_cards: Vec<usize>,
     pub hand: Vec<usize>,
     pub draft: Vec<usize>,
@@ -97,6 +97,9 @@ impl Player {
 pub struct GameCommand {
     pub use_ink: Option<usize>,
     pub use_remover: Option<usize>,
+    pub arranged: Option<Vec<usize>>,
+    pub wild: Option<(usize, String)>,
+    pub submit_word: Option<bool>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BoardCodec {
