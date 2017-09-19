@@ -4,6 +4,7 @@ extern crate tokio_core;
 extern crate rust_wordnik;
 #[macro_use]
 extern crate serde_json;
+extern crate rand;
 pub extern crate hardback_server;
 
 mod handler;

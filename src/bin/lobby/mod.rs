@@ -20,7 +20,7 @@ impl Lobby {
             table_index: 0,
         }
     }
-    pub fn make_table(&mut self, player: Connection, tables: &mut HashMap<i32, Table>) {
+    pub fn make_table(&mut self, player: Connection) {
         let table_n = self.table_index.clone();
         if let Some(mut c) = self.connections.get_mut(&player.addr) {
             c.table = Some(table_n);
@@ -28,7 +28,7 @@ impl Lobby {
         }
         self.table_index += 1;
     }
-    pub fn remove_table(&mut self, table_num: i32, tables: &mut HashMap<i32, Table>) {
+    pub fn remove_table(&mut self, table_num: i32) {
         let iter_mut = self.connections.iter_mut();
         iter_mut.filter(|&(_, ref con)| con.table == Some(table_num))
             .map(|(_, con)| {
@@ -47,8 +47,7 @@ impl Lobby {
     pub fn from_json(&mut self,
                      addr: String,
                      msg: OwnedMessage,
-                     tables: &mut HashMap<i32, Table>,
-                     cardmeta: &[cards::ListCard<BoardStruct>; 180]) {
+                     tables: &mut HashMap<i32, Table>) {
 
         if let OwnedMessage::Text(z) = msg {
             match ServerReceivedMsg::deserialize_receive(&z) {
@@ -65,7 +64,7 @@ impl Lobby {
                     if let Some(Some(_)) = newTable {
                         let con_c = self.clone();
                         if let Some(con) = con_c.connections.get(&addr) {
-                            self.make_table(con.clone(), tables);
+                            self.make_table(con.clone());
                         }
                     } else if let Some(Some(_ready)) = ready {
                         let mut tl = None;
@@ -87,7 +86,7 @@ impl Lobby {
                                        .count() == 0 {
                                     tables.insert(table_n, Table::new(vec_z, number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
-                                        t.start_game(cardmeta);
+                                        t.start_game();
                                     }
 
 
@@ -156,7 +155,7 @@ impl Lobby {
                                 (con.table, con.player_num) {
                                 if let Some(t) = tables.get_mut(&table_num) {
                                     if let Some(ref txx) = t.tx {
-                                        txx.send((_player_num as i32, _gamecommand)).unwrap();
+                                        txx.send((_player_num, _gamecommand)).unwrap();
                                     }
                                 }
                             }

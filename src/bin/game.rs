@@ -1,12 +1,10 @@
 use futures::sync::mpsc;
-use futures::{Future, Sink};
 use websocket::message::OwnedMessage;
-use lobby::{Table, Lobby};
+use lobby::Lobby;
 use server_lib::RealDecisionMaker;
 use game_logic::board::BoardStruct;
 use std;
 use std::collections::HashMap;
-use server_lib::codec::*;
 use server_lib::cards;
 pub enum GameRxType {
     Sender(String, mpsc::Sender<OwnedMessage>),
@@ -15,7 +13,6 @@ pub enum GameRxType {
 pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
     let mut lobby = Lobby::new();
     let mut tables = HashMap::new();
-    let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
     let mut last_update = std::time::Instant::now();
     loop {
         let sixteen_ms = std::time::Duration::from_millis(16);
@@ -34,7 +31,7 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
                 }
                 GameRxType::Message(addr, msg) => {
                     println!("zz,{:?}", msg.clone());
-                    lobby.from_json(addr, msg, &mut tables, &cardmeta);
+                    lobby.from_json(addr, msg, &mut tables);
                 }
             }
 

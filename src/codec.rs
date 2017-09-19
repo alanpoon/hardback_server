@@ -19,14 +19,17 @@ pub struct TableInfo {
 pub struct PrivateInformation {}
 #[derive(Serialize, Deserialize,Debug, Clone)]
 pub struct Player {
-    name: String,
-    vp: usize,
-    coin: usize,
-    ink: usize,
-    remover: usize,
-    hand: Vec<usize>,
-    draft: Vec<usize>,
-    discard: Vec<usize>,
+    pub name: String,
+    pub vp: usize,
+    pub coin: usize,
+    pub ink: usize,
+    pub remover: usize,
+    pub arranged: Vec<usize>,
+    pub wild: Vec<usize>,
+    pub inked_cards: Vec<usize>,
+    pub hand: Vec<usize>,
+    pub draft: Vec<usize>,
+    pub discard: Vec<usize>,
 }
 impl Player {
     pub fn new(name: String) -> Player {
@@ -36,6 +39,9 @@ impl Player {
             coin: 0,
             ink: 0,
             remover: 0,
+            arranged: vec![],
+            wild: vec![],
+            inked_cards: vec![],
             hand: vec![],
             draft: vec![],
             discard: vec![],
@@ -89,11 +95,13 @@ impl Player {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameCommand {
-    pub formed_word: Option<Vec<cards::Card>>,
-    pub hand: Vec<cards::Card>,
-    pub buy: Option<usize>,
+    pub use_ink: Option<usize>,
+    pub use_remover: Option<usize>,
 }
-
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BoardCodec {
+    pub players: Vec<Player>,
+}
 CGM_codec!{
     structname:ServerReceivedMsg,
     rename:{
@@ -118,6 +126,7 @@ CGM_codec!{
     (tablenumber,set_tablenumber,i32),
     (players,set_players,Vec<Player>),
     (privateInformation,set_private_information,PrivateInformation),
+    (boardstate,set_boardstate,Result<BoardCodec,String>),
     (request,set_request,String),
     (reason,set_reason,String),
     (optional,set_optional,bool),
