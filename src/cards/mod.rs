@@ -48,7 +48,16 @@ pub struct ListCard<T> {
     pub giveablefn: Option<Box<Fn(&mut T, usize)>>,
     pub genrefn: Option<Box<Fn(&mut T, usize)>>,
 }
-pub trait Board {}
+pub trait Board {
+    fn two_cent_per_adv(&mut self,player_id:usize);
+    fn minus_other_ink(&mut self,player_id:usize);
+    fn lockup_offer(&mut self,player_id:usize);
+    fn uncover_adjacent(&mut self,player_id:usize);
+    fn double_adjacent(&mut self,player_id:usize);
+    fn trash_other(&mut self,player_id:usize);
+    fn one_vp_per_wild(&mut self,player_id:usize);
+    fn keep_or_discard_three(&mut self,player_id:usize);
+}
 macro_rules! listcard_map {
     (structtype:$s_alias:ty,
 cards:{  $(($id:expr,$letter:expr,$cost:expr,$purchase_giveables:expr,$giveables:expr,$genre_giveables:expr,$trash:expr,$genre:expr,$rotated:expr,$giveablefn:expr,$genrefn:expr)),* $(,)*
@@ -91,6 +100,7 @@ pub fn populate<T: Board>() -> [ListCard<T>; 180] {
         (13,"n",4,GIVEABLE::VP(1),GIVEABLE::COIN(2),GIVEABLE::VPCOIN(1,1),GIVEABLE::NONE,Genre::ADVENTURE,false,None,None),
         (14,"o",6,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ADVENTURE,false,None,Some(Box::new(|ref mut b, p| {
             //genre, 2cents for every adv
+            b.two_cent_per_adv(p);
         }))),
         (15,"p",4,GIVEABLE::VP(1),GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ADVENTURE,false,None,None),
         (16,"q",7,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(4),GIVEABLE::VP(3),Genre::ADVENTURE,false,None,None),
@@ -120,6 +130,7 @@ pub fn populate<T: Board>() -> [ListCard<T>; 180] {
         (40,"g",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VPINK(2),GIVEABLE::NONE,Genre::HORROR,false,None,None),
         (41,"h",7,GIVEABLE::NONE,GIVEABLE::VPCOIN(1,2),GIVEABLE::VPCOIN(2,1),GIVEABLE::NONE,Genre::HORROR,false,None,Some(Box::new(|ref mut b, p| {
             //horror, genre other player -1 ink/remover
+            b.minus_other_ink(p);
         }))),
         (42,"i",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VPORCOIN(2),GIVEABLE::NONE,Genre::HORROR,false,None,None),
         (43,"j",5,GIVEABLE::NONE,GIVEABLE::VPINK(3),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::HORROR,false,None,None),
@@ -151,215 +162,292 @@ pub fn populate<T: Board>() -> [ListCard<T>; 180] {
         (67,"a",3,GIVEABLE::NONE,GIVEABLE::VPORCOIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::HORROR,false,None,None),
         (68,"b",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (69,"c",5,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover
+            b.uncover_adjacent(p);
         })),Some(Box::new(|ref mut b, p| {
             //mystery,  gen:Lock up offer row
+            b.lockup_offer(p);
         }))),
         (70,"d",4,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent wild
+            b.uncover_adjacent(p);
         })),None),
         (71,"e",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:uncover adjacent wild
+            b.uncover_adjacent(p);
         }))),
         (72,"f",2,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (73,"g",6,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (74,"h",3,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery,) Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (75,"i",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (76,"j",8,GIVEABLE::NONE,GIVEABLE::VP(5),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (77,"k",2,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (78,"l",6,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (79,"m",3,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (80,"n",7,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:all wild cards +vp
+            b.one_vp_per_wild(p);
         }))),
         (81,"o",3,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),Some(Box::new(|ref mut b, p| {
             //mystery,  gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (82,"p",4,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (83,"q",3,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (84,"r",4,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (85,"s",4,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (86,"t",6,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen: uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (87,"u",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery,  gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (88,"v",9,GIVEABLE::NONE,GIVEABLE::VP(4),GIVEABLE::VP(4),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (89,"w",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery,  gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (90,"x",3,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (91,"y",7,GIVEABLE::NONE,GIVEABLE::VP(4),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (92,"z",5,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery,  gen: uncover adjacent
+            b.uncover_adjacent(p);
         }))),
         (93,"i",3,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery,  gen: lockup after rowcard
+            b.lockup_offer(p);
         }))),
         (94,"a",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,true,None,None),
         (95,"f",5,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:Lockup offer rowcard
+            b.lockup_offer(p);
         })),None),
         (96,"m",4,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,true,None,Some(Box::new(|ref mut b, p| {
             //mystery,  gen: lockup offer row
+            b.lockup_offer(p);
         }))),
         (97,"k",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (98,"q",5,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(3),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (99,"t",8,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,true,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:lockup offer row
+            b.lockup_offer(p);
         }))),
         (100,"r",6,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),Some(Box::new(|ref mut b, p| {
             //mystery, gen:Lockup
+            b.lockup_offer(p);
         }))),
         (101,"p",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p| {
             //mystery, gen:lockup
+            b.lockup_offer(p);
         }))),
         (102,"a",3,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p| {
             //mystery, Non-gen:uncover adjacent
+            b.uncover_adjacent(p);
         })),None),
         (103,"z",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p);
         })),None),
         (104,"w",4,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
-            //rommanc, Non-gen:thrash other, gen:double adjacent
-        })),None),
+            //rommanc, Non-gen:thrash other
+            b.trash_other(p);
+        })),Some(Box::new(|ref mut b, p| {
+            //rommanc,  gen:double adjacent
+            b.double_adjacent(p);
+        }))),
         (105,"v",3,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (106,"u",9,GIVEABLE::NONE,GIVEABLE::VP(5),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (107,"t",3,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen: thrash other
+            b.trash_other(p);
         }))),
         (108,"s",4,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (109,"r",5,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:keep or discard top3
+            b.keep_or_discard_three(p);
         }))),
         (110,"q",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (111,"p",6,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (112,"o",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (113,"n",2,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (114,"m",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (115,"l",8,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (116,"k",3,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (117,"j",6,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
-            //rommanc, Non-gen:double adjacent,gen:thrash other
-        })),None),
+            //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p);
+        })),Some(Box::new(|ref mut b, p| {
+            //rommanc, gen:thrash other
+            b.trash_other(p);
+        }))),
         (118,"i",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,None),
         (119,"h",3,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash
+            b.trash_other(p);
         })),None),
         (120,"g",3,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (121,"f",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (122,"e",6,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (123,"d",4,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (124,"c",3,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (125,"b",3,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p);
         })),None),
         (126,"a",4,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:thrash other
+            b.trash_other(p);
         })),None),
         (127,"b",5,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,true,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (128,"e",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,None,None),
         (129,"f",6,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p);
         })),Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (130,"h",7,GIVEABLE::NONE,GIVEABLE::VP(3),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ROMANCE,false,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:double adjacent
+            b.double_adjacent(p);
         }))),
         (131,"k",5,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,true,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:trash other
+            b.trash_other(p);
         }))),
         (132,"n",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:trash other
+            b.trash_other(p);
         })),None),
         (133,"o",8,GIVEABLE::NONE,GIVEABLE::VPCOIN(1,2),GIVEABLE::VPCOIN(1,1),GIVEABLE::NONE,Genre::ROMANCE,true,None,None),
         (134,"r",5,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,true,None,Some(Box::new(|ref mut b, p| {
             //rommanc, gen:trash
+            b.trash_other(p);
         }))),
         (135,"z",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:trash other
+            b.trash_other(p);
         })),None),
         (136,"y",4,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p);
         })),Some(Box::new(|ref mut b, p| {
             //rommanc, gen:thrash other
+            b.trash_other(p);
         }))),
         (137,"x",7,GIVEABLE::NONE,GIVEABLE::VP(4),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p| {
             //rommanc, Non-gen:trash other card
+            b.trash_other(p);
         })),None),
         (138,"a",0,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::NONE,false,None,None),
         (139,"a",0,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::NONE,false,None,None),

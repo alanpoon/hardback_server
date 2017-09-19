@@ -22,7 +22,6 @@ pub enum Action {
 
 pub struct GameEngine {
     players: Vec<Player>,
-
     connections: Vec<Connection>,
     gamestates: Vec<GameState>,
 }
