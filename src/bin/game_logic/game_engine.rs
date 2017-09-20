@@ -42,9 +42,10 @@ impl GameEngine {
         let mut last_update = std::time::Instant::now();
         let turn_index = 0;
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
-        let remaining_card =give_outstarting(&mut self.players, &cardmeta);
+        let mut remaining_cards = give_outstarting(&mut self.players, &cardmeta);
         let (wait_tx, wait_rx) = mpsc::channel();
-        let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player)>>>; 4] = [None, None, None, None];
+        let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
+            [None, None, None, None];
 
         'game: loop {
             let sixteen_ms = std::time::Duration::from_millis(1000);
@@ -88,7 +89,7 @@ impl GameEngine {
                         if let Some(&Connection { ref sender, .. }) =
                             self.connections.get(player_id) {
                             let mut temp_vec: Vec<String> = vec![];
-                            let mut temp_wait_for_input: Vec<Box<Fn(&mut Player)>> = vec![];
+                            let mut temp_wait_for_input: Vec<Box<Fn(&mut Player,&mut Vec<usize>)>> = vec![];
                             for (sz, sb) in option_vec {
                                 temp_vec.push(sz);
                                 temp_wait_for_input.push(sb);
@@ -128,6 +129,7 @@ impl GameEngine {
                 let mut need_update = false;
                 let mut temp_board = BoardStruct::new(self.players.clone(),
                                                       self.gamestates.clone(),
+                                                      remaining_cards.clone(),
                                                       wait_tx.clone());
                 let mut type_is_reply = false;
                 let &GameCommand { reply, .. } = &game_command;
@@ -139,6 +141,7 @@ impl GameEngine {
                                        ref arranged,
                                        ref wild,
                                        submit_word,
+                                       buy,
                                        .. },
                         Some(ref mut _p),
                         Some(ref con),
@@ -228,21 +231,54 @@ impl GameEngine {
                                                            &cardmeta,
                                                            vec![&adv_vec, &hor_vec, &mys_vec,
                                                                 &rom_vec]);
-                               
+
 
                                 }
                             }
 
                         }
-                        &mut &mut GameState::Buy => {}
+                        &mut &mut GameState::Buy => {
+                            if let Some(z) = buy {
+                                //z top of remaining deck
+                                //find the cost
+                                let res: Result<(), String> = match remaining_cards.get(z) {
+                                    Some(&_c) => {
+                                        match cardmeta[_c].cost as f64 <=
+                                              _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
+                                            true => {
+                                                match cardmeta[_c].cost <= _p.coin {
+                                                    true => {
+                                                        _p.coin -= cardmeta[_c].cost;
+                                                        _p.discard.push(remaining_cards.remove(_c));
+                                                        Ok(())
+                                                    }
+                                                    false => {
+                                                        let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
+                                                        let _g: (usize, String, Vec<(String, Box<Fn(&mut Player,&mut Vec<usize>)>)>) =
+                    (player_id,
+                     j,
+                     vec![("Trade in 3 ink for one coin to buy this?".to_owned(), Box::new(move|ref mut p,ref mut rmcards| { p.discard.push(rmcards.remove(_c)) ; })),
+                          ("No".to_owned(),
+                           Box::new(|ref mut p,ref mut rmcards| { }))]);
+                                                        Ok(())
+                                                    }
+                                                }
+                                            }
+                                            false => Err("Cannot afford the card".to_owned()),
+                                        }
+                                    }
+                                    None => Err("Cannot find the card selected".to_owned()),
+                                };
+                            }
+                        }
                         _ => {}
                     }
                 }
-                  //save temp_board.players to self.players 
-                  for  mut it in temp_board.players.iter_mut().zip(self.players.iter_mut()) {
+                //save temp_board.players to self.players
+                for mut it in temp_board.players.iter_mut().zip(self.players.iter_mut()) {
                     let (ref mut _tb_p, ref mut _p) = it;
-                    *_p=_tb_p;
-                  }
+                    *_p = _tb_p;
+                }
                 if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
@@ -250,7 +286,7 @@ impl GameEngine {
                      type_is_reply) {
                     if let (Some(_reply), &&mut Some(ref _wait_vec)) = (reply, &_wait) {
                         if let Some(_closure) = _wait_vec.get(_reply) {
-                            (*_closure)(_p);
+                            (*_closure)(_p, &mut remaining_cards);
                         }
                     }
                     *_wait = None;
@@ -262,7 +298,8 @@ impl GameEngine {
     }
 }
 pub fn give_outstarting(players: &mut Vec<Player>,
-                        cardmeta: &[cards::ListCard<BoardStruct>; 180])->Vec<usize> {
+                        cardmeta: &[cards::ListCard<BoardStruct>; 180])
+                        -> Vec<usize> {
     let mut remaining_deck = vec![];
     for _p in players {
         _p.starting::<BoardStruct>(cardmeta, &mut remaining_deck);
@@ -288,7 +325,9 @@ pub fn resolve_giveable(card_index: usize,
                         board: &mut BoardStruct,
                         wait_tx: mpsc::Sender<Option<(usize,
                                                       String,
-                                                      Vec<(String, Box<Fn(&mut Player)>)>)>>) {
+                                                      Vec<(String,
+                                                           Box<Fn(&mut Player,
+                                                                  &mut Vec<usize>)>)>)>>) {
     if let Some(ref mut z) = board.players.get_mut(player_id) {
         giveable_match(z, player_id, &cardmeta[card_index].giveables, wait_tx);
     }
@@ -302,7 +341,9 @@ pub fn giveable_match(z: &mut Player,
                       giveables: &cards::GIVEABLE,
                       wait_tx: mpsc::Sender<Option<(usize,
                                                     String,
-                                                    Vec<(String, Box<Fn(&mut Player)>)>)>>) {
+                                                    Vec<(String,
+                                                         Box<Fn(&mut Player,
+                                                                &mut Vec<usize>)>)>)>>) {
     let choose_bet = "Choose between".to_owned();
     match giveables {
         &cards::GIVEABLE::VP(_x) => {
@@ -319,27 +360,30 @@ pub fn giveable_match(z: &mut Player,
             z.coin += _x;
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                               vec![("Ink".to_owned(),
+                                     Box::new(|ref mut p, _| { p.ink += 1; })),
                                     ("Ink Remover".to_owned(),
-                                     Box::new(|ref mut p| { p.remover += 1; }))])))
+                                     Box::new(|ref mut p, _| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("1 Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                               vec![("1 Ink".to_owned(),
+                                     Box::new(|ref mut p, _| { p.ink += 1; })),
                                     ("1 Ink Remover".to_owned(),
-                                     Box::new(|ref mut p| { p.remover += 1; }))])))
+                                     Box::new(|ref mut p, _| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::NONE => {}
         &cards::GIVEABLE::INK => {
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("1 Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                               vec![("1 Ink".to_owned(),
+                                     Box::new(|ref mut p, _| { p.ink += 1; })),
                                     ("1 Ink Remover".to_owned(),
-                                     Box::new(|ref mut p| { p.remover += 1; }))])))
+                                     Box::new(|ref mut p, _| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPORCOIN(_x) => {
@@ -349,8 +393,8 @@ pub fn giveable_match(z: &mut Player,
             let _xcc = _xc.clone();
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![(j1, Box::new(move |ref mut p| { p.vp += _x; })),
-                                    (j2, Box::new(move |ref mut p| { p.coin += _x; }))])))
+                               vec![(j1, Box::new(move |ref mut p, _| { p.vp += _x; })),
+                                    (j2, Box::new(move |ref mut p, _| { p.coin += _x; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPORCOININK(_x) => {
@@ -361,22 +405,22 @@ pub fn giveable_match(z: &mut Player,
             wait_tx.send(Some((player_id,
                                choose_bet,
                                vec![(j1,
-                                     Box::new(move |ref mut p| {
+                                     Box::new(move |ref mut p, _| {
                                                   p.vp += _x;
                                                   p.ink += 1;
                                               })),
                                     (j2,
-                                     Box::new(move |ref mut p| {
+                                     Box::new(move |ref mut p, _| {
                                                   p.coin += _x;
                                                   p.ink += 1;
                                               })),
                                     (j3,
-                                     Box::new(move |ref mut p| {
+                                     Box::new(move |ref mut p, _| {
                                                   p.vp += _x;
                                                   p.remover += 1;
                                               })),
                                     (j4,
-                                     Box::new(move |ref mut p| {
+                                     Box::new(move |ref mut p, _| {
                                                   p.coin += _x;
                                                   p.remover += 1;
                                               }))])))
@@ -411,7 +455,8 @@ pub fn resolve_genre_giveable(player_id: usize,
                               wait_tx: mpsc::Sender<Option<(usize,
                                                             String,
                                                             Vec<(String,
-                                                                 Box<Fn(&mut Player)>)>)>>,
+                                                                 Box<Fn(&mut Player,
+                                                                        &mut Vec<usize>)>)>)>>,
                               cardmeta: &[cards::ListCard<BoardStruct>; 180],
                               genre_vec: Vec<&Vec<usize>>) {
     if let Some(ref mut z) = board.players.get_mut(player_id) {
