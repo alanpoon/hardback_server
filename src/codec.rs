@@ -100,6 +100,7 @@ pub struct GameCommand {
     pub arranged: Option<Vec<usize>>,
     pub wild: Option<(usize, String)>,
     pub submit_word: Option<bool>,
+    pub reply: Option<usize>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BoardCodec {
@@ -130,7 +131,7 @@ CGM_codec!{
     (players,set_players,Vec<Player>),
     (privateInformation,set_private_information,PrivateInformation),
     (boardstate,set_boardstate,Result<BoardCodec,String>),
-    (request,set_request,String),
+    (request,set_request,(String,Vec<String>)),
     (reason,set_reason,String),
     (optional,set_optional,bool),
     (location,set_location,String),

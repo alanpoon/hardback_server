@@ -9,13 +9,14 @@ use game::Connection;
 use rand::Rng;
 use rand;
 use std;
+#[derive(Clone)]
 pub enum GameState {
     SubmitWord,
     Buy,
     DrawCard,
     Spell(Action),
-    ResolveOption(Vec<Option<usize>>),
 }
+#[derive(Clone)]
 pub enum Action {
     UseInk(usize),
 }
@@ -42,6 +43,8 @@ impl GameEngine {
         let turn_index = 0;
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         give_outstarting(&mut self.players, &cardmeta);
+        let (wait_tx, wait_rx) = mpsc::channel();
+        let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player)>>>; 4] = [None, None, None, None];
 
         'game: loop {
             let sixteen_ms = std::time::Duration::from_millis(1000);
@@ -74,41 +77,81 @@ impl GameEngine {
                         _p.wild = vec![];
                         _p.inked_cards = vec![];
                     }
-                    &mut &mut GameState::ResolveOption(ref _v) => for _c in _v {},
                     _ => {}
                 }
                 temp_players.push(_p.clone());
             }
-            for it in self.connections.iter() {
-                let ref con = it;
-                let k: Result<BoardCodec, String> =
-                    Ok(BoardCodec { players: temp_players.clone() });
-                let g = json!({
-                                  "boardstate": k
-                              });
-                con.sender
-                    .clone()
-                    .send(OwnedMessage::Text(g.to_string()))
-                    .wait()
-                    .unwrap();
+            while let Ok(input_request) = wait_rx.recv() {
+                match input_request {
+                    Some((player_id, header, option_vec)) => {
+                        // request Input
+                        if let Some(&Connection { ref sender, .. }) =
+                            self.connections.get(player_id) {
+                            let mut temp_vec: Vec<String> = vec![];
+                            let mut temp_wait_for_input: Vec<Box<Fn(&mut Player)>> = vec![];
+                            for (sz, sb) in option_vec {
+                                temp_vec.push(sz);
+                                temp_wait_for_input.push(sb);
+                            }
+                            wait_for_input[player_id] = Some(temp_wait_for_input);
+                            let g = json!({
+                                    "request": (header,temp_vec)
+                                });
+                            sender.clone()
+                                .send(OwnedMessage::Text(g.to_string()))
+                                .wait()
+                                .unwrap();
+                        }
+                    }
+                    None => {
+                        //just update boardstae
+                        for it in self.connections.iter() {
+                            let ref con = it;
+                            let k: Result<BoardCodec, String> =
+                                Ok(BoardCodec { players: temp_players.clone() });
+                            let g = json!({
+                                    "boardstate": k
+                                });
+                            con.sender
+                                .clone()
+                                .send(OwnedMessage::Text(g.to_string()))
+                                .wait()
+                                .unwrap();
+                        }
+                    }
+                }
+
             }
+
 
             while let Ok((player_id, game_command)) = rx.recv() {
                 let mut need_update = false;
-                let mut temp_board = BoardStruct::new(self.players.clone());
-                if let (GameCommand { use_ink,
-                                      use_remover,
-                                      ref arranged,
-                                      ref wild,
-                                      submit_word,
-                                      .. },
+                let mut temp_board = BoardStruct::new(self.players.clone(),
+                                                      self.gamestates.clone(),
+                                                      wait_tx.clone());
+                let mut type_is_reply = false;
+                let &GameCommand { reply, .. } = &game_command;
+                if let Some(_) = reply {
+                    type_is_reply = true;
+                }
+                if let (&GameCommand { use_ink,
+                                       use_remover,
+                                       ref arranged,
+                                       ref wild,
+                                       submit_word,
+                                       .. },
                         Some(ref mut _p),
                         Some(ref con),
-                        Some(ref mut _gamestate)) =
-                    (game_command,
+                        Some(ref mut _gamestate),
+                        &None,
+                        false) =
+                    (&game_command,
                      self.players.get_mut(player_id),
                      self.connections.get(player_id),
-                     self.gamestates.get_mut(player_id)) {
+                     self.gamestates.get_mut(player_id),
+                     &wait_for_input[player_id],
+                     type_is_reply) {
+
                     match _gamestate {
                         &mut &mut GameState::Spell(ref a) => {
                             if let Some(z) = use_ink {
@@ -160,7 +203,6 @@ impl GameEngine {
                                     }
                                 }
                                 if wordapi::there_such_word(&word) {
-                                    let mut resolve_option = false;
                                     let mut adv_vec = vec![];
                                     let mut hor_vec = vec![];
                                     let mut mys_vec = vec![];
@@ -177,20 +219,16 @@ impl GameEngine {
                                                              &cardmeta,
                                                              player_id,
                                                              &mut temp_board,
-                                                             &mut resolve_option);
+                                                             wait_tx.clone());
                                         }
                                     }
                                     resolve_genre_giveable(player_id,
                                                            &mut temp_board,
-                                                           &mut resolve_option,
+                                                           wait_tx.clone(),
                                                            &cardmeta,
-                                                           &adv_vec,
-                                                           &hor_vec,
-                                                           &mys_vec,
-                                                           &rom_vec);
-                                    if resolve_option {
-                                        *(*_gamestate) = GameState::ResolveOption(valid_card);
-                                    }
+                                                           vec![&adv_vec, &hor_vec, &mys_vec,
+                                                                &rom_vec]);
+
                                 }
                             }
 
@@ -198,6 +236,17 @@ impl GameEngine {
                         &mut &mut GameState::Buy => {}
                         _ => {}
                     }
+                } else if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
+                    (&game_command,
+                     self.players.get_mut(player_id),
+                     &mut wait_for_input[player_id],
+                     type_is_reply) {
+                    if let (Some(_reply), &mut Some(ref _wait_vec)) = (reply, _wait) {
+                        if let Some(_closure) = _wait_vec.get(_reply) {
+                            (*_closure)(_p);
+                        }
+                    }
+                    *_wait = None;
                 }
 
             }
@@ -229,12 +278,24 @@ pub fn resolve_giveable(card_index: usize,
                         cardmeta: &[cards::ListCard<BoardStruct>; 180],
                         player_id: usize,
                         board: &mut BoardStruct,
-                        resolve_option: &mut bool) {
+                        wait_tx: mpsc::Sender<Option<(usize,
+                                                      String,
+                                                      Vec<(String, Box<Fn(&mut Player)>)>)>>) {
     if let Some(ref mut z) = board.players.get_mut(player_id) {
-        giveable_match(z, &cardmeta[card_index].giveables, resolve_option);
+        giveable_match(z, player_id, &cardmeta[card_index].giveables, wait_tx);
+    }
+    //resolve closure
+    if let Some(ref _closure) = cardmeta[card_index].giveablefn {
+        (*_closure)(board, player_id, card_index);
     }
 }
-pub fn giveable_match(z: &mut Player, giveables: &cards::GIVEABLE, resolve_option: &mut bool) {
+pub fn giveable_match(z: &mut Player,
+                      player_id: usize,
+                      giveables: &cards::GIVEABLE,
+                      wait_tx: mpsc::Sender<Option<(usize,
+                                                    String,
+                                                    Vec<(String, Box<Fn(&mut Player)>)>)>>) {
+    let choose_bet = "Choose between".to_owned();
     match giveables {
         &cards::GIVEABLE::VP(_x) => {
             z.vp += _x;
@@ -248,15 +309,70 @@ pub fn giveable_match(z: &mut Player, giveables: &cards::GIVEABLE, resolve_optio
         }
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
-            z.ink += 1;
+            wait_tx.send(Some((player_id,
+                               choose_bet,
+                               vec![("Ink".to_owned(),Box::new(|ref mut p|{
+              p.ink+=1;
+          })),("Ink Remover".to_owned(),Box::new(|ref mut p|{
+              p.remover+=1;
+          }))])))
+                .unwrap();
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
-            z.ink += 1;
+            wait_tx.send(Some((player_id,
+                               choose_bet,
+                               vec![("1 Ink".to_owned(),Box::new(|ref mut p|{
+              p.ink+=1;
+          })),("1 Ink Remover".to_owned(),Box::new(|ref mut p|{
+              p.remover+=1;
+          }))])))
+                .unwrap();
         }
         &cards::GIVEABLE::NONE => {}
-        _ => {
-            *resolve_option = true;
+        &cards::GIVEABLE::INK => {
+            wait_tx.send(Some((player_id,
+                               choose_bet,
+                               vec![("1 Ink".to_owned(),Box::new(|ref mut p|{
+              p.ink+=1;
+          })),("1 Ink Remover".to_owned(),Box::new(|ref mut p|{
+              p.remover+=1;
+          }))])))
+                .unwrap();
+        }
+        &cards::GIVEABLE::VPORCOIN(_x) => {
+            let j1 = format!("{} VP",_x);
+            let j2 = format!("{} Coin",_x);
+            wait_tx.send(Some((player_id,
+                               choose_bet,
+                               vec![(j1,Box::new(|ref mut p|{
+              p.vp+=_x;
+          })),(j2,Box::new(|ref mut p|{
+              p.coin+=_x;
+          }))])))
+                .unwrap();
+        }
+        &cards::GIVEABLE::VPORCOININK(_x) => {
+            let j1 = format!("{} VP and 1 ink",_x);
+            let j2 = format!("{} Coin and 1 ink",_x);
+            let j3 = format!("{} VP and 1 ink remover",_x);
+            let j4 = format!("{} Coin and 1 ink remover",_x);
+            wait_tx.send(Some((player_id,
+                               choose_bet,
+                               vec![(j1,Box::new(|ref mut p|{
+              p.vp+=_x;
+              p.ink+=1;
+          })),(j2,Box::new(|ref mut p|{
+              p.coin+=_x;
+              p.ink+=1;
+          })),(j3,Box::new(|ref mut p|{
+              p.vp+=_x;
+              p.remover+=1;
+          })),(j4,Box::new(|ref mut p|{
+              p.coin+=_x;
+              p.remover+=1;
+          }))])))
+                .unwrap();
         }
     }
 }
@@ -284,33 +400,31 @@ pub fn track_genre(card_index: usize,
 }
 pub fn resolve_genre_giveable(player_id: usize,
                               board: &mut BoardStruct,
-                              resolve_option: &mut bool,
+                              wait_tx: mpsc::Sender<Option<(usize,
+                                                            String,
+                                                            Vec<(String,
+                                                                 Box<Fn(&mut Player)>)>)>>,
                               cardmeta: &[cards::ListCard<BoardStruct>; 180],
-                              adv: &Vec<usize>,
-                              hor: &Vec<usize>,
-                              mys: &Vec<usize>,
-                              rom: &Vec<usize>) {
+                              genre_vec: Vec<&Vec<usize>>) {
     if let Some(ref mut z) = board.players.get_mut(player_id) {
-        if adv.len() >= 2 {
-            for &_c in adv {
-                giveable_match(z, &cardmeta[_c].giveables, resolve_option);
+        for _o in genre_vec.clone() {
+            if _o.len() >= 2 {
+                for &_c in _o {
+                    giveable_match(z, player_id, &cardmeta[_c].giveables, wait_tx.clone());
+                }
             }
+
         }
-        if hor.len() >= 2 {
-            for &_c in hor {
-                giveable_match(z, &cardmeta[_c].giveables, resolve_option);
+
+    }
+    for _o in genre_vec {
+        if _o.len() >= 2 {
+            for &_c in _o {
+                if let Some(ref _closure) = cardmeta[_c].giveablefn {
+                    (*_closure)(board, player_id, _c);
+                }
             }
-        }
-        if mys.len() >= 2 {
-            for &_c in mys {
-                giveable_match(z, &cardmeta[_c].giveables, resolve_option);
-            }
-        }
-        if rom.len() >= 2 {
-            for &_c in rom {
-                giveable_match(z, &cardmeta[_c].giveables, resolve_option);
-            }
+
         }
     }
-
 }
