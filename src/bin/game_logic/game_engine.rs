@@ -46,7 +46,6 @@ impl GameEngine {
         let (wait_tx, wait_rx) = mpsc::channel();
         let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
             [None, None, None, None];
-
         'game: loop {
             let sixteen_ms = std::time::Duration::from_millis(1000);
             let now = std::time::Instant::now();
@@ -250,11 +249,7 @@ impl GameEngine {
                             }
                             if let Some(z) = buylockup {
                                 //z:index of player.lockup
-                                buy_card_from_lockup(z,
-                                              &cardmeta,
-                                              _p,
-                                              player_id,
-                                              wait_tx.clone());
+                                buy_card_from_lockup(z, &cardmeta, _p, player_id, wait_tx.clone());
                             }
                         }
                         _ => {}
@@ -492,8 +487,8 @@ pub fn buy_card_from(position_index: usize,
                             let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
 
                             Some(Ok((player_id,
-                                    j,
-                                    vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
+                                     j,
+                                     vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
                                           Box::new(move |ref mut p, ref mut rmcards| {
                                                        p.discard.push(rmcards.remove(_c));
                                                    })),
@@ -513,54 +508,54 @@ pub fn buy_card_from(position_index: usize,
     }
 }
 pub fn buy_card_from_lockup(position_index: usize,
-                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
-                     _p: &mut Player,
-                     player_id: usize,
-                     wait_tx: mpsc::Sender<Option<(usize,
-                                                   String,
-                                                   Vec<(String,
-                                                        Box<Fn(&mut Player,
-                                                               &mut Vec<usize>)>)>)>>) {
-            let mut card_index:usize=0;
-            if let Some(&_c) = _p.lockup.get(position_index){
-                card_index=_c;
-            } else{
-                println!("lockup does not have this card");
-            }
+                            cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                            _p: &mut Player,
+                            player_id: usize,
+                            wait_tx: mpsc::Sender<Option<(usize,
+                                                          String,
+                                                          Vec<(String,
+                                                               Box<Fn(&mut Player,
+                                                                      &mut Vec<usize>)>)>)>>) {
+    let mut card_index = 2;
+    if let Some(&_c) = _p.lockup.get(position_index) {
+        card_index = _c;
+    } else {
+        println!("lockup does not have this card");
+    }
     let res: Option<Result<(usize, String, Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>),
-                           String>> = 
-            match cardmeta[card_index].cost as f64 <= _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
+                           String>> = match cardmeta[card_index].cost as f64 <=
+          _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
+        true => {
+            match cardmeta[card_index].cost <= _p.coin {
                 true => {
-                    match cardmeta[card_index].cost <= _p.coin {
-                        true => {
-                            _p.coin -= cardmeta[card_index].cost;
-                            _p.discard.push(card_index);
-                            _p.lockup.remove(position_index);
-                            None
-                        }
-                        false => {
-                            let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
-
-                            Some(Ok((player_id,
-                                    j,
-                                    vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
-                                          Box::new(move |ref mut p, _| {
-                                              let coin_left = _p.coin;
-                                              let remainder = cardmeta[card_index].cost-coin_left;
-                                                         _p.coin = 0;
-                                                         _p.ink-=remainder*3;
-                                                        _p.discard.push(card_index);
-                                                        _p.lockup.remove(position_index);
+                    _p.coin -= cardmeta[card_index].cost;
+                    _p.discard.push(card_index);
+                    _p.lockup.remove(position_index);
+                    None
+                }
+                false => {
+                    let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
+                    let cost = cardmeta[card_index].cost.clone();
+                    Some(Ok((player_id,
+                             j,
+                             vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
+                                          Box::new(move |ref mut p,_| {
+                                              let coin_left = p.coin;
+                                          let remainder = cost-coin_left;
+                                                         p.coin = 0;
+                                                         p.ink-=remainder*3;
+                                                        p.discard.push(card_index);
+                                                        p.lockup.remove(position_index);
                                                       
                                                    })),
                                          ("No".to_owned(),
-                                          Box::new(|ref mut p, _| {}))])))
+                                          Box::new(|ref mut p,  _| {}))])))
 
-                        }
-                    }
                 }
-                false => Some(Err("Cannot afford the card".to_owned())),
-            };
+            }
+        }
+        false => Some(Err("Cannot afford the card".to_owned())),
+    };
     if let Some(Ok(a)) = res {
         wait_tx.send(Some(a)).unwrap();
     }
