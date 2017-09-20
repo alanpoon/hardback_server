@@ -5,14 +5,14 @@ extern crate rust_wordnik;
 #[macro_use]
 extern crate serde_json;
 extern crate rand;
-pub extern crate hardback_server;
+pub extern crate hardback_server_lib;
 
 mod handler;
 pub mod game;
 #[allow(non_snake_case)]
 pub mod lobby;
 pub mod game_logic;
-pub use hardback_server as server_lib;
+pub use hardback_server_lib as server_lib;
 const CONNECTION: &'static str = "127.0.0.1:8080";
 fn main() {
 
