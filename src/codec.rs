@@ -105,7 +105,8 @@ pub struct GameCommand {
     pub wild: Option<(usize, String)>,
     pub submit_word: Option<bool>,
     pub reply: Option<usize>,
-    pub buy: Option<usize>,
+    pub buyoffer: Option<usize>,
+    pub buylockup: Option<usize>,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BoardCodec {
