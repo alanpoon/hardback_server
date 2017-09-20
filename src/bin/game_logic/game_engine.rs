@@ -42,7 +42,7 @@ impl GameEngine {
         let mut last_update = std::time::Instant::now();
         let turn_index = 0;
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
-        give_outstarting(&mut self.players, &cardmeta);
+        let remaining_card =give_outstarting(&mut self.players, &cardmeta);
         let (wait_tx, wait_rx) = mpsc::channel();
         let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player)>>>; 4] = [None, None, None, None];
 
@@ -228,6 +228,7 @@ impl GameEngine {
                                                            &cardmeta,
                                                            vec![&adv_vec, &hor_vec, &mys_vec,
                                                                 &rom_vec]);
+                               
 
                                 }
                             }
@@ -237,6 +238,11 @@ impl GameEngine {
                         _ => {}
                     }
                 }
+                  //save temp_board.players to self.players 
+                  for  mut it in temp_board.players.iter_mut().zip(self.players.iter_mut()) {
+                    let (ref mut _tb_p, ref mut _p) = it;
+                    *_p=_tb_p;
+                  }
                 if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
@@ -256,11 +262,12 @@ impl GameEngine {
     }
 }
 pub fn give_outstarting(players: &mut Vec<Player>,
-                        cardmeta: &[cards::ListCard<BoardStruct>; 180]) {
+                        cardmeta: &[cards::ListCard<BoardStruct>; 180])->Vec<usize> {
     let mut remaining_deck = vec![];
     for _p in players {
         _p.starting::<BoardStruct>(cardmeta, &mut remaining_deck);
     }
+    remaining_deck
 }
 pub fn resolve_card_during_play(card_index: usize,
                                 cardmeta: &[cards::ListCard<BoardStruct>; 180],

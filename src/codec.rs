@@ -30,6 +30,8 @@ pub struct Player {
     pub hand: Vec<usize>,
     pub draft: Vec<usize>,
     pub discard: Vec<usize>,
+    pub lockup:Vec<usize>,
+    pub rotated_cards:Vec<usize>
 }
 impl Player {
     pub fn new(name: String) -> Player {
@@ -45,6 +47,8 @@ impl Player {
             hand: vec![],
             draft: vec![],
             discard: vec![],
+            lockup:vec![],
+            rotated_cards:vec![]
         }
     }
     pub fn starting<T: cards::Board>(&mut self,

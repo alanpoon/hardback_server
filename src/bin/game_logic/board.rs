@@ -6,6 +6,7 @@ use std::sync::mpsc;
 
 pub struct BoardStruct {
     pub players: Vec<Player>,
+    pub offer_row:Vec<usize>,
     pub gamestates: Vec<GameState>,
     pub tx: mpsc::Sender<Option<(usize, String, Vec<(String, Box<Fn(&mut Player)>)>)>>,
 }
@@ -40,7 +41,6 @@ impl Board for BoardStruct {
             c += 1;
         }
         for _j in _o {
-            if let Some(ref mut _g) = self.gamestates.get_mut(_j) {
                 let j = format!("Player {} has played a card to force other players to lose a ink or ink remover.",
                                 player_id);
                 let _g: (usize, String, Vec<(String, Box<Fn(&mut Player)>)>) =
@@ -53,10 +53,11 @@ impl Board for BoardStruct {
                     .clone()
                     .send(Some(_g))
                     .unwrap();
-            }
         }
     }
-    fn lockup_offer(&mut self, player_id: usize, card_id: usize) {}
+    fn lockup_offer(&mut self, player_id: usize, card_id: usize) {
+
+    }
     fn uncover_adjacent(&mut self, player_id: usize, card_id: usize) {}
     fn double_adjacent(&mut self, player_id: usize, card_id: usize) {}
     fn trash_other(&mut self, player_id: usize, card_id: usize) {}
@@ -66,10 +67,12 @@ impl Board for BoardStruct {
 impl BoardStruct {
     pub fn new(players: Vec<Player>,
                gamestates: Vec<GameState>,
+               offer_row:Vec<usize>,
                tx: mpsc::Sender<Option<(usize, String, Vec<(String, Box<Fn(&mut Player)>)>)>>)
                -> BoardStruct {
         BoardStruct {
             players: players,
+            offer_row:offer_row,
             tx: tx,
             gamestates: gamestates,
         }
