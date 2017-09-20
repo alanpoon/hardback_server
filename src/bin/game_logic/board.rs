@@ -46,10 +46,9 @@ impl Board for BoardStruct {
                 let _g: (usize, String, Vec<(String, Box<Fn(&mut Player)>)>) =
                     (player_id,
                      j,
-                     vec![("lose a ink".to_owned(),
-                                                    Box::new(|ref mut p| { p.ink -= 1; })),
-                                                   ("lose a ink remover".to_owned(),
-                                                    Box::new(|ref mut p| { p.remover -= 1; }))]);
+                     vec![("lose a ink".to_owned(), Box::new(|ref mut p| { p.ink -= 1; })),
+                          ("lose a ink remover".to_owned(),
+                           Box::new(|ref mut p| { p.remover -= 1; }))]);
                 self.tx
                     .clone()
                     .send(Some(_g))

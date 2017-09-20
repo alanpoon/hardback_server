@@ -95,8 +95,8 @@ impl GameEngine {
                             }
                             wait_for_input[player_id] = Some(temp_wait_for_input);
                             let g = json!({
-                                    "request": (header,temp_vec)
-                                });
+                                              "request": (header, temp_vec)
+                                          });
                             sender.clone()
                                 .send(OwnedMessage::Text(g.to_string()))
                                 .wait()
@@ -110,8 +110,8 @@ impl GameEngine {
                             let k: Result<BoardCodec, String> =
                                 Ok(BoardCodec { players: temp_players.clone() });
                             let g = json!({
-                                    "boardstate": k
-                                });
+                                              "boardstate": k
+                                          });
                             con.sender
                                 .clone()
                                 .send(OwnedMessage::Text(g.to_string()))
@@ -236,12 +236,13 @@ impl GameEngine {
                         &mut &mut GameState::Buy => {}
                         _ => {}
                     }
-                } else if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
+                }
+                if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
                      &mut wait_for_input[player_id],
                      type_is_reply) {
-                    if let (Some(_reply), &mut Some(ref _wait_vec)) = (reply, _wait) {
+                    if let (Some(_reply), &&mut Some(ref _wait_vec)) = (reply, &_wait) {
                         if let Some(_closure) = _wait_vec.get(_reply) {
                             (*_closure)(_p);
                         }
@@ -311,67 +312,67 @@ pub fn giveable_match(z: &mut Player,
             z.coin += _x;
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("Ink".to_owned(),Box::new(|ref mut p|{
-              p.ink+=1;
-          })),("Ink Remover".to_owned(),Box::new(|ref mut p|{
-              p.remover+=1;
-          }))])))
+                               vec![("Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                                    ("Ink Remover".to_owned(),
+                                     Box::new(|ref mut p| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("1 Ink".to_owned(),Box::new(|ref mut p|{
-              p.ink+=1;
-          })),("1 Ink Remover".to_owned(),Box::new(|ref mut p|{
-              p.remover+=1;
-          }))])))
+                               vec![("1 Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                                    ("1 Ink Remover".to_owned(),
+                                     Box::new(|ref mut p| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::NONE => {}
         &cards::GIVEABLE::INK => {
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![("1 Ink".to_owned(),Box::new(|ref mut p|{
-              p.ink+=1;
-          })),("1 Ink Remover".to_owned(),Box::new(|ref mut p|{
-              p.remover+=1;
-          }))])))
+                               vec![("1 Ink".to_owned(), Box::new(|ref mut p| { p.ink += 1; })),
+                                    ("1 Ink Remover".to_owned(),
+                                     Box::new(|ref mut p| { p.remover += 1; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPORCOIN(_x) => {
-            let j1 = format!("{} VP",_x);
-            let j2 = format!("{} Coin",_x);
+            let j1 = format!("{} VP", _x);
+            let j2 = format!("{} Coin", _x);
+            let _xc = _x.clone();
+            let _xcc = _xc.clone();
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![(j1,Box::new(|ref mut p|{
-              p.vp+=_x;
-          })),(j2,Box::new(|ref mut p|{
-              p.coin+=_x;
-          }))])))
+                               vec![(j1, Box::new(move |ref mut p| { p.vp += _x; })),
+                                    (j2, Box::new(move |ref mut p| { p.coin += _x; }))])))
                 .unwrap();
         }
         &cards::GIVEABLE::VPORCOININK(_x) => {
-            let j1 = format!("{} VP and 1 ink",_x);
-            let j2 = format!("{} Coin and 1 ink",_x);
-            let j3 = format!("{} VP and 1 ink remover",_x);
-            let j4 = format!("{} Coin and 1 ink remover",_x);
+            let j1 = format!("{} VP and 1 ink", _x);
+            let j2 = format!("{} Coin and 1 ink", _x);
+            let j3 = format!("{} VP and 1 ink remover", _x);
+            let j4 = format!("{} Coin and 1 ink remover", _x);
             wait_tx.send(Some((player_id,
                                choose_bet,
-                               vec![(j1,Box::new(|ref mut p|{
-              p.vp+=_x;
-              p.ink+=1;
-          })),(j2,Box::new(|ref mut p|{
-              p.coin+=_x;
-              p.ink+=1;
-          })),(j3,Box::new(|ref mut p|{
-              p.vp+=_x;
-              p.remover+=1;
-          })),(j4,Box::new(|ref mut p|{
-              p.coin+=_x;
-              p.remover+=1;
-          }))])))
+                               vec![(j1,
+                                     Box::new(move |ref mut p| {
+                                                  p.vp += _x;
+                                                  p.ink += 1;
+                                              })),
+                                    (j2,
+                                     Box::new(move |ref mut p| {
+                                                  p.coin += _x;
+                                                  p.ink += 1;
+                                              })),
+                                    (j3,
+                                     Box::new(move |ref mut p| {
+                                                  p.vp += _x;
+                                                  p.remover += 1;
+                                              })),
+                                    (j4,
+                                     Box::new(move |ref mut p| {
+                                                  p.coin += _x;
+                                                  p.remover += 1;
+                                              }))])))
                 .unwrap();
         }
     }
