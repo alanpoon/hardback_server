@@ -130,7 +130,7 @@ impl Lobby {
                         let g = json!({
                             "chat": _chat.clone(),
                             "location":_location.clone(),
-                            "type_name":"chat",
+                            "type":"chat",
                             "sender":sender_n
                             });
                         let iter_lobby = self.connections.iter();
@@ -168,5 +168,22 @@ impl Lobby {
             }
 
         }
+    }
+}
+pub fn broadcast_tableinfo(vec_con:&Vec<Connection>){
+    let mut temp_hash:HashMap<i32,TableInfo> = HashMap::new();
+    for con in vec_con{
+        if let Some(_id)= con.table{
+            if !temp_hash.contains_key(_id.clone()){
+                temp_hash.insert(_id.clone(),TableInfo::new(vec![con.name.clone()],con.number_of_player))
+            } else{
+                if let Some(z) = temp_hash.get_mut(_id){
+                    z.add_player(con.name.clone());
+                }
+            }
+        }
+    }
+    for con in vec_con{
+        
     }
 }
