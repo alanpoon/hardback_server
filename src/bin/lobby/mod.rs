@@ -8,6 +8,7 @@ use futures::{Future, Sink};
 use game_logic::board::BoardStruct;
 use server_lib::codec::*;
 use server_lib::cards;
+use itertools::Itertools;
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
@@ -27,23 +28,62 @@ impl Lobby {
             c.player_num = Some(0);
         }
         self.table_index += 1;
+        self.broadcast_tableinfo();
     }
     pub fn remove_table(&mut self, table_num: i32) {
-        let iter_mut = self.connections.iter_mut();
-        iter_mut.filter(|&(_, ref con)| con.table == Some(table_num))
+        self.connections
+            .iter_mut()
+            .filter(|&(_, ref con)| con.table == Some(table_num))
             .map(|(_, con)| {
                      con.table = None;
                      con.player_num = None;
                  })
             .collect::<Vec<()>>();
+
+        self.broadcast_tableinfo();
     }
     pub fn remove_connection(&mut self, player: Connection) {
         self.connections.remove(&player.addr);
+        self.broadcast_tableinfo();
     }
     pub fn add_connection(&mut self, player: Connection) {
         self.connections.insert(player.addr.clone(), player);
     }
+    pub fn broadcast_tableinfo(&self) {
+        let mut table_infos: Vec<TableInfo> = vec![];
+        for (key, mut group) in &(self.connections.clone()).into_iter().group_by(|elt| {
+                                                                                     (*elt).1.table
+                                                                                 }) {
+            // Check that the sum of each group is +/- 4.
 
+            let mut number_of_player = 3;
+            let mut game_started = false;
+            if let Some(z) = group.nth(0) {
+                number_of_player = z.1.number_of_player;
+                game_started = z.1.game_started;
+            }
+            if let (Some(table_num), false) = (key, game_started) {
+                let t = TableInfo::new(group.map(|x| x.1.name).collect(), number_of_player);
+                table_infos.push(t);
+            }
+
+        }
+
+        self.connections
+            .iter()
+            .filter(|&(_, ref con)| con.game_started == false)
+            .map(|(_, con)| {
+                let g = json!({
+                            "tables": table_infos,
+                            });
+                con.sender
+                    .clone()
+                    .send(OwnedMessage::Text(g.to_string()))
+                    .wait()
+                    .unwrap();
+            })
+            .collect::<Vec<()>>();
+    }
     pub fn from_json(&mut self,
                      addr: String,
                      msg: OwnedMessage,
@@ -75,21 +115,29 @@ impl Lobby {
                             con.ready = _ready;
                         }
                         if _ready {
-                            let iter_lobby = self.connections.iter();
                             if let Some(table_n) = tl {
                                 let mut vec_z = vec![];
-                                if iter_lobby.filter(|&(_, c)| {
-                                                         vec_z.push(c.clone());
-                                                         (c.table == tl)
-                                                     })
+                                let mut game_can_be_started = false;
+                                if self.connections
+                                       .iter()
+                                       .filter(|&(_, c)| {
+                                                   vec_z.push(c.clone());
+                                                   (c.table == tl)
+                                               })
                                        .filter(|&(_, c)| c.ready == false)
                                        .count() == 0 {
                                     tables.insert(table_n, Table::new(vec_z, number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
                                         t.start_game();
+                                        game_can_be_started = true;
                                     }
-
-
+                                }
+                                if game_can_be_started {
+                                    self.connections
+                                        .iter_mut()
+                                        .filter(|&(_, ref c)| c.table == tl)
+                                        .map(|(_, c)| c.game_started = true)
+                                        .collect::<Vec<()>>();
                                 }
                             }
 
@@ -135,7 +183,7 @@ impl Lobby {
                             });
                         let iter_lobby = self.connections.iter();
                         iter_lobby.filter(|&(_, c)| if _location == "lobby" {
-                                              c.table == None
+                                              c.game_started == false
                                           } else {
                                               c.table == table_n
                                           })
@@ -151,8 +199,8 @@ impl Lobby {
 
                     } else if let Some(Some(_gamecommand)) = gamecommand {
                         if let Some(con) = self.connections.get_mut(&addr) {
-                            if let (Some(table_num), Some(_player_num)) =
-                                (con.table, con.player_num) {
+                            if let (Some(table_num), Some(_player_num), true) =
+                                (con.table, con.player_num, con.game_started) {
                                 if let Some(t) = tables.get_mut(&table_num) {
                                     if let Some(ref txx) = t.tx {
                                         txx.send((_player_num, _gamecommand)).unwrap();
@@ -168,22 +216,5 @@ impl Lobby {
             }
 
         }
-    }
-}
-pub fn broadcast_tableinfo(vec_con:&Vec<Connection>){
-    let mut temp_hash:HashMap<i32,TableInfo> = HashMap::new();
-    for con in vec_con{
-        if let Some(_id)= con.table{
-            if !temp_hash.contains_key(_id.clone()){
-                temp_hash.insert(_id.clone(),TableInfo::new(vec![con.name.clone()],con.number_of_player))
-            } else{
-                if let Some(z) = temp_hash.get_mut(_id){
-                    z.add_player(con.name.clone());
-                }
-            }
-        }
-    }
-    for con in vec_con{
-        
     }
 }

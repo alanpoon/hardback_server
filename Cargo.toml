@@ -12,6 +12,7 @@ websocket = { version ="0.20.2"}
 tokio-core ="0.1.9"
 futures ={ version = "0.1.14"}
 hardback_server_lib ={path="../hardback_server_lib"}
+itertools = "0.6.3"
 
 [[bin]]
 name = "hardback_server"
