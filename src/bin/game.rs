@@ -1,14 +1,17 @@
 use futures::sync::mpsc;
+use futures::{Sink, Future};
 use websocket::message::OwnedMessage;
 use lobby::Lobby;
 use server_lib::RealDecisionMaker;
-use game_logic::board::BoardStruct;
+use logic_lib::game_logic::game_engine::GameCon;
 use std;
+use std::fmt;
 use std::collections::HashMap;
 use server_lib::cards;
 pub enum GameRxType {
     Sender(String, mpsc::Sender<OwnedMessage>),
     Message(String, OwnedMessage),
+    Close(String),
 }
 pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
     let mut lobby = Lobby::new();
@@ -33,6 +36,9 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
                     println!("zz,{:?}", msg.clone());
                     lobby.from_json(addr, msg, &mut tables);
                 }
+                GameRxType::Close(addr) => {
+                    lobby.remove_connection(addr);
+                }
             }
 
         }
@@ -44,13 +50,34 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
 pub struct Connection {
     pub addr: String,
     pub name: String,
-    pub table: Option<i32>,
+    pub table: Option<usize>,
     pub game_started: bool,
     pub player_num: Option<usize>,
     pub number_of_player: usize,
     pub ready: bool,
     pub decider: Option<RealDecisionMaker>,
     pub sender: mpsc::Sender<OwnedMessage>,
+}
+impl GameCon for Connection {
+    fn tx_send(&self, msg: OwnedMessage) {
+        self.sender
+            .clone()
+            .send(msg)
+            .wait()
+            .unwrap();
+    }
+}
+impl fmt::Debug for Connection {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,
+               "Connection {{ table: {:?}, game_started: {},name:{},number_of_player:{},ready:{},player_num:{:?} }}",
+               self.table,
+               self.game_started,
+               self.name,
+               self.number_of_player,
+               self.ready,
+               self.player_num)
+    }
 }
 impl Connection {
     pub fn new(sender: mpsc::Sender<OwnedMessage>, addr: String) -> Connection {

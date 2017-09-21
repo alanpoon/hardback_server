@@ -29,8 +29,10 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
             // accept the request to be a ws connection
             let (ch_sender, ch_receiver) = mpsc::channel(2);
              let game_rx_c=game_rx.clone();
+             let game_rx_c2 = game_rx.clone();
              let f =format!("{}",addr);
                let addrz =addr.clone();
+               let addrz2=addr.clone();
               game_rx.clone().send(GameRxType::Sender(f,ch_sender)).unwrap();
             let f = upgrade
                 .accept()
@@ -66,7 +68,11 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
                 });
 
 	          handle.spawn(f.map_err(move |e| println!("{}: '{:?}'", addr, e))
-	                       .map(move |_| println!("{} closed.", addr)));
+	                       .map(move |_| {
+                                  let j = format!("{}",addrz2);
+                                  game_rx_c2.clone().send(GameRxType::Close(j)).unwrap();
+                            println!("{} closed.", addr);
+                           }));
                            
          Ok(())
         });

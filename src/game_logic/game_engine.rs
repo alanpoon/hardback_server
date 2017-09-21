@@ -2,10 +2,8 @@ use std::sync::mpsc;
 use server_lib::codec::*;
 use server_lib::cards;
 use websocket::message::OwnedMessage;
-use futures::{Future, Sink};
 use game_logic::board::BoardStruct;
 use game_logic::wordapi;
-use game::Connection;
 use rand::Rng;
 use rand;
 use std;
@@ -20,14 +18,18 @@ pub enum GameState {
 pub enum Action {
     UseInk(usize),
 }
-
-pub struct GameEngine {
+pub trait GameCon {
+    fn tx_send(&self, OwnedMessage);
+}
+pub struct GameEngine<con_T: GameCon> {
     players: Vec<Player>,
-    connections: Vec<Connection>,
+    connections: Vec<con_T>,
     gamestates: Vec<GameState>,
 }
-impl GameEngine {
-    pub fn new(players: Vec<Player>, connections: Vec<Connection>) -> Self {
+impl<con_T> GameEngine<con_T>
+    where con_T: GameCon
+{
+    pub fn new(players: Vec<Player>, connections: Vec<con_T>) -> Self {
         let mut gamestates_v = vec![];
         for _ in &players {
             gamestates_v.push(GameState::DrawCard);
@@ -60,7 +62,8 @@ impl GameEngine {
                 //((x,y), z)
                 match game_state {
                     &mut &mut GameState::DrawCard => {
-                        for _ in 0usize..5 - _p.hand.len() {
+                        println!("_p.hand.len(){}", _p.hand.len());
+                        for _ in 0usize..(5 - _p.hand.len()) {
                             if let Some(n) = _p.draft.pop() {
                                 _p.hand.push(n);
                             } else {
@@ -85,8 +88,8 @@ impl GameEngine {
                 match input_request {
                     Some((player_id, header, option_vec)) => {
                         // request Input
-                        if let Some(&Connection { ref sender, .. }) =
-                            self.connections.get(player_id) {
+                        if let Some::<&con_T>(ref con) = self.connections.get(player_id) {
+
                             let mut temp_vec: Vec<String> = vec![];
                             let mut temp_wait_for_input: Vec<Box<Fn(&mut Player,&mut Vec<usize>)>> = vec![];
                             for (sz, sb) in option_vec {
@@ -97,10 +100,8 @@ impl GameEngine {
                             let g = json!({
                                               "request": (header, temp_vec)
                                           });
-                            sender.clone()
-                                .send(OwnedMessage::Text(g.to_string()))
-                                .wait()
-                                .unwrap();
+                            con.tx_send(OwnedMessage::Text(g.to_string()));
+
                         }
                     }
                     None => {
@@ -112,11 +113,7 @@ impl GameEngine {
                             let g = json!({
                                               "boardstate": k
                                           });
-                            con.sender
-                                .clone()
-                                .send(OwnedMessage::Text(g.to_string()))
-                                .wait()
-                                .unwrap();
+                            con.tx_send(OwnedMessage::Text(g.to_string()));
                         }
                     }
                 }
@@ -168,11 +165,7 @@ impl GameEngine {
                                     let g = json!({
                                                       "boardstate": k
                                                   });
-                                    con.sender
-                                        .clone()
-                                        .send(OwnedMessage::Text(g.to_string()))
-                                        .wait()
-                                        .unwrap();
+                                    con.tx_send(OwnedMessage::Text(g.to_string()));
 
                                 }
                             } else if let &Some(ref z) = arranged {
@@ -488,12 +481,13 @@ pub fn buy_card_from(position_index: usize,
 
                             Some(Ok((player_id,
                                      j,
-                                     vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
-                                          Box::new(move |ref mut p, ref mut rmcards| {
-                                                       p.discard.push(rmcards.remove(_c));
-                                                   })),
-                                         ("No".to_owned(),
-                                          Box::new(|ref mut p, ref mut rmcards| {}))])))
+                                     vec![("Trade in 3 ink for one coin to buy this?"
+                                               .to_owned(),
+                                           Box::new(move |ref mut p, ref mut rmcards| {
+                                                        p.discard.push(rmcards.remove(_c));
+                                                    })),
+                                          ("No".to_owned(),
+                                           Box::new(|ref mut p, ref mut rmcards| {}))])))
 
                         }
                     }
@@ -539,17 +533,16 @@ pub fn buy_card_from_lockup(position_index: usize,
                     Some(Ok((player_id,
                              j,
                              vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
-                                          Box::new(move |ref mut p,_| {
-                                              let coin_left = p.coin;
-                                          let remainder = cost-coin_left;
-                                                         p.coin = 0;
-                                                         p.ink-=remainder*3;
-                                                        p.discard.push(card_index);
-                                                        p.lockup.remove(position_index);
-                                                      
-                                                   })),
-                                         ("No".to_owned(),
-                                          Box::new(|ref mut p,  _| {}))])))
+                                   Box::new(move |ref mut p, _| {
+                        let coin_left = p.coin;
+                        let remainder = cost - coin_left;
+                        p.coin = 0;
+                        p.ink -= remainder * 3;
+                        p.discard.push(card_index);
+                        p.lockup.remove(position_index);
+
+                    })),
+                                  ("No".to_owned(), Box::new(|ref mut p, _| {}))])))
 
                 }
             }

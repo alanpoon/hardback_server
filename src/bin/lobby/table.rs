@@ -1,7 +1,7 @@
 use game::Connection;
 use std::sync::mpsc;
 use server_lib::codec::*;
-use game_logic::GameEngine;
+use logic_lib::game_logic::GameEngine;
 use std;
 
 pub struct Table {
@@ -26,6 +26,7 @@ impl Table {
             player_vec.push(p);
         }
         let connections = (*self).players.clone();
+        println!("t.start_game");
         std::thread::spawn(|| { GameEngine::new(player_vec, connections).run(rx); });
     }
 }

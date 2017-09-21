@@ -5,14 +5,13 @@ use game::Connection;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
-use game_logic::board::BoardStruct;
 use server_lib::codec::*;
 use server_lib::cards;
 use itertools::Itertools;
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
-    pub table_index: i32,
+    pub table_index: usize,
 }
 impl Lobby {
     pub fn new() -> Self {
@@ -22,15 +21,35 @@ impl Lobby {
         }
     }
     pub fn make_table(&mut self, player: Connection) {
-        let table_n = self.table_index.clone();
+        let table_n = self.table_index;
         if let Some(mut c) = self.connections.get_mut(&player.addr) {
             c.table = Some(table_n);
             c.player_num = Some(0);
         }
-        self.table_index += 1;
+        let mut temp_tables = vec![];
+        for (key, mut group) in &(self.connections.clone()).into_iter().group_by(|elt| {
+                                                                                     (*elt).1.table
+                                                                                 }) {
+            if let (Some(t_i), false) =
+                (key,
+                 group.nth(0)
+                     .unwrap()
+                     .1
+                     .game_started) {
+                temp_tables.push(t_i);
+            }
+        }
+        for _i in 0..self.table_index {
+            if !temp_tables.contains(&_i) {
+                self.table_index = _i;
+            } else {
+                self.table_index += 1;
+            }
+        }
+
         self.broadcast_tableinfo();
     }
-    pub fn remove_table(&mut self, table_num: i32) {
+    pub fn remove_table(&mut self, table_num: usize) {
         self.connections
             .iter_mut()
             .filter(|&(_, ref con)| con.table == Some(table_num))
@@ -42,14 +61,15 @@ impl Lobby {
 
         self.broadcast_tableinfo();
     }
-    pub fn remove_connection(&mut self, player: Connection) {
-        self.connections.remove(&player.addr);
+    pub fn remove_connection(&mut self, addr: String) {
+        self.connections.remove(&addr);
         self.broadcast_tableinfo();
     }
     pub fn add_connection(&mut self, player: Connection) {
         self.connections.insert(player.addr.clone(), player);
     }
     pub fn broadcast_tableinfo(&self) {
+        println!("{:?}", self.connections.clone());
         let mut table_infos: Vec<TableInfo> = vec![];
         for (key, mut group) in &(self.connections.clone()).into_iter().group_by(|elt| {
                                                                                      (*elt).1.table
@@ -58,12 +78,15 @@ impl Lobby {
 
             let mut number_of_player = 3;
             let mut game_started = false;
-            if let Some(z) = group.nth(0) {
-                number_of_player = z.1.number_of_player;
-                game_started = z.1.game_started;
+            let mut player_vec = vec![];
+
+            for _g in group {
+                number_of_player = _g.1.number_of_player;
+                game_started = _g.1.game_started;
+                player_vec.push(_g.1.name.clone());
             }
             if let (Some(table_num), false) = (key, game_started) {
-                let t = TableInfo::new(group.map(|x| x.1.name).collect(), number_of_player);
+                let t = TableInfo::new(player_vec, number_of_player);
                 table_infos.push(t);
             }
 
@@ -75,6 +98,9 @@ impl Lobby {
             .map(|(_, con)| {
                 let g = json!({
                             "tables": table_infos,
+                            "type":"lobby",
+                            "tablenumber":con.table,
+                            "sender":con.name,
                             });
                 con.sender
                     .clone()
@@ -87,7 +113,7 @@ impl Lobby {
     pub fn from_json(&mut self,
                      addr: String,
                      msg: OwnedMessage,
-                     tables: &mut HashMap<i32, Table>) {
+                     tables: &mut HashMap<usize, Table>) {
 
         if let OwnedMessage::Text(z) = msg {
             match ServerReceivedMsg::deserialize_receive(&z) {
@@ -116,6 +142,7 @@ impl Lobby {
                         }
                         if _ready {
                             if let Some(table_n) = tl {
+                                println!("tl");
                                 let mut vec_z = vec![];
                                 let mut game_can_be_started = false;
                                 if self.connections
