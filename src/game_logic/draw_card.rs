@@ -86,7 +86,8 @@ pub fn player_starting<T: Board>(_p: &mut Player,
 pub fn player_starting<T: Board>(_p: &mut Player,
                                  cardmeta: &[cards::ListCard<T>; 180],
                                  owned_deck: &mut Vec<usize>) {
-    _p.hand = vec![145, 152, 158, 172, 159];
+
+    _p.hand = vec![147, 154, 160, 174, 161];
     _p.draft = vec![141, 148, 150, 177, 70];
     owned_deck.extend(_p.hand.clone());
     owned_deck.extend(_p.draft.clone());

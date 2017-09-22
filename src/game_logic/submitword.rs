@@ -7,7 +7,7 @@ pub fn submit(){
           if let Some(true) = submit_word {
                                 let mut word = "".to_owned();
                                 let mut valid_card = vec![];
-                                for it in _p.arranged.iter().zip(_p.wild.iter()) {
+                                for it in _p.arranged.iter() {
                                     let (&_a, _w) = it;
                                     if let &Some(ref __w) = _w {
                                         word.push_str(&__w);

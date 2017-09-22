@@ -1,19 +1,14 @@
 use std::sync::mpsc;
 use server_lib::codec::*;
 use server_lib::cards;
+use server_lib::cards::*;
 use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
 use game_logic::{self, wordapi};
 use rand::Rng;
 use rand;
 use std;
-#[derive(Clone)]
-pub enum GameState {
-    SubmitWord,
-    Buy,
-    DrawCard,
-    Spell,
-}
+
 
 pub trait GameCon {
     fn tx_send(&self, OwnedMessage);
@@ -22,16 +17,24 @@ pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
     connections: Vec<T>,
     gamestates: Vec<GameState>,
+    turn_index: usize,
 }
 impl<T> GameEngine<T>
     where T: GameCon
 {
     pub fn new(players: Vec<Player>, connections: Vec<T>) -> Self {
         let mut gamestates_v = vec![];
+        let mut c = 0;
         for _ in &players {
-            gamestates_v.push(GameState::Spell);
+            if c == 0 {
+                gamestates_v.push(GameState::TurnToSubmit);
+            } else {
+                gamestates_v.push(GameState::Spell);
+            }
+            c += 1;
         }
         GameEngine {
+            turn_index: 0,
             players: players,
             connections: connections,
             gamestates: gamestates_v,
@@ -39,7 +42,6 @@ impl<T> GameEngine<T>
     }
     pub fn run(&mut self, rx: mpsc::Receiver<(usize, GameCommand)>) {
         let mut last_update = std::time::Instant::now();
-        let turn_index = 0;
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         println!("ccc");
         let mut remaining_cards = give_outstarting(&mut self.players, &cardmeta);
@@ -55,7 +57,7 @@ impl<T> GameEngine<T>
             if duration_since_last_update < sixteen_ms {
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
-            if let Ok((player_id, game_command)) = rx.try_recv() {
+            while let Ok((player_id, game_command)) = rx.try_recv() {
                 let mut need_update = false;
                 let mut temp_board = BoardStruct::new(self.players.clone(),
                                                       self.gamestates.clone(),
@@ -70,7 +72,6 @@ impl<T> GameEngine<T>
                 if let (&GameCommand { use_ink,
                                        use_remover,
                                        ref arranged,
-                                       ref wild,
                                        submit_word,
                                        buyoffer,
                                        buylockup,
@@ -95,7 +96,15 @@ impl<T> GameEngine<T>
                                                                        use_remover);
                             game_logic::spell::arrange(_p, arranged);
                         }
-                        &mut &mut GameState::SubmitWord => {
+                        &mut &mut GameState::TurnToSubmit => {
+                            game_logic::spell::use_ink_or_remover::<T>(_p,
+                                                                       con,
+                                                                       use_ink,
+                                                                       use_remover);
+                            game_logic::spell::arrange(_p, arranged);
+                            game_logic::spell::turn_to_submit(_p, &cardmeta, submit_word);
+                        }
+                        &mut &mut GameState::SubmitWordWaitForReply => {
                             //uses tempboard
 
                         }
@@ -144,7 +153,7 @@ impl<T> GameEngine<T>
                     wait_for_break = true;
                 }
             }
-            if let Ok(input_request) = wait_rx.recv() {
+            while let Ok(input_request) = wait_rx.recv() {
                 println!("recev input_request");
                 match input_request {
                     Some((player_id, header, option_vec)) => {
@@ -170,7 +179,10 @@ impl<T> GameEngine<T>
                         for it in self.connections.iter() {
                             let ref con = it;
                             let k: Result<BoardCodec, String> =
-                                Ok(BoardCodec { players: self.players.clone() });
+                                Ok(BoardCodec {
+                                       players: self.players.clone(),
+                                       gamestates: self.gamestates.clone(),
+                                   });
                             let g = json!({
                                               "boardstate": k
                                           });

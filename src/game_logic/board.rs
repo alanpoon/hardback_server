@@ -1,7 +1,6 @@
-use server_lib::codec::Player;
+use server_lib::codec::{GameState, Player};
 use server_lib::cards::*;
 use server_lib::cards;
-use game_logic::game_engine::GameState;
 use std::sync::mpsc;
 
 pub struct BoardStruct {
@@ -83,8 +82,8 @@ impl BoardStruct {
 }
 pub fn get_valid_cards(_p: &mut Player) -> Vec<Option<usize>> {
     let mut valid_card = vec![];
-    for it in _p.arranged.iter().zip(_p.wild.iter()) {
-        let (&_a, _w) = it;
+    for it in _p.arranged.iter() {
+        let &(_a, ref _w) = it;
         if let &Some(_) = _w {
             valid_card.push(None);
         } else {

@@ -32,6 +32,13 @@ impl Board for BoardStruct {
     fn keep_or_discard_three(&mut self, player_id: usize, card_id: usize) {}
 }
 #[test]
+fn check_cardmeta() {
+    let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
+    for _k in cardmeta.iter().enumerate() {
+        assert_eq!(_k.0, _k.1.id);
+    }
+}
+#[test]
 fn player_starting() {
     let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
     let mut remaining_deck = vec![];
@@ -55,24 +62,19 @@ fn arrange_card() {
 
     std::thread::spawn(|| { GameEngine::new(vec![p], connections).run(rx); });
     let mut k = GameCommand::new();
-    k.arranged = Some(vec![145, 152, 158, 172, 159]);
-    k.killserver = Some(true);
+    k.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
+    //  k.killserver = Some(true);
     tx.send((0, k)).unwrap();
-    /*
-    while let Ok(OwnedMessage::Text(st)) = con_rx.recv() {
-        println!("zz {:?}",st.clone());
-        let h = ClientReceivedMsg::deserialize_receive(&st).unwrap();
-
-    }
-    */
+    let mut k = GameCommand::new();
+    let mut k1 = GameCommand::new(); //submit word
+    k1.submit_word = Some(true);
+    tx.send((0, k1)).unwrap();
     let mut iter_o = con_rx.iter().map(|x| {
         let mut y = None;
         println!("0");
         if let OwnedMessage::Text(z) = x {
-            println!("1");
             if let Ok(ClientReceivedMsg { boardstate, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
-                println!("2 {:?}", boardstate);
                 y = Some(boardstate.unwrap().unwrap().unwrap());
             }
         }
@@ -80,9 +82,17 @@ fn arrange_card() {
     });
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
-    p.arranged = vec![145, 152, 158, 172, 159];
-    p.hand = vec![145, 152, 158, 172, 159];
+    p.arranged = vec![(147, None), (154, None), (160, None), (174, None), (161, None)];
+    p.hand = vec![147, 154, 160, 174, 161];
     p.draft = vec![141, 148, 150, 177, 70];
-    assert_eq!(iter_o.next(), Some(Some(BoardCodec { players: vec![p] })));
+    //arranged
+    assert_eq!(iter_o.next(),
+               Some(Some(BoardCodec {
+                             players: vec![p.clone()],
+                             gamestates: vec![GameState::TurnToSubmit],
+                         })));
 
+    //   assert_eq!(iter_o.next(), Some(Some(BoardCodec { players: vec![p],gamestates:vec![GameState::SubmitWordWaitForReply] })));
+    p.vp = 3;
+    p.coin = 2;
 }
