@@ -1,7 +1,6 @@
 use server_lib::codec::*;
 use server_lib::cards;
 use websocket::message::OwnedMessage;
-use game_logic::board::BoardStruct;
 use game_logic::game_engine::GameCon;
 pub fn use_ink_or_remover<T: GameCon>(_p: &mut Player,
                                       con: &T,

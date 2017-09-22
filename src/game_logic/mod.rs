@@ -4,3 +4,4 @@ pub mod wordapi;
 pub mod board;
 pub mod purchase;
 pub mod spell;
+pub mod draw_card;

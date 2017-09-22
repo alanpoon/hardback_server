@@ -29,7 +29,7 @@ impl<T> GameEngine<T>
     pub fn new(players: Vec<Player>, connections: Vec<T>) -> Self {
         let mut gamestates_v = vec![];
         for _ in &players {
-            gamestates_v.push(GameState::DrawCard);
+            gamestates_v.push(GameState::Spell);
         }
         GameEngine {
             players: players,
@@ -55,7 +55,6 @@ impl<T> GameEngine<T>
             if duration_since_last_update < sixteen_ms {
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
-            let mut temp_players = vec![];
             if let Ok((player_id, game_command)) = rx.try_recv() {
                 let mut need_update = false;
                 let mut temp_board = BoardStruct::new(self.players.clone(),
@@ -171,7 +170,7 @@ impl<T> GameEngine<T>
                         for it in self.connections.iter() {
                             let ref con = it;
                             let k: Result<BoardCodec, String> =
-                                Ok(BoardCodec { players: temp_players.clone() });
+                                Ok(BoardCodec { players: self.players.clone() });
                             let g = json!({
                                               "boardstate": k
                                           });
@@ -190,9 +189,9 @@ impl<T> GameEngine<T>
 pub fn give_outstarting(players: &mut Vec<Player>,
                         cardmeta: &[cards::ListCard<BoardStruct>; 180])
                         -> Vec<usize> {
-    let mut remaining_deck = vec![];
-    for _p in players {
-        _p.starting::<BoardStruct>(cardmeta, &mut remaining_deck);
+    let mut owned_deck = vec![];
+    for mut _p in players {
+        game_logic::draw_card::player_starting(_p, cardmeta, &mut owned_deck);
     }
-    remaining_deck
+    owned_deck
 }
