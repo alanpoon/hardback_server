@@ -16,7 +16,7 @@ itertools = "0.6.3"
 
 [[bin]]
 name = "hardback_server"
-path = "src/bin/main.rs"
+path = "src/main.rs"
 
 [lib]
 name = "hardback_server"
