@@ -33,7 +33,8 @@ pub fn arrange(_p: &mut Player, arranged: &Option<Vec<(usize, Option<String>)>>)
 
 pub fn turn_to_submit<T: Board>(_p: &mut Player,
                                 cardmeta: &[cards::ListCard<T>; 180],
-                                submit_word: Option<bool>) {
+                                submit_word: Option<bool>)
+                                -> bool {
     println!("turn to submit{:?}", _p.arranged.clone());
     if let Some(true) = submit_word {
         let letter_iter = _p.arranged.iter().map(|&(x, ref some_wild)| if let &Some(ref _wild) =
@@ -44,10 +45,6 @@ pub fn turn_to_submit<T: Board>(_p: &mut Player,
                                                  });
         let k = letter_iter.collect::<String>();
         println!("k {:?}", k);
-        if wordapi::there_such_word(&k) {
-            println!("there is such word");
-        } else {
-            println!("there is no such word");
-        }
+        wordapi::there_such_word(&k)
     }
 }

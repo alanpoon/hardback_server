@@ -2,6 +2,7 @@ use game_logic::game_engine::*;
 use server_lib::codec::*;
 use server_lib::cards;
 use server_lib::cards::*;
+use game_logic::board::BoardStruct;
 use game_logic;
 use std;
 use std::sync::mpsc;
@@ -20,17 +21,7 @@ impl GameCon for Connection {
             .unwrap();
     }
 }
-pub struct BoardStruct {}
-impl Board for BoardStruct {
-    fn two_cent_per_adv(&mut self, player_id: usize, card_id: usize) {}
-    fn minus_other_ink(&mut self, player_id: usize, card_id: usize) {}
-    fn lockup_offer(&mut self, player_id: usize, card_id: usize) {}
-    fn uncover_adjacent(&mut self, player_id: usize, card_id: usize) {}
-    fn double_adjacent(&mut self, player_id: usize, card_id: usize) {}
-    fn trash_other(&mut self, player_id: usize, card_id: usize) {}
-    fn one_vp_per_wild(&mut self, player_id: usize, card_id: usize) {}
-    fn keep_or_discard_three(&mut self, player_id: usize, card_id: usize) {}
-}
+
 #[test]
 fn check_cardmeta() {
     let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
@@ -66,9 +57,7 @@ fn arrange_card() {
     //  k.killserver = Some(true);
     tx.send((0, k)).unwrap();
     let mut k = GameCommand::new();
-    let mut k1 = GameCommand::new(); //submit word
-    k1.submit_word = Some(true);
-    tx.send((0, k1)).unwrap();
+
     let mut iter_o = con_rx.iter().map(|x| {
         let mut y = None;
         println!("0");
@@ -82,17 +71,21 @@ fn arrange_card() {
     });
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
+    //Test arranged
     p.arranged = vec![(147, None), (154, None), (160, None), (174, None), (161, None)];
     p.hand = vec![147, 154, 160, 174, 161];
     p.draft = vec![141, 148, 150, 177, 70];
-    //arranged
     assert_eq!(iter_o.next(),
                Some(Some(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::TurnToSubmit],
                          })));
-
-    //   assert_eq!(iter_o.next(), Some(Some(BoardCodec { players: vec![p],gamestates:vec![GameState::SubmitWordWaitForReply] })));
+    //Test submit word
+    let mut k1 = GameCommand::new();
+    k1.submit_word = Some(true);
+    tx.send((0, k1)).unwrap();
     p.vp = 3;
     p.coin = 2;
+    assert_eq!(iter_o.next(), Some(Some(BoardCodec { players: vec![p],gamestates:vec![GameState::Buy] })));
+    
 }

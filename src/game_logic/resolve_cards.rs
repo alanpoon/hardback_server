@@ -3,51 +3,46 @@ use server_lib::codec::*;
 use server_lib::cards;
 use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
-pub fn submit(){
-          if let Some(true) = submit_word {
-                                let mut word = "".to_owned();
-                                let mut valid_card = vec![];
-                                for it in _p.arranged.iter() {
-                                    let (&_a, _w) = it;
-                                    if let &Some(ref __w) = _w {
-                                        word.push_str(&__w);
-                                        valid_card.push(None);
-                                    } else {
-                                        let letter = cardmeta[_a].letter;
-                                        word.push_str(&letter);
-                                        valid_card.push(Some(_a));
-                                    }
-                                }
-                                if wordapi::there_such_word(&word) {
-                                    let mut adv_vec = vec![];
-                                    let mut hor_vec = vec![];
-                                    let mut mys_vec = vec![];
-                                    let mut rom_vec = vec![];
-                                    for t in &valid_card {
-                                        if let &Some(_c) = t {
-                                            track_genre(_c.clone(),
-                                                        &cardmeta,
-                                                        &mut adv_vec,
-                                                        &mut hor_vec,
-                                                        &mut mys_vec,
-                                                        &mut rom_vec);
-                                            resolve_giveable(_c.clone(),
-                                                             &cardmeta,
-                                                             player_id,
-                                                             &mut temp_board,
-                                                             wait_tx.clone());
-                                        }
-                                    }
-                                    resolve_genre_giveable(player_id,
-                                                           &mut temp_board,
-                                                           wait_tx.clone(),
-                                                           &cardmeta,
-                                                           vec![&adv_vec, &hor_vec, &mys_vec,
-                                                                &rom_vec]);
+pub fn resolve_cards(_p: &mut Player,
+                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     temp_board: &mut BoardStruct,
+                     wait_tx: mpsc::Sender<Option<(usize,
+                                                   String,
+                                                   Vec<(String,
+                                                        Box<Fn(&mut Player,
+                                                               &mut Vec<usize>)>)>)>>) {
+    let valid_card = _p.arranged
+        .iter()
+        .filter(|x| if let Some(_) = x.1 { false } else { true })
+        .map(|x| x.0)
+        .collect();
+    let mut adv_vec = vec![];
+    let mut hor_vec = vec![];
+    let mut mys_vec = vec![];
+    let mut rom_vec = vec![];
+    for t in &valid_card {
+        if let &Some(_c) = t {
+            track_genre(_c.clone(),
+                        &cardmeta,
+                        &mut adv_vec,
+                        &mut hor_vec,
+                        &mut mys_vec,
+                        &mut rom_vec);
+            resolve_giveable(_c.clone(),
+                             &cardmeta,
+                             player_id,
+                             &mut temp_board,
+                             wait_tx.clone());
+        }
+    }
+    resolve_genre_giveable(player_id,
+                           &mut temp_board,
+                           wait_tx.clone(),
+                           &cardmeta,
+                           vec![&adv_vec, &hor_vec, &mys_vec, &rom_vec]);
 
 
-                                }
-                            }
+
 
 }
 pub fn track_genre(card_index: usize,

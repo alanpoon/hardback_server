@@ -102,7 +102,9 @@ impl<T> GameEngine<T>
                                                                        use_ink,
                                                                        use_remover);
                             game_logic::spell::arrange(_p, arranged);
-                            game_logic::spell::turn_to_submit(_p, &cardmeta, submit_word);
+                          if  game_logic::spell::turn_to_submit(_p, &cardmeta, submit_word){
+                              game_logic::resolve_cards::resolve_cards(_p,&cardmeta,)
+                          }
                         }
                         &mut &mut GameState::SubmitWordWaitForReply => {
                             //uses tempboard
