@@ -9,9 +9,12 @@ use rand::Rng;
 use rand;
 use std;
 
-
 pub trait GameCon {
     fn tx_send(&self, OwnedMessage);
+}
+pub trait TheDraft {
+    fn player_starting(&self, &mut Player, &[cards::ListCard<BoardStruct>; 180], &mut Vec<usize>);
+    fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
 }
 pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
@@ -40,11 +43,12 @@ impl<T> GameEngine<T>
             gamestates: gamestates_v,
         }
     }
-    pub fn run(&mut self, rx: mpsc::Receiver<(usize, GameCommand)>) {
+    pub fn run<D: TheDraft>(&mut self, rx: mpsc::Receiver<(usize, GameCommand)>, debug_struct: D) {
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         println!("ccc");
-        let mut remaining_cards = give_outstarting(&mut self.players, &cardmeta);
+        let mut owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
+        let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let (wait_tx, wait_rx) = mpsc::channel();
         let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
             [None, None, None, None];
@@ -57,12 +61,16 @@ impl<T> GameEngine<T>
             if duration_since_last_update < sixteen_ms {
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
+            game_logic::draw_card::redraw_cards_to_hand_size(&mut self.players,
+                                                             &mut self.gamestates);
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 println!("receive from client");
                 let mut need_update = false;
+                let mut offer_row =
+                    (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
                 let mut temp_board = BoardStruct::new(self.players.clone(),
                                                       self.gamestates.clone(),
-                                                      remaining_cards.clone(),
+                                                      offer_row,
                                                       wait_tx.clone());
                 let mut type_is_reply = false;
                 let &GameCommand { reply, killserver, .. } = &game_command;
@@ -113,7 +121,6 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_tx.clone());
-                                **_gamestate = GameState::Buy;
                             }
                         }
                         &mut &mut GameState::SubmitWordWaitForReply => {
@@ -129,6 +136,7 @@ impl<T> GameEngine<T>
                                                                     _board,
                                                                     player_id,
                                                                     wait_tx.clone());
+
                             }
                             if let Some(z) = buylockup {
                                 //z:index of player.lockup
@@ -147,7 +155,16 @@ impl<T> GameEngine<T>
                     let (_tb_p, mut _p) = it;
                     *_p = _tb_p.clone();
                 }
-
+                for mut it in temp_board.gamestates.iter().zip(self.gamestates.iter_mut()) {
+                    let (_tb_p, mut _p) = it;
+                    *_p = _tb_p.clone();
+                }
+                println!("emp_board.offer_row.len()){}", temp_board.offer_row.len());
+                for _missingcard in 0..(7 - temp_board.offer_row.len()) {
+                    if let Some(x) = remaining_cards.pop() {
+                        temp_board.offer_row.push(x);
+                    }
+                }
                 if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
@@ -190,11 +207,16 @@ impl<T> GameEngine<T>
                     None => {
                         //just update boardstae
                         for it in self.connections.iter() {
+                            let offer_row = (0..7)
+                                .zip(remaining_cards.iter())
+                                .map(|(e, c)| c.clone())
+                                .collect();
                             let ref con = it;
                             let k: Result<BoardCodec, String> =
                                 Ok(BoardCodec {
                                        players: self.players.clone(),
                                        gamestates: self.gamestates.clone(),
+                                       offer_row: offer_row,
                                    });
                             let g = json!({
                                               "boardstate": k
@@ -212,12 +234,13 @@ impl<T> GameEngine<T>
         }
     }
 }
-pub fn give_outstarting(players: &mut Vec<Player>,
-                        cardmeta: &[cards::ListCard<BoardStruct>; 180])
-                        -> Vec<usize> {
+pub fn give_outstarting<D: TheDraft>(players: &mut Vec<Player>,
+                                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                                     debug_struct: &D)
+                                     -> Vec<usize> {
     let mut owned_deck = vec![];
     for mut _p in players {
-        game_logic::draw_card::player_starting(_p, cardmeta, &mut owned_deck);
+        debug_struct.player_starting(_p, cardmeta, &mut owned_deck);
     }
     owned_deck
 }

@@ -3,7 +3,7 @@ use server_lib::codec::*;
 use server_lib::cards;
 use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
-
+use game_logic::resolve_cards;
 pub fn resolve_purchase_giveables(card_index: usize,
                                   cardmeta: &[cards::ListCard<BoardStruct>; 180],
                                   _p: &mut Player) {
@@ -23,18 +23,25 @@ pub fn buy_card_from(position_index: usize,
                                                    Vec<(String,
                                                         Box<Fn(&mut Player,
                                                                &mut Vec<usize>)>)>)>>) {
-    if let Some(_p) = _board.players.get_mut(player_id) {
+    println!("purchasing!");
+    if let (Some(_p), Some(_gamestate)) =
+        (_board.players.get_mut(player_id), _board.gamestates.get_mut(player_id)) {
+        println!("player coin {}", _p.coin.clone());
         let res: Option<Result<(usize,
                                 String,
                                 Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>),
                                String>> = match from.get(position_index) {
+
             Some(&_c) => {
+                println!("goo");
                 match cardmeta[_c].cost as f64 <= _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
                     true => {
+                        println!("ooo");
                         match cardmeta[_c].cost <= _p.coin {
                             true => {
                                 _p.coin -= cardmeta[_c].cost;
-                                _p.discard.push(from.remove(_c));
+                                _p.discard.push(from.remove(position_index));
+                                resolve_cards::resolve_purchase(_c, _p, &cardmeta, _gamestate);
                                 None
                             }
                             false => {
@@ -58,6 +65,7 @@ pub fn buy_card_from(position_index: usize,
             }
             None => Some(Err("Cannot find the card selected".to_owned())),
         };
+
         if let Some(Ok(a)) = res {
             wait_tx.send(Some(a)).unwrap();
         }

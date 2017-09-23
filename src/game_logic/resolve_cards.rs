@@ -18,6 +18,9 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
             .map(|x| if let None = x.1 { Some(x.0) } else { None })
             .collect::<Vec<Option<usize>>>();
     }
+    if let Some(_gamestates) = _board.gamestates.get_mut(player_id) {
+        *_gamestates = GameState::Buy;
+    }
     let mut adv_vec = vec![];
     let mut hor_vec = vec![];
     let mut mys_vec = vec![];
@@ -207,4 +210,16 @@ pub fn giveable_match(z: &mut Player,
                 .unwrap();
         }
     }
+}
+pub fn resolve_purchase(card_index: usize,
+                        _p: &mut Player,
+                        cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                        _gamestate: &mut GameState) {
+    match cardmeta[card_index].purchase_giveables {
+        cards::GIVEABLE::COIN(_x) => {
+            _p.coin += _x;
+        }
+        _ => {}
+    }
+    *_gamestate = GameState::DrawCard;
 }

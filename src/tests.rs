@@ -7,6 +7,8 @@ use game_logic;
 use std;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
+use testdraft::{TheNormalDraftStruct, TheAdventureDraftStruct, TheMysteryDraftStruct,
+                TheHorrorDraftStruct};
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -21,7 +23,6 @@ impl GameCon for Connection {
             .unwrap();
     }
 }
-
 #[test]
 fn check_cardmeta() {
     let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
@@ -34,7 +35,8 @@ fn player_starting() {
     let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
     let mut remaining_deck = vec![];
     let mut _p = Player::new("defaultname".to_owned());
-    game_logic::draw_card::player_starting::<BoardStruct>(&mut _p, &cardmeta, &mut remaining_deck);
+    let _normal_draft = TheNormalDraftStruct {};
+    _normal_draft.player_starting(&mut _p, &cardmeta, &mut remaining_deck);
     assert_eq!(_p.draft.len(), 5);
     assert_eq!(_p.hand.len(), 5);
 }
@@ -49,21 +51,32 @@ fn arrange_card() {
                                player_num: Some(0),
                                sender: con_tx,
                            }];
-    std::thread::spawn(|| { GameEngine::new(vec![p], connections).run(rx); });
+    std::thread::spawn(|| {
+                           GameEngine::new(vec![p], connections).run(rx, TheNormalDraftStruct {});
+                       });
     std::thread::spawn(move || {
-        let five_seconds = std::time::Duration::new(3, 0);
+        let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
-        let mut k = GameCommand::new();
-        k.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
-        //  k.killserver = Some(true);
-        tx.send((0, k)).unwrap();
-        std::thread::sleep(five_seconds);
-        //assert 2
-        println!("k1");
         let mut k1 = GameCommand::new();
-        k1.submit_word = Some(true);
+        k1.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
+        //  k.killserver = Some(true);
         tx.send((0, k1)).unwrap();
-        std::thread::sleep(five_seconds);
+        std::thread::sleep(three_seconds);
+        //assert 2
+        let mut k2 = GameCommand::new();
+        k2.submit_word = Some(true);
+        tx.send((0, k2)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 3
+        let mut k3 = GameCommand::new();
+        k3.buyoffer = Some(0);
+        tx.send((0, k3)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 4
+        let mut k4 = GameCommand::new();
+        k4.buyoffer = Some(0);
+        tx.send((0, k4)).unwrap();
+        std::thread::sleep(three_seconds);
     });
 
     let mut c = 0;
@@ -90,14 +103,24 @@ fn arrange_card() {
                Some(Some(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::TurnToSubmit],
+                             offer_row: vec![179, 178, 176, 175, 173, 172, 171],
                          })));
     //Test submit word
     p.vp = 3;
     p.coin = 2;
     assert_eq!(iter_o.next(),
                Some(Some(BoardCodec {
-                             players: vec![p],
+                             players: vec![p.clone()],
                              gamestates: vec![GameState::Buy],
+                             offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                         })));
+    p.discard = vec![179];
+    //Test buy card
+    assert_eq!(iter_o.next(),
+               Some(Some(BoardCodec {
+                             players: vec![p.clone()],
+                             gamestates: vec![GameState::DrawCard],
+                             offer_row: vec![178, 176, 175, 173, 172, 171, 170],
                          })));
 
 }
