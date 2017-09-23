@@ -7,8 +7,5 @@ extern crate rand;
 extern crate serde_json;
 pub extern crate hardback_server_lib;
 pub mod game_logic;
-#[cfg(test)]
-pub mod tests;
-#[cfg(test)]
 pub mod testdraft;
 pub use hardback_server_lib as server_lib;

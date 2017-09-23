@@ -1,14 +1,24 @@
-use game_logic::game_engine::*;
+extern crate websocket;
+extern crate futures;
+extern crate tokio_core;
+extern crate rust_wordnik;
+extern crate rand;
+#[macro_use]
+extern crate serde_json;
+pub extern crate hardback_server_lib;
+pub extern crate hardback_server;
+pub use hardback_server_lib as server_lib;
+
+use hardback_server::game_logic::game_engine::*;
 use server_lib::codec::*;
 use server_lib::cards;
 use server_lib::cards::*;
-use game_logic::board::BoardStruct;
-use game_logic;
-use std;
+use hardback_server::game_logic::board::BoardStruct;
+use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use testdraft::{TheNormalDraftStruct, TheAdventureDraftStruct, TheMysteryDraftStruct,
-                TheHorrorDraftStruct};
+use hardback_server::testdraft::TheNormalDraftStruct;
+
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -42,7 +52,7 @@ fn player_starting() {
 }
 
 #[test]
-fn arrange_card() {
+fn arrange_normal_card() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -79,10 +89,7 @@ fn arrange_card() {
         std::thread::sleep(three_seconds);
     });
 
-    let mut c = 0;
     let mut iter_o = con_rx.iter().map(|x| {
-        println!("con_rx_c {}", c);
-        c += 1;
         let mut y = None;
         if let OwnedMessage::Text(z) = x {
             if let Ok(ClientReceivedMsg { boardstate, .. }) =
