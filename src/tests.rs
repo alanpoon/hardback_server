@@ -49,18 +49,28 @@ fn arrange_card() {
                                player_num: Some(0),
                                sender: con_tx,
                            }];
-    println!("aaa");
-
     std::thread::spawn(|| { GameEngine::new(vec![p], connections).run(rx); });
-    let mut k = GameCommand::new();
-    k.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
-    //  k.killserver = Some(true);
-    tx.send((0, k)).unwrap();
-    let mut k = GameCommand::new();
+    std::thread::spawn(move || {
+        let five_seconds = std::time::Duration::new(3, 0);
+        //assert 1
+        let mut k = GameCommand::new();
+        k.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
+        //  k.killserver = Some(true);
+        tx.send((0, k)).unwrap();
+        std::thread::sleep(five_seconds);
+        //assert 2
+        println!("k1");
+        let mut k1 = GameCommand::new();
+        k1.submit_word = Some(true);
+        tx.send((0, k1)).unwrap();
+        std::thread::sleep(five_seconds);
+    });
 
+    let mut c = 0;
     let mut iter_o = con_rx.iter().map(|x| {
+        println!("con_rx_c {}", c);
+        c += 1;
         let mut y = None;
-        println!("0");
         if let OwnedMessage::Text(z) = x {
             if let Ok(ClientReceivedMsg { boardstate, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
@@ -75,15 +85,13 @@ fn arrange_card() {
     p.arranged = vec![(147, None), (154, None), (160, None), (174, None), (161, None)];
     p.hand = vec![147, 154, 160, 174, 161];
     p.draft = vec![141, 148, 150, 177, 70];
+
     assert_eq!(iter_o.next(),
                Some(Some(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::TurnToSubmit],
                          })));
     //Test submit word
-    let mut k1 = GameCommand::new();
-    k1.submit_word = Some(true);
-    tx.send((0, k1)).unwrap();
     p.vp = 3;
     p.coin = 2;
     assert_eq!(iter_o.next(),

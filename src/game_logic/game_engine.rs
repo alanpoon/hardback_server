@@ -58,6 +58,7 @@ impl<T> GameEngine<T>
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
             while let Ok((player_id, game_command)) = rx.try_recv() {
+                println!("receive from client");
                 let mut need_update = false;
                 let mut temp_board = BoardStruct::new(self.players.clone(),
                                                       self.gamestates.clone(),
@@ -112,6 +113,7 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_tx.clone());
+                                **_gamestate = GameState::Buy;
                             }
                         }
                         &mut &mut GameState::SubmitWordWaitForReply => {
@@ -141,10 +143,11 @@ impl<T> GameEngine<T>
                     }
                 }
                 //save temp_board.players to self.players
-                for mut it in temp_board.players.iter_mut().zip(self.players.iter_mut()) {
-                    let (ref mut _tb_p, ref mut _p) = it;
-                    *_p = _tb_p;
+                for mut it in temp_board.players.iter().zip(self.players.iter_mut()) {
+                    let (_tb_p, mut _p) = it;
+                    *_p = _tb_p.clone();
                 }
+
                 if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
@@ -163,7 +166,7 @@ impl<T> GameEngine<T>
                     wait_for_break = true;
                 }
             }
-            while let Ok(input_request) = wait_rx.recv() {
+            while let Ok(input_request) = wait_rx.try_recv() {
                 println!("recev input_request");
                 match input_request {
                     Some((player_id, header, option_vec)) => {
@@ -201,6 +204,7 @@ impl<T> GameEngine<T>
                     }
                 }
                 if wait_for_break {
+                    println!("closing server");
                     break 'game;
                 }
             }
