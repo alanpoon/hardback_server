@@ -76,13 +76,13 @@ impl<T> GameEngine<T>
                                        buyoffer,
                                        buylockup,
                                        .. },
-                        Some(ref mut _p),
+                        ref mut _board,
                         Some(ref con),
                         Some(ref mut _gamestate),
                         &None,
                         false) =
                     (&game_command,
-                     self.players.get_mut(player_id),
+                     &mut temp_board,
                      self.connections.get(player_id),
                      self.gamestates.get_mut(player_id),
                      &wait_for_input[player_id],
@@ -90,21 +90,29 @@ impl<T> GameEngine<T>
 
                     match _gamestate {
                         &mut &mut GameState::Spell => {
-                            game_logic::spell::use_ink_or_remover::<T>(_p,
+                            game_logic::spell::use_ink_or_remover::<T>(_board,
+                                                                       player_id,
                                                                        con,
                                                                        use_ink,
                                                                        use_remover);
-                            game_logic::spell::arrange(_p, arranged);
+                            game_logic::spell::arrange(_board, player_id, arranged);
                         }
                         &mut &mut GameState::TurnToSubmit => {
-                            game_logic::spell::use_ink_or_remover::<T>(_p,
+                            game_logic::spell::use_ink_or_remover::<T>(_board,
+                                                                       player_id,
                                                                        con,
                                                                        use_ink,
                                                                        use_remover);
-                            game_logic::spell::arrange(_p, arranged);
-                          if  game_logic::spell::turn_to_submit(_p, &cardmeta, submit_word){
-                              game_logic::resolve_cards::resolve_cards(_p,&cardmeta,)
-                          }
+                            game_logic::spell::arrange(_board, player_id, arranged);
+                            if let Some(true) = game_logic::spell::turn_to_submit(_board,
+                                                                                  player_id,
+                                                                                  &cardmeta,
+                                                                                  submit_word) {
+                                game_logic::resolve_cards::resolve_cards(_board,
+                                                                         player_id,
+                                                                         &cardmeta,
+                                                                         wait_tx.clone());
+                            }
                         }
                         &mut &mut GameState::SubmitWordWaitForReply => {
                             //uses tempboard
@@ -116,7 +124,7 @@ impl<T> GameEngine<T>
                                 game_logic::purchase::buy_card_from(z,
                                                                     &mut remaining_cards,
                                                                     &cardmeta,
-                                                                    _p,
+                                                                    _board,
                                                                     player_id,
                                                                     wait_tx.clone());
                             }
@@ -124,7 +132,7 @@ impl<T> GameEngine<T>
                                 //z:index of player.lockup
                                 game_logic::purchase::buy_card_from_lockup(z,
                                                                            &cardmeta,
-                                                                           _p,
+                                                                           _board,
                                                                            player_id,
                                                                            wait_tx.clone());
                             }

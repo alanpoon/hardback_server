@@ -3,19 +3,21 @@ use server_lib::codec::*;
 use server_lib::cards;
 use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
-pub fn resolve_cards(_p: &mut Player,
+pub fn resolve_cards(mut _board: &mut BoardStruct,
+                     player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
-                     temp_board: &mut BoardStruct,
                      wait_tx: mpsc::Sender<Option<(usize,
                                                    String,
                                                    Vec<(String,
                                                         Box<Fn(&mut Player,
                                                                &mut Vec<usize>)>)>)>>) {
-    let valid_card = _p.arranged
-        .iter()
-        .filter(|x| if let Some(_) = x.1 { false } else { true })
-        .map(|x| x.0)
-        .collect();
+    let mut valid_card = vec![];
+    if let Some(_p) = _board.players.get(player_id) {
+        valid_card = _p.arranged
+            .iter()
+            .map(|x| if let None = x.1 { Some(x.0) } else { None })
+            .collect::<Vec<Option<usize>>>();
+    }
     let mut adv_vec = vec![];
     let mut hor_vec = vec![];
     let mut mys_vec = vec![];
@@ -31,18 +33,15 @@ pub fn resolve_cards(_p: &mut Player,
             resolve_giveable(_c.clone(),
                              &cardmeta,
                              player_id,
-                             &mut temp_board,
+                             &mut _board,
                              wait_tx.clone());
         }
     }
     resolve_genre_giveable(player_id,
-                           &mut temp_board,
+                           &mut _board,
                            wait_tx.clone(),
                            &cardmeta,
                            vec![&adv_vec, &hor_vec, &mys_vec, &rom_vec]);
-
-
-
 
 }
 pub fn track_genre(card_index: usize,
@@ -70,7 +69,7 @@ pub fn track_genre(card_index: usize,
 pub fn resolve_giveable(card_index: usize,
                         cardmeta: &[cards::ListCard<BoardStruct>; 180],
                         player_id: usize,
-                        board: &mut BoardStruct,
+                        mut board: &mut BoardStruct,
                         wait_tx: mpsc::Sender<Option<(usize,
                                                       String,
                                                       Vec<(String,
@@ -86,7 +85,7 @@ pub fn resolve_giveable(card_index: usize,
 }
 
 pub fn resolve_genre_giveable(player_id: usize,
-                              board: &mut BoardStruct,
+                              mut board: &mut BoardStruct,
                               wait_tx: mpsc::Sender<Option<(usize,
                                                             String,
                                                             Vec<(String,

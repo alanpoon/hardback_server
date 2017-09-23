@@ -4,39 +4,48 @@ use server_lib::cards::Board;
 use websocket::message::OwnedMessage;
 use game_logic::game_engine::GameCon;
 use game_logic::wordapi;
-pub fn use_ink_or_remover<T: GameCon>(_p: &mut Player,
+use game_logic::board::BoardStruct;
+pub fn use_ink_or_remover<T: GameCon>(_board: &mut BoardStruct,
+                                      player_id: usize,
                                       con: &T,
                                       use_ink: Option<usize>,
                                       use_remover: Option<usize>) {
-    if let Some(z) = use_ink {
-        _p.inked_cards.push(z);
-    } else if let Some(z) = use_remover {
-        if _p.inked_cards.contains(&z) {
-            _p.hand.push(_p.inked_cards.remove(z));
-        } else {
-            let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
-                                                        .to_owned());
-            let g = json!({
-                              "boardstate": k
-                          });
-            con.tx_send(OwnedMessage::Text(g.to_string()));
+    if let Some(_p) = _board.players.get_mut(player_id) {
+        if let Some(z) = use_ink {
+            _p.inked_cards.push(z);
+        } else if let Some(z) = use_remover {
+            if _p.inked_cards.contains(&z) {
+                _p.hand.push(_p.inked_cards.remove(z));
+            } else {
+                let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
+                                                            .to_owned());
+                let g = json!({
+                                  "boardstate": k
+                              });
+                con.tx_send(OwnedMessage::Text(g.to_string()));
 
+            }
+        }
+    }
+
+}
+pub fn arrange(_board: &mut BoardStruct,
+               player_id: usize,
+               arranged: &Option<Vec<(usize, Option<String>)>>) {
+    if let Some(_p) = _board.players.get_mut(player_id) {
+        if let &Some(ref z) = arranged {
+            _p.arranged = z.clone();
         }
     }
 }
-pub fn arrange(_p: &mut Player, arranged: &Option<Vec<(usize, Option<String>)>>) {
-    if let &Some(ref z) = arranged {
-        _p.arranged = z.clone();
-    }
 
-}
-
-pub fn turn_to_submit<T: Board>(_p: &mut Player,
+pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
+                                player_id: usize,
                                 cardmeta: &[cards::ListCard<T>; 180],
                                 submit_word: Option<bool>)
-                                -> bool {
-    println!("turn to submit{:?}", _p.arranged.clone());
-    if let Some(true) = submit_word {
+                                -> Option<bool> {
+    if let (Some(_p), Some(true)) = (_board.players.get_mut(player_id), submit_word) {
+
         let letter_iter = _p.arranged.iter().map(|&(x, ref some_wild)| if let &Some(ref _wild) =
             some_wild {
                                                      _wild.to_owned()
@@ -45,6 +54,10 @@ pub fn turn_to_submit<T: Board>(_p: &mut Player,
                                                  });
         let k = letter_iter.collect::<String>();
         println!("k {:?}", k);
-        wordapi::there_such_word(&k)
+        Some(wordapi::there_such_word(&k))
+    } else {
+        None
     }
+
+
 }

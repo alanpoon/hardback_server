@@ -86,6 +86,10 @@ fn arrange_card() {
     tx.send((0, k1)).unwrap();
     p.vp = 3;
     p.coin = 2;
-    assert_eq!(iter_o.next(), Some(Some(BoardCodec { players: vec![p],gamestates:vec![GameState::Buy] })));
-    
+    assert_eq!(iter_o.next(),
+               Some(Some(BoardCodec {
+                             players: vec![p],
+                             gamestates: vec![GameState::Buy],
+                         })));
+
 }
