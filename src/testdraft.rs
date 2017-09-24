@@ -32,8 +32,6 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
                        _p: &mut Player,
                        cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-        _p.coin = 4;
-        _p.ink = 4;
         _p.hand = vec![7, 14, 20, 18, 4];
         _p.draft = vec![141, 148, 150, 177, 70];
         owned_deck.extend(_p.hand.clone());

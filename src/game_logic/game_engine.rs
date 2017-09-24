@@ -50,7 +50,7 @@ impl<T> GameEngine<T>
         let mut owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let (wait_tx, wait_rx) = mpsc::channel();
-        let mut wait_for_input: [Option<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
+        let mut wait_for_input: [Vec<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
             [None, None, None, None];
         let mut wait_for_break = false;
         'game: loop {
@@ -123,6 +123,7 @@ impl<T> GameEngine<T>
                                                                          wait_tx.clone());
                             }
                         }
+
                         &mut &mut GameState::SubmitWordWaitForReply => {
                             //uses tempboard
 
@@ -170,12 +171,14 @@ impl<T> GameEngine<T>
                      self.players.get_mut(player_id),
                      &mut wait_for_input[player_id],
                      type_is_reply) {
-                    if let (Some(_reply), &&mut Some(ref _wait_vec)) = (reply, &_wait) {
-                        if let Some(_closure) = _wait_vec.get(_reply) {
-                            (*_closure)(_p, &mut remaining_cards);
+                    if let (Some(_reply), &&mut _wait_vec_vec) = (reply, &_wait) {
+                        for _wait_vec in _wait_vec_vec{
+                            if let Some(_closure) = _wait_vec.get(_reply) {
+                                (*_closure)(_p, &mut remaining_cards);
+                            }
                         }
                     }
-                    *_wait = None;
+                    *_wait = vec![];
                 }
                 wait_tx.clone().send(None).unwrap();
                 println!("killserver P{:?}", killserver.clone());

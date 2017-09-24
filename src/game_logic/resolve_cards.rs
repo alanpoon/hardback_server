@@ -45,7 +45,10 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                            wait_tx.clone(),
                            &cardmeta,
                            vec![&adv_vec, &hor_vec, &mys_vec, &rom_vec]);
-
+    resolve_trash_giveable(player_id,
+                           &mut _board,
+                           wait_tx.clone(),
+                           &cardmeta,&valid_card);
 }
 pub fn track_genre(card_index: usize,
                    cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -80,6 +83,7 @@ pub fn resolve_giveable(card_index: usize,
                                                                   &mut Vec<usize>)>)>)>>) {
     if let Some(ref mut z) = board.players.get_mut(player_id) {
         giveable_match(z, player_id, &cardmeta[card_index].giveables, wait_tx);
+        println!("card_index:{:?}, player.vp:{}, player.coin:{}",card_index,z.vp.clone(),z.coin.clone());
     }
     //resolve closure
     if let Some(ref _closure) = cardmeta[card_index].giveablefn {
@@ -100,7 +104,8 @@ pub fn resolve_genre_giveable(player_id: usize,
         for _o in genre_vec.clone() {
             if _o.len() >= 2 {
                 for &_c in _o {
-                    giveable_match(z, player_id, &cardmeta[_c].giveables, wait_tx.clone());
+                    giveable_match(z, player_id, &cardmeta[_c].genre_giveables, wait_tx.clone());
+                    println!("genre card_index{}, player.vp:{}, player.coin:{}",_c,z.vp.clone(),z.coin.clone());
                 }
             }
 
@@ -118,7 +123,18 @@ pub fn resolve_genre_giveable(player_id: usize,
         }
     }
 }
-
+pub fn resolve_trash_giveable(player_id: usize,
+                              mut board: &mut BoardStruct,
+                              wait_tx: mpsc::Sender<Option<(usize,
+                                                            String,
+                                                            Vec<(String,
+                                                                 Box<Fn(&mut Player,
+                                                                        &mut Vec<usize>)>)>)>>,
+                              cardmeta: &[cards::ListCard<BoardStruct>; 180],valid_card:Vec<usize>) {
+             if let Some(ref mut z) = board.players.get_mut(player_id) {
+                
+             }                   
+                              }
 pub fn giveable_match(z: &mut Player,
                       player_id: usize,
                       giveables: &cards::GIVEABLE,
