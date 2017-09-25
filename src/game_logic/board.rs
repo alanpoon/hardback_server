@@ -52,7 +52,7 @@ impl Board for BoardStruct {
                        Box::new(|ref mut p, ref mut rmcards| { p.ink -= 1; })),
                       ("lose a ink remover".to_owned(),
                        Box::new(|ref mut p, ref mut rmcards| { p.remover -= 1; }))]);
-            x.push(_g);
+            x.push(Some(_g));
             
         });
 

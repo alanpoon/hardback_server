@@ -60,7 +60,7 @@ pub fn buy_card_from(position_index: usize,
 
         if let Some(Ok(a)) = res {
             //  wait_tx.send(Some(a)).unwrap();
-            wait_for_input[player_id].push(a);
+            wait_for_input[player_id].push(Some(a));
         }
     }
 
@@ -114,7 +114,7 @@ pub fn buy_card_from_lockup(position_index: usize,
         };
         if let Some(Ok(a)) = res {
             //   wait_tx.send(Some(a)).unwrap();
-            wait_for_input[player_id].push(a);
+            wait_for_input[player_id].push(Some(a));
         }
     }
 

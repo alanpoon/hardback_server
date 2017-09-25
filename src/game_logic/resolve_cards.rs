@@ -1,12 +1,16 @@
 use server_lib::codec::*;
 use server_lib::cards;
-use server_lib::cards::WaitForInputType;
+use server_lib::cards::{GIVEABLE, WaitForInputType};
 use game_logic::board::BoardStruct;
 
 pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
+    //broadcast those benefits that don't need to wait for user reply
+    if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
+        it.push(None);
+    }
     let mut valid_card = vec![];
     if let Some(_p) = _board.players.get(player_id) {
         valid_card = _p.arranged
@@ -121,10 +125,34 @@ pub fn resolve_genre_giveable(player_id: usize,
 }
 pub fn resolve_trash_giveable(player_id: usize,
                               mut board: &mut BoardStruct,
-                              WaitForInputType: &mut [WaitForInputType; 4],
+                              wait_for_input: &mut [WaitForInputType; 4],
                               cardmeta: &[cards::ListCard<BoardStruct>; 180],
                               valid_card: &Vec<Option<usize>>) {
-    if let Some(ref mut z) = board.players.get_mut(player_id) {}
+    if let (Some(ref mut z), ref mut _wait_vec) =
+        (board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
+        for &_oc in valid_card {
+            if let Some(_c) = _oc {
+                let header = "Do you want to trash this card for the benefit?".to_owned();
+                let vec_option: Option<Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>> =
+                    match cardmeta[_c].trash {
+                        GIVEABLE::VP(_x) => {
+                            Some(vec![("yes".to_owned(),
+                                       Box::new(move |ref mut p, _| { p.vp += _x; })),
+                                      ("no".to_owned(), Box::new(|ref mut p, _| {}))])
+                        }
+                        GIVEABLE::COIN(_x) => {
+                            Some(vec![("yes".to_owned(),
+                                       Box::new(move |ref mut p, _| { p.coin += _x; })),
+                                      ("no".to_owned(), Box::new(|ref mut p, _| {}))])
+                        }
+                        _ => None,
+                    };
+                if let Some(_opts) = vec_option {
+                    _wait_vec.push(Some((GameState::Buy, header, _opts)));
+                }
+            }
+        }
+    }
 }
 pub fn giveable_match(z: &mut Player,
                       player_id: usize,
@@ -144,12 +172,16 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
-            wait_for_input[player_id].push((GameState::DrawCard,
-                                            choose_bet,
-                                            vec![("Ink".to_owned(),
-                                                  Box::new(|ref mut p, _| { p.ink += 1; })),
-                                                 ("Ink Remover".to_owned(),
-                                                  Box::new(|ref mut p, _| { p.remover += 1; }))]));
+            wait_for_input[player_id].push(Some((GameState::DrawCard,
+                                                 choose_bet,
+                                                 vec![("Ink".to_owned(),
+                                                       Box::new(|ref mut p, _| {
+                                                                    p.ink += 1;
+                                                                })),
+                                                      ("Ink Remover".to_owned(),
+                                                       Box::new(|ref mut p, _| {
+                                                                    p.remover += 1;
+                                                                }))])));
             /*     wait_tx.send(Some((player_id,
                                choose_bet,
                                vec![("Ink".to_owned(),

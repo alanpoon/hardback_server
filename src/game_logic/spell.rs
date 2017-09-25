@@ -1,6 +1,6 @@
 use server_lib::codec::*;
 use server_lib::cards;
-use server_lib::cards::Board;
+use server_lib::cards::{Board, WaitForInputType};
 use websocket::message::OwnedMessage;
 use game_logic::game_engine::GameCon;
 use game_logic::wordapi;
@@ -31,10 +31,13 @@ pub fn use_ink_or_remover<T: GameCon>(_board: &mut BoardStruct,
 }
 pub fn arrange(_board: &mut BoardStruct,
                player_id: usize,
-               arranged: &Option<Vec<(usize, Option<String>)>>) {
-    if let Some(_p) = _board.players.get_mut(player_id) {
+               arranged: &Option<Vec<(usize, Option<String>)>>,
+               wait_for_input: &mut [WaitForInputType; 4]) {
+    if let (Some(_p), mut _w) =
+        (_board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
         if let &Some(ref z) = arranged {
             _p.arranged = z.clone();
+            _w.push(None);
         }
     }
 }
