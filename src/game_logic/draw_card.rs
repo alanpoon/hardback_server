@@ -1,5 +1,5 @@
 use server_lib::codec::*;
-use server_lib::cards::{self, Board};
+use server_lib::cards::{self, Board, WaitForInputType};
 use game_logic::board::BoardStruct;
 use rand::distributions::{IndependentSample, Range};
 use rand::Rng;
@@ -79,7 +79,6 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>, gamestates: &mut Vec
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
-                println!("_p.hand.len(){}", _p.hand.len());
                 for _ in 0usize..(5 - _p.hand.len()) {
                     if let Some(n) = _p.draft.pop() {
                         _p.hand.push(n);

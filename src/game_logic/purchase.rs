@@ -1,9 +1,10 @@
 use std::sync::mpsc;
 use server_lib::codec::*;
 use server_lib::cards;
-use websocket::message::OwnedMessage;
+use server_lib::cards::WaitForInputType;
 use game_logic::board::BoardStruct;
 use game_logic::resolve_cards;
+
 pub fn resolve_purchase_giveables(card_index: usize,
                                   cardmeta: &[cards::ListCard<BoardStruct>; 180],
                                   _p: &mut Player) {
@@ -12,42 +13,33 @@ pub fn resolve_purchase_giveables(card_index: usize,
     }
 }
 
-
 pub fn buy_card_from(position_index: usize,
                      from: &mut Vec<usize>,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      _board: &mut BoardStruct,
                      player_id: usize,
-                     wait_tx: mpsc::Sender<Option<(usize,
-                                                   String,
-                                                   Vec<(String,
-                                                        Box<Fn(&mut Player,
-                                                               &mut Vec<usize>)>)>)>>) {
+                     wait_for_input: &mut [WaitForInputType; 4]) {
     println!("purchasing!");
-    if let (Some(_p), Some(_gamestate)) =
-        (_board.players.get_mut(player_id), _board.gamestates.get_mut(player_id)) {
+    if let Some(_p) = _board.players.get_mut(player_id) {
         println!("player coin {}", _p.coin.clone());
-        let res: Option<Result<(usize,
+        let res: Option<Result<(GameState,
                                 String,
                                 Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>),
                                String>> = match from.get(position_index) {
 
             Some(&_c) => {
-                println!("goo");
                 match cardmeta[_c].cost as f64 <= _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
                     true => {
-                        println!("ooo");
                         match cardmeta[_c].cost <= _p.coin {
                             true => {
                                 _p.coin -= cardmeta[_c].cost;
                                 _p.discard.push(from.remove(position_index));
-                                resolve_cards::resolve_purchase(_c, _p, &cardmeta, _gamestate);
+                                resolve_cards::resolve_purchase(_c, _p, &cardmeta);
                                 None
                             }
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
-
-                                Some(Ok((player_id,
+                                Some(Ok((GameState::DrawCard,
                                          j,
                                          vec![("Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
@@ -67,7 +59,8 @@ pub fn buy_card_from(position_index: usize,
         };
 
         if let Some(Ok(a)) = res {
-            wait_tx.send(Some(a)).unwrap();
+            //  wait_tx.send(Some(a)).unwrap();
+            wait_for_input[player_id].push(a);
         }
     }
 
@@ -76,11 +69,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                             cardmeta: &[cards::ListCard<BoardStruct>; 180],
                             _board: &mut BoardStruct,
                             player_id: usize,
-                            wait_tx: mpsc::Sender<Option<(usize,
-                                                          String,
-                                                          Vec<(String,
-                                                               Box<Fn(&mut Player,
-                                                                      &mut Vec<usize>)>)>)>>) {
+                            wait_for_input: &mut [WaitForInputType; 4]) {
     if let Some(_p) = _board.players.get_mut(player_id) {
         let mut card_index = 2;
         if let Some(&_c) = _p.lockup.get(position_index) {
@@ -88,7 +77,7 @@ pub fn buy_card_from_lockup(position_index: usize,
         } else {
             println!("lockup does not have this card");
         }
-        let res: Option<Result<(usize,
+        let res: Option<Result<(GameState,
                                 String,
                                 Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>),
                                String>> = match cardmeta[card_index].cost as f64 <=
@@ -104,7 +93,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                     false => {
                         let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                         let cost = cardmeta[card_index].cost.clone();
-                        Some(Ok((player_id,
+                        Some(Ok((GameState::DrawCard,
                                  j,
                                  vec![("Trade in 3 ink for one coin to buy this?".to_owned(),
                                        Box::new(move |ref mut p, _| {
@@ -124,7 +113,8 @@ pub fn buy_card_from_lockup(position_index: usize,
             false => Some(Err("Cannot afford the card".to_owned())),
         };
         if let Some(Ok(a)) = res {
-            wait_tx.send(Some(a)).unwrap();
+            //   wait_tx.send(Some(a)).unwrap();
+            wait_for_input[player_id].push(a);
         }
     }
 

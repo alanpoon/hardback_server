@@ -4,9 +4,7 @@ use server_lib::cards;
 use server_lib::cards::*;
 use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
-use game_logic::{self, wordapi};
-use rand::Rng;
-use rand;
+use game_logic;
 use std;
 
 pub trait GameCon {
@@ -47,12 +45,11 @@ impl<T> GameEngine<T>
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         println!("ccc");
-        let mut owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
+        let owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
-        let (wait_tx, wait_rx) = mpsc::channel();
-        let mut wait_for_input: [Vec<Vec<Box<Fn(&mut Player, &mut Vec<usize>)>>>; 4] =
-            [None, None, None, None];
+        let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
         let mut wait_for_break = false;
+        let mut need_update = false;
         'game: loop {
             let sixteen_ms = std::time::Duration::from_millis(1000);
             let now = std::time::Instant::now();
@@ -65,13 +62,10 @@ impl<T> GameEngine<T>
                                                              &mut self.gamestates);
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 println!("receive from client");
-                let mut need_update = false;
+
                 let mut offer_row =
-                    (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                let mut temp_board = BoardStruct::new(self.players.clone(),
-                                                      self.gamestates.clone(),
-                                                      offer_row,
-                                                      wait_tx.clone());
+                    (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
+                let mut temp_board = BoardStruct::new(self.players.clone(), offer_row);
                 let mut type_is_reply = false;
                 let &GameCommand { reply, killserver, .. } = &game_command;
                 if let Some(_) = reply {
@@ -88,13 +82,13 @@ impl<T> GameEngine<T>
                         ref mut _board,
                         Some(ref con),
                         Some(ref mut _gamestate),
-                        &None,
+                        ref mut wait_vec,
                         false) =
                     (&game_command,
                      &mut temp_board,
                      self.connections.get(player_id),
                      self.gamestates.get_mut(player_id),
-                     &wait_for_input[player_id],
+                     &mut wait_for_input,
                      type_is_reply) {
 
                     match _gamestate {
@@ -113,6 +107,7 @@ impl<T> GameEngine<T>
                                                                        use_ink,
                                                                        use_remover);
                             game_logic::spell::arrange(_board, player_id, arranged);
+                            **_gamestate = GameState::Buy;
                             if let Some(true) = game_logic::spell::turn_to_submit(_board,
                                                                                   player_id,
                                                                                   &cardmeta,
@@ -120,119 +115,112 @@ impl<T> GameEngine<T>
                                 game_logic::resolve_cards::resolve_cards(_board,
                                                                          player_id,
                                                                          &cardmeta,
-                                                                         wait_tx.clone());
+                                                                         wait_vec);
                             }
                         }
 
-                        &mut &mut GameState::SubmitWordWaitForReply => {
-                            //uses tempboard
-
-                        }
                         &mut &mut GameState::Buy => {
                             if let Some(z) = buyoffer {
                                 //z top of remaining deck
+                                **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from(z,
                                                                     &mut remaining_cards,
                                                                     &cardmeta,
                                                                     _board,
                                                                     player_id,
-                                                                    wait_tx.clone());
+                                                                    wait_vec);
 
                             }
                             if let Some(z) = buylockup {
                                 //z:index of player.lockup
+                                **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from_lockup(z,
                                                                            &cardmeta,
                                                                            _board,
                                                                            player_id,
-                                                                           wait_tx.clone());
+                                                                           wait_vec);
                             }
                         }
                         _ => {}
                     }
                 }
                 //save temp_board.players to self.players
-                for mut it in temp_board.players.iter().zip(self.players.iter_mut()) {
+                for it in temp_board.players.iter().zip(self.players.iter_mut()) {
                     let (_tb_p, mut _p) = it;
                     *_p = _tb_p.clone();
                 }
-                for mut it in temp_board.gamestates.iter().zip(self.gamestates.iter_mut()) {
-                    let (_tb_p, mut _p) = it;
-                    *_p = _tb_p.clone();
-                }
-                println!("emp_board.offer_row.len()){}", temp_board.offer_row.len());
+
                 for _missingcard in 0..(7 - temp_board.offer_row.len()) {
                     if let Some(x) = remaining_cards.pop() {
                         temp_board.offer_row.push(x);
                     }
                 }
-                if let (&GameCommand { reply, .. }, Some(_p), _wait, true) =
+                for mut it in wait_for_input.iter()
+                        .zip(self.gamestates.iter_mut())
+                        .zip(self.connections.iter()) {
+                    let ((ref _w, ref mut _g), ref con) = it;
+                    if !_w.is_empty() {
+                        **_g = GameState::WaitForReply;
+                        let mut temp_vec: Vec<String> = vec![];
+                        if let &Some(&(_, ref header, ref option_vec)) = &_w.first() {
+                            for &(ref sz, _) in option_vec {
+                                temp_vec.push(sz.clone());
+                            }
+                            let g = json!({
+                                              "request": (header.clone(), temp_vec)
+                                          });
+                            con.tx_send(OwnedMessage::Text(g.to_string()));
+                        }
+                    }
+                }
+                if let (&GameCommand { reply, .. }, Some(_p), Some(_gamestate), _wait, true) =
                     (&game_command,
                      self.players.get_mut(player_id),
+                     self.gamestates.get_mut(player_id),
                      &mut wait_for_input[player_id],
                      type_is_reply) {
-                    if let (Some(_reply), &&mut _wait_vec_vec) = (reply, &_wait) {
-                        for _wait_vec in _wait_vec_vec{
-                            if let Some(_closure) = _wait_vec.get(_reply) {
+                    if let (Some(_reply), ref mut _wait_vec_vec) = (reply, _wait) {
+                        let mut next_gamestate = GameState::DrawCard;
+                        let len = _wait_vec_vec.len();
+                        if let Some(_wait_vec) = _wait_vec_vec.pop() {
+                            next_gamestate = _wait_vec.0;
+                            if let Some(&(_, ref _closure)) = _wait_vec.2.get(_reply) {
                                 (*_closure)(_p, &mut remaining_cards);
+                            }
+                            if len == 1 {
+                                *_gamestate = next_gamestate;
+                            } else {
+                                *_gamestate = GameState::WaitForReply;
                             }
                         }
                     }
-                    *_wait = vec![];
+
                 }
-                wait_tx.clone().send(None).unwrap();
                 println!("killserver P{:?}", killserver.clone());
                 if let Some(true) = killserver {
                     wait_for_break = true;
                 }
             }
-            while let Ok(input_request) = wait_rx.try_recv() {
-                println!("recev input_request");
-                match input_request {
-                    Some((player_id, header, option_vec)) => {
-                        // request Input
-                        if let Some::<&T>(ref con) = self.connections.get(player_id) {
-
-                            let mut temp_vec: Vec<String> = vec![];
-                            let mut temp_wait_for_input: Vec<Box<Fn(&mut Player,&mut Vec<usize>)>> = vec![];
-                            for (sz, sb) in option_vec {
-                                temp_vec.push(sz);
-                                temp_wait_for_input.push(sb);
-                            }
-                            wait_for_input[player_id] = Some(temp_wait_for_input);
-                            let g = json!({
-                                              "request": (header, temp_vec)
-                                          });
-                            con.tx_send(OwnedMessage::Text(g.to_string()));
-
-                        }
-                    }
-                    None => {
-                        //just update boardstae
-                        for it in self.connections.iter() {
-                            let offer_row = (0..7)
-                                .zip(remaining_cards.iter())
-                                .map(|(e, c)| c.clone())
-                                .collect();
-                            let ref con = it;
-                            let k: Result<BoardCodec, String> =
-                                Ok(BoardCodec {
-                                       players: self.players.clone(),
-                                       gamestates: self.gamestates.clone(),
-                                       offer_row: offer_row,
-                                   });
-                            let g = json!({
+            if need_update {
+                for it in self.connections.iter() {
+                    let offer_row =
+                        (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+                    let ref con = it;
+                    let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                               players: self.players.clone(),
+                                                               gamestates: self.gamestates.clone(),
+                                                               offer_row: offer_row,
+                                                           });
+                    let g = json!({
                                               "boardstate": k
                                           });
-                            con.tx_send(OwnedMessage::Text(g.to_string()));
-                        }
-                    }
+                    con.tx_send(OwnedMessage::Text(g.to_string()));
                 }
-                if wait_for_break {
+            }
+             if wait_for_break {
                     println!("closing server");
                     break 'game;
                 }
-            }
             last_update = std::time::Instant::now();
         }
     }

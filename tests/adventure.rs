@@ -52,7 +52,11 @@ fn arrange_adventure_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(7, Some("h".to_owned())), (14, Some("o".to_owned())), (20, Some("u".to_owned())), (18, None), (4, None)]);
+        k1.arranged = Some(vec![(7, Some("h".to_owned())),
+                                (14, Some("o".to_owned())),
+                                (20, Some("u".to_owned())),
+                                (18, None),
+                                (4, None)]);
         //:s=>GIVEABLE::VP(1) purchase ,GIVEABLE::VP(2) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::VP(2) thrash
         //:e=>GIVEABLE::NONE purchase ,GIVEABLE::VP(1) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::COIN(2) thrash
         //  k.killserver = Some(true);
@@ -73,7 +77,7 @@ fn arrange_adventure_card() {
         k4.reply = Some(0);
         tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);
-        
+
     });
 
     let mut iter_o = con_rx.iter().map(|x| {
@@ -89,7 +93,11 @@ fn arrange_adventure_card() {
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(7, Some("h".to_owned())), (14, Some("o".to_owned())), (20, Some("u".to_owned())), (18, None), (4, None)];
+    p.arranged = vec![(7, Some("h".to_owned())),
+                      (14, Some("o".to_owned())),
+                      (20, Some("u".to_owned())),
+                      (18, None),
+                      (4, None)];
     p.hand = vec![7, 14, 20, 18, 4];
     p.draft = vec![141, 148, 150, 177, 70];
 
@@ -104,18 +112,21 @@ fn arrange_adventure_card() {
     assert_eq!(iter_o.next(),
                Some(Some(BoardCodec {
                              players: vec![p.clone()],
-                             gamestates: vec![GameState::TrashForSomething],
+                             gamestates: vec![GameState::WaitForReply],
                              offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                          })));
-    p.arranged = vec![(7, Some("h".to_owned())), (14, Some("o".to_owned())), (20, Some("u".to_owned())), (4, None)];
-    p.hand=[7, 14, 20, 4];
+    p.arranged = vec![(7, Some("h".to_owned())),
+                      (14, Some("o".to_owned())),
+                      (20, Some("u".to_owned())),
+                      (4, None)];
+    p.hand = vec![7, 14, 20, 4];
     assert_eq!(iter_o.next(),
-            Some(Some(BoardCodec {
-                            players: vec![p.clone()],
-                            gamestates: vec![GameState::TrashForSomething],
-                            offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                        })));
-  /*  p.discard = vec![26];
+               Some(Some(BoardCodec {
+                             players: vec![p.clone()],
+                             gamestates: vec![GameState::WaitForReply],
+                             offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                         })));
+    /*  p.discard = vec![26];
     //Test buy card
     assert_eq!(iter_o.next(),
                Some(Some(BoardCodec {
