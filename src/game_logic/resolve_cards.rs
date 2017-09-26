@@ -1,6 +1,6 @@
 use server_lib::codec::*;
 use server_lib::cards;
-use server_lib::cards::{GIVEABLE, WaitForInputType};
+use server_lib::cards::{GIVEABLE, WaitForInputType, WaitForSingleInput};
 use game_logic::board::BoardStruct;
 
 pub fn resolve_cards(mut _board: &mut BoardStruct,
@@ -133,10 +133,13 @@ pub fn resolve_trash_giveable(player_id: usize,
         for &_oc in valid_card {
             if let Some(_c) = _oc {
                 let header = "Do you want to trash this card for the benefit?".to_owned();
-                let vec_option: Option<Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>> =
+                let vec_option: Option<Vec<(GameState,
+                                            String,
+                                            Box<Fn(&mut Player, &mut Vec<usize>)>)>> =
                     match cardmeta[_c].trash {
                         GIVEABLE::VP(_x) => {
-                            Some(vec![("yes".to_owned(),
+                            Some(vec![(GameState::Buy,
+                                       "Yes".to_owned(),
                                        Box::new(move |ref mut p, _| {
                                 p.vp += _x;
                                 let index = p.hand
@@ -145,10 +148,13 @@ pub fn resolve_trash_giveable(player_id: usize,
                                     .unwrap();
                                 p.hand.remove(index);
                             })),
-                                      ("no".to_owned(), Box::new(|ref mut p, _| {}))])
+                                      (GameState::Buy,
+                                       "No".to_owned(),
+                                       Box::new(|ref mut p, _| {}))])
                         }
                         GIVEABLE::COIN(_x) => {
-                            Some(vec![("yes".to_owned(),
+                            Some(vec![(GameState::Buy,
+                                       "Yes".to_owned(),
                                        Box::new(move |ref mut p, _| {
                                 p.coin += _x;
                                 let index = p.hand
@@ -157,12 +163,14 @@ pub fn resolve_trash_giveable(player_id: usize,
                                     .unwrap();
                                 p.hand.remove(index);
                             })),
-                                      ("no".to_owned(), Box::new(|ref mut p, _| {}))])
+                                      (GameState::Buy,
+                                       "No".to_owned(),
+                                       Box::new(|ref mut p, _| {}))])
                         }
                         _ => None,
                     };
                 if let Some(_opts) = vec_option {
-                    _wait_vec.push(Some((GameState::Buy, header, _opts)));
+                    _wait_vec.push(Some((header, _opts)));
                     _wait_vec.push(None);
                 }
             }
@@ -187,13 +195,14 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
-            wait_for_input[player_id].push(Some((GameState::DrawCard,
-                                                 choose_bet,
-                                                 vec![("Ink".to_owned(),
+            wait_for_input[player_id].push(Some((choose_bet,
+                                                 vec![(GameState::DrawCard,
+                                                       "Ink".to_owned(),
                                                        Box::new(|ref mut p, _| {
                                                                     p.ink += 1;
                                                                 })),
-                                                      ("Ink Remover".to_owned(),
+                                                      (GameState::DrawCard,
+                                                       "Ink Remover".to_owned(),
                                                        Box::new(|ref mut p, _| {
                                                                     p.remover += 1;
                                                                 }))])));

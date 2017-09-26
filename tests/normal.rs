@@ -79,12 +79,12 @@ fn arrange_normal_card() {
         std::thread::sleep(three_seconds);
         //assert 3
         let mut k3 = GameCommand::new();
-        k3.buyoffer = Some(0);
+        k3.buyoffer = Some((true, 0));
         tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
         //assert 4
         let mut k4 = GameCommand::new();
-        k4.buyoffer = Some(0);
+        k4.buyoffer = Some((true, 0));
         tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);
     });
@@ -111,6 +111,7 @@ fn arrange_normal_card() {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::TurnToSubmit],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                             turn_index: 0,
                          })));
     //Test submit word
     p.vp = 3;
@@ -120,6 +121,7 @@ fn arrange_normal_card() {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::Buy],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                             turn_index: 0,
                          })));
     p.discard = vec![179];
     //Test buy card
@@ -128,6 +130,7 @@ fn arrange_normal_card() {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::DrawCard],
                              offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                             turn_index: 0,
                          })));
 
 }

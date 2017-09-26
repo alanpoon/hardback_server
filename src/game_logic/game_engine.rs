@@ -44,7 +44,7 @@ impl<T> GameEngine<T>
     pub fn run<D: TheDraft>(&mut self, rx: mpsc::Receiver<(usize, GameCommand)>, debug_struct: D) {
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
-        println!("ccc");
+        let mut turn_index = 0;
         let owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
@@ -60,7 +60,13 @@ impl<T> GameEngine<T>
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
             game_logic::draw_card::redraw_cards_to_hand_size(&mut self.players,
-                                                             &mut self.gamestates);
+                                                             &mut self.gamestates,
+                                                             &mut turn_index);
+            game_logic::draw_card::update_gamestates(&mut self.gamestates,
+                                                     &self.connections,
+                                                     &self.players,
+                                                     &remaining_cards,
+                                                     turn_index);
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 count_rec = 0;
                 println!("receive from client {}", count_rec);
@@ -93,9 +99,9 @@ impl<T> GameEngine<T>
                      self.gamestates.get_mut(player_id),
                      &mut wait_for_input,
                      type_is_reply.clone()) {
-                    println!("super {:?}", type_is_reply);
                     match _gamestate {
                         &mut &mut GameState::Spell => {
+                            println!("spell");
                             game_logic::spell::use_ink_or_remover::<T>(_board,
                                                                        player_id,
                                                                        con,
@@ -104,6 +110,7 @@ impl<T> GameEngine<T>
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                         }
                         &mut &mut GameState::TurnToSubmit => {
+                            println!("TurnToSubmit");
                             game_logic::spell::use_ink_or_remover::<T>(_board,
                                                                        player_id,
                                                                        con,
@@ -122,7 +129,8 @@ impl<T> GameEngine<T>
                         }
 
                         &mut &mut GameState::Buy => {
-                            if let Some(z) = buyoffer {
+                            println!("Buy");
+                            if let Some((true, z)) = buyoffer {
                                 //z top of remaining deck
                                 **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from(z,
@@ -132,8 +140,10 @@ impl<T> GameEngine<T>
                                                                     player_id,
                                                                     wait_vec);
 
+                            } else {
+                                **_gamestate = GameState::DrawCard;
                             }
-                            if let Some(z) = buylockup {
+                            if let Some((true, z)) = buylockup {
                                 //z:index of player.lockup
                                 **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from_lockup(z,
@@ -141,6 +151,8 @@ impl<T> GameEngine<T>
                                                                            _board,
                                                                            player_id,
                                                                            wait_vec);
+                            } else {
+                                **_gamestate = GameState::DrawCard;
                             }
                         }
                         _ => {}
@@ -163,27 +175,21 @@ impl<T> GameEngine<T>
                                                &self.connections,
                                                &remaining_cards,
                                                self.players.clone(),
-                                               self.gamestates.clone());
-                    for mut it in wait_for_input.iter()
-                            .zip(self.gamestates.iter_mut())
-                            .zip(self.connections.iter()) {
-                        let ((ref _w, ref mut _g), ref con) = it;
-                        continue_to_prob::<T>(_w, _g, con);
+                                               self.gamestates.clone(),
+                                               turn_index);
+                    println!("after broadcast len {:?}", wait_for_input[player_id].len());
+
+                    if let (_w, Some(_g), Some(_con)) =
+                        (&mut wait_for_input[player_id],
+                         self.gamestates.get_mut(player_id),
+                         self.connections.get(player_id)) {
+                        continue_to_prob::<T>(_w, _g, _con);
+                        println!("after prob len {:?}", _w.len());
+
                     }
+
                 }
 
-
-                match wait_for_input[player_id].first() {
-                    Some(&Some(ref x)) => {
-                        println!("there is some {:?}", x.1.clone());
-                    }
-                    Some(&None) => {
-                        println!("there is really none");
-                    }
-                    None => {
-                        println!("there is none");
-                    }
-                }
                 let mut next_gamestate = GameState::DrawCard;
                 if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
                     if let Some(_reply) = reply {
@@ -192,12 +198,12 @@ impl<T> GameEngine<T>
                              self.gamestates.get_mut(player_id),
                              &mut wait_for_input[player_id]) {
                             if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
-                                next_gamestate = _wait_vec.0;
-                                if let Some(&(_, ref _closure)) = _wait_vec.2.get(_reply) {
+                                if let Some(&(ref next_gstate, _, ref _closure)) =
+                                    _wait_vec.1.get(_reply) {
                                     (*_closure)(_p, &mut remaining_cards);
+                                    next_gamestate = next_gstate.clone();
                                 }
                             }
-
                         }
                         let len = wait_for_input[player_id].len();
                         println!("reply's wait vec len:{}", len);
@@ -210,8 +216,9 @@ impl<T> GameEngine<T>
                                                    &self.connections,
                                                    &remaining_cards,
                                                    self.players.clone(),
-                                                   self.gamestates.clone());
-                        
+                                                   self.gamestates.clone(),
+                                                   turn_index);
+
                         if let (Some(_con), Some(_gamestate)) =
                             (self.connections.get(player_id), self.gamestates.get_mut(player_id)) {
                             continue_to_prob::<T>(&wait_for_input[player_id], _gamestate, &_con);
@@ -254,8 +261,8 @@ pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
         println!("solo");
         *_g = GameState::WaitForReply;
         let mut temp_vec: Vec<String> = vec![];
-        let &(_, ref header, ref option_vec) = __w;
-        for &(ref sz, _) in option_vec {
+        let &(ref header, ref option_vec) = __w;
+        for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());
         }
         let g = json!({
@@ -271,22 +278,40 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
                                          con_vec: &Vec<T>,
                                          remaining_cards: &Vec<usize>,
                                          players: Vec<Player>,
-                                         gamestates: Vec<GameState>) {
-    if let None = wait_for_input_p.remove(0) {
-        for it in con_vec.iter() {
-            let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-            let ref con = it;
-            let k: Result<BoardCodec, String> = Ok(BoardCodec {
-                                                       players: players.clone(),
-                                                       gamestates: gamestates.clone(),
-                                                       offer_row: offer_row,
-                                                   });
-            let g = json!({
+                                         gamestates: Vec<GameState>,
+                                         turn_index: usize) {
+    let mut remove_first = false;
+    match wait_for_input_p.first() {
+        Some(&Some(ref x)) => {
+            println!("there is some {:?}", x.0.clone());
+        }
+        Some(&None) => {
+            remove_first = true;
+            for it in con_vec.iter() {
+                let offer_row =
+                    (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+                let ref con = it;
+                let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                           players: players.clone(),
+                                                           gamestates: gamestates.clone(),
+                                                           offer_row: offer_row,
+                                                           turn_index: turn_index,
+                                                       });
+                let g = json!({
                                           "boardstate": k
                                       });
-            con.tx_send(OwnedMessage::Text(g.to_string()));
+                con.tx_send(OwnedMessage::Text(g.to_string()));
+            }
+
+            println!("there is really none");
         }
-
-
+        None => {
+            println!("there is none");
+        }
+    }
+    if let Some(&None) = wait_for_input_p.first() {}
+    if remove_first {
+        wait_for_input_p.remove(0);
+        println!("remove_first");
     }
 }

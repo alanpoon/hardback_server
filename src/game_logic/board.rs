@@ -45,12 +45,12 @@ impl Board for BoardStruct {
         wait_for_input.iter_mut().map(move| x|{
              let j = format!("Player {} has played a card to force other players to lose a ink or ink remover.",
                             player_id);
-            let _g: (GameState, String, Vec<(String, Box<Fn(&mut Player, &mut Vec<usize>)>)>) =
-                (GameState::Spell,
+            let _g: WaitForSingleInput=
+                (
                  j,
-                 vec![("lose a ink".to_owned(),
+                 vec![(GameState::Spell,"lose a ink".to_owned(),
                        Box::new(|ref mut p, ref mut rmcards| { p.ink -= 1; })),
-                      ("lose a ink remover".to_owned(),
+                      (GameState::Spell,"lose a ink remover".to_owned(),
                        Box::new(|ref mut p, ref mut rmcards| { p.remover -= 1; }))]);
             x.push(Some(_g));
             

@@ -1,6 +1,8 @@
 use server_lib::codec::*;
 use server_lib::cards::{self, Board, WaitForInputType};
 use game_logic::board::BoardStruct;
+use game_logic::game_engine::GameCon;
+use websocket::message::OwnedMessage;
 use rand::distributions::{IndependentSample, Range};
 use rand::Rng;
 use rand;
@@ -71,13 +73,18 @@ impl game_logic::game_engine::TheDraft for TheDraftStruct {
         remaining_deck
     }
 }
-
-pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>, gamestates: &mut Vec<GameState>) {
+#[cfg(not(test))]
+pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
+                                 gamestates: &mut Vec<GameState>,
+                                 turn_index: &mut usize) {
+    let player_num = players.len();
     for mut it in players.iter_mut().zip(gamestates.iter_mut()) {
         let (ref mut _p, ref mut game_state) = it;
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
+                _p.discard = _p.hand.clone();
+                _p.hand = vec![];
                 for _ in 0usize..(5 - _p.hand.len()) {
                     if let Some(n) = _p.draft.pop() {
                         _p.hand.push(n);
@@ -93,9 +100,82 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>, gamestates: &mut Vec
                 }
                 _p.arranged = vec![];
                 _p.inked_cards = vec![];
-
+                if *turn_index < player_num - 1 {
+                    *turn_index += 1;
+                } else {
+                    *turn_index = 0;
+                }
             }
             _ => {}
         }
     }
+}
+#[cfg(test)]
+pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
+                                 gamestates: &mut Vec<GameState>,
+                                 turn_index: &mut usize) {
+    let player_num = players.len();
+    for mut it in players.iter_mut().zip(gamestates.iter_mut()) {
+        let (ref mut _p, ref mut game_state) = it;
+        //((x,y), z)
+        match game_state {
+            &mut &mut GameState::DrawCard => {
+                _p.discard = _p.hand.clone();
+                _p.hand = vec![];
+                for _ in 0usize..(5 - _p.hand.len()) {
+                    if let Some(n) = _p.draft.pop() {
+                        _p.hand.push(n);
+                    } else {
+                        _p.draft = _p.discard.clone();
+                        _p.discard = vec![];
+                        if let Some(n) = _p.draft.pop() {
+                            _p.hand.push(n);
+                        }
+                    }
+                }
+                _p.arranged = vec![];
+                _p.inked_cards = vec![];
+                if *turn_index < player_num - 1 {
+                    *turn_index += 1;
+                } else {
+                    *turn_index = 0;
+                }
+            }
+            _ => {}
+        }
+    }
+}
+pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
+                                     cons: &Vec<T>,
+                                     players: &Vec<Player>,
+                                     remaining_cards: &Vec<usize>,
+                                     turn_index: usize) {
+    let mut need_boardcast = false;
+    if let Some(ref mut _g) = gamestates.get_mut(turn_index) {
+        if let GameState::DrawCard = **_g {
+            **_g = GameState::TurnToSubmit;
+            need_boardcast = true;
+
+        }
+    }
+    if need_boardcast {
+        for _con in cons.iter() {
+            let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+            let g = json!({
+                              "turn_index": turn_index
+                          });
+            _con.tx_send(OwnedMessage::Text(g.to_string()));
+            let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                       players: players.clone(),
+                                                       gamestates: gamestates.clone(),
+                                                       offer_row: offer_row,
+                                                       turn_index: turn_index,
+                                                   });
+            let h = json!({
+                              "boardstate": k
+                          });
+            _con.tx_send(OwnedMessage::Text(h.to_string()));
+        }
+    }
+
 }
