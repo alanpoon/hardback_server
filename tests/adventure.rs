@@ -27,7 +27,6 @@ pub struct Connection {
 }
 impl GameCon for Connection {
     fn tx_send(&self, msg: OwnedMessage) {
-        println!("msg:{:?}", msg.clone());
         self.sender
             .clone()
             .send(msg)
@@ -72,16 +71,22 @@ fn arrange_adventure_card() {
         //assert 2 + assert 3
         let mut k2 = GameCommand::new();
         k2.submit_word = Some(true);
-
         tx.send((0, k2)).unwrap();
         std::thread::sleep(three_seconds);
 
-        //assert 4
+        //assert 4 + assert 5
         let mut k3 = GameCommand::new();
         k3.reply = Some(0);
-        k3.killserver = Some(true);
         tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
+
+        //assert 6
+        let mut k4 = GameCommand::new(); //say no to trash card
+        k4.reply = Some(1);
+        k4.killserver = Some(true);
+        tx.send((0, k4)).unwrap();
+        std::thread::sleep(three_seconds);
+
         /*
         //assert 3 //say yes to discard card for benefit, send this to client
         let mut k3 = GameCommand::new();
@@ -110,7 +115,6 @@ fn arrange_adventure_card() {
                 }
             }
         }
-        println!("what is y{:?}", y.clone());
         y
     });
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
@@ -146,10 +150,26 @@ fn arrange_adventure_card() {
                                            .to_owned(),
                                        vec!["yes".to_owned(), "no".to_owned()]))));
     //assert 4
+    p.vp += 2;
+    p.hand = vec![7, 14, 20, 4];
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::WaitForReply],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                    })));
+    //assert 5
     assert_eq!(iter_o.next(),
                Some(ShortRec::request(("Do you want to trash this card for the benefit?"
                                            .to_owned(),
                                        vec!["yes".to_owned(), "no".to_owned()]))));
+    //assert 6
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::Buy],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                    })));
 
     /*
     p.arranged = vec![(7, Some("h".to_owned())),

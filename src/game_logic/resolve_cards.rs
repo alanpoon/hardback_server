@@ -137,18 +137,33 @@ pub fn resolve_trash_giveable(player_id: usize,
                     match cardmeta[_c].trash {
                         GIVEABLE::VP(_x) => {
                             Some(vec![("yes".to_owned(),
-                                       Box::new(move |ref mut p, _| { p.vp += _x; })),
+                                       Box::new(move |ref mut p, _| {
+                                p.vp += _x;
+                                let index = p.hand
+                                    .iter()
+                                    .position(|x| *x == _c)
+                                    .unwrap();
+                                p.hand.remove(index);
+                            })),
                                       ("no".to_owned(), Box::new(|ref mut p, _| {}))])
                         }
                         GIVEABLE::COIN(_x) => {
                             Some(vec![("yes".to_owned(),
-                                       Box::new(move |ref mut p, _| { p.coin += _x; })),
+                                       Box::new(move |ref mut p, _| {
+                                p.coin += _x;
+                                let index = p.hand
+                                    .iter()
+                                    .position(|x| *x == _c)
+                                    .unwrap();
+                                p.hand.remove(index);
+                            })),
                                       ("no".to_owned(), Box::new(|ref mut p, _| {}))])
                         }
                         _ => None,
                     };
                 if let Some(_opts) = vec_option {
                     _wait_vec.push(Some((GameState::Buy, header, _opts)));
+                    _wait_vec.push(None);
                 }
             }
         }

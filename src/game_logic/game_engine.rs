@@ -92,8 +92,8 @@ impl<T> GameEngine<T>
                      self.connections.get(player_id),
                      self.gamestates.get_mut(player_id),
                      &mut wait_for_input,
-                     type_is_reply) {
-
+                     type_is_reply.clone()) {
+                    println!("super {:?}", type_is_reply);
                     match _gamestate {
                         &mut &mut GameState::Spell => {
                             game_logic::spell::use_ink_or_remover::<T>(_board,
@@ -157,34 +157,22 @@ impl<T> GameEngine<T>
                         temp_board.offer_row.push(x);
                     }
                 }
-
-                println!("before broadcast len {:?}", wait_for_input[player_id].len());
-                if let None = wait_for_input[player_id].remove(0) {
-                    for it in self.connections.iter() {
-                        let offer_row =
-                            (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                        let ref con = it;
-                        let k: Result<BoardCodec, String> = Ok(BoardCodec {
-                                                                   players: self.players.clone(),
-                                                                   gamestates: self.gamestates
-                                                                       .clone(),
-                                                                   offer_row: offer_row,
-                                                               });
-                        let g = json!({
-                                          "boardstate": k
-                                      });
-                        con.tx_send(OwnedMessage::Text(g.to_string()));
+                if !type_is_reply {
+                    println!("before broadcast len {:?}", wait_for_input[player_id].len());
+                    continue_to_broadcast::<T>(&mut wait_for_input[player_id],
+                                               &self.connections,
+                                               &remaining_cards,
+                                               self.players.clone(),
+                                               self.gamestates.clone());
+                    for mut it in wait_for_input.iter()
+                            .zip(self.gamestates.iter_mut())
+                            .zip(self.connections.iter()) {
+                        let ((ref _w, ref mut _g), ref con) = it;
+                        continue_to_prob::<T>(_w, _g, con);
                     }
-                } else {
-                    println!("broadcast cannot pop");
                 }
-                for mut it in wait_for_input.iter()
-                        .zip(self.gamestates.iter_mut())
-                        .zip(self.connections.iter()) {
-                    let ((ref _w, ref mut _g), ref con) = it;
-                    println!("player 1's wait len {:?}", _w.len());
-                    continue_to_prob::<T>(_w, _g, con);
-                }
+
+
                 match wait_for_input[player_id].first() {
                     Some(&Some(ref x)) => {
                         println!("there is some {:?}", x.1.clone());
@@ -196,38 +184,43 @@ impl<T> GameEngine<T>
                         println!("there is none");
                     }
                 }
-                if let (&GameCommand { reply, .. },
-                        Some(_p),
-                        Some(_gamestate),
-                        Some(_con),
-                        mut _wait,
-                        true) =
-                    (&game_command,
-                     self.players.get_mut(player_id),
-                     self.gamestates.get_mut(player_id),
-                     self.connections.get(player_id),
-                     &mut wait_for_input[player_id],
-                     type_is_reply) {
-                    if let (Some(_reply), _wait_vec_vec) = (reply, &mut _wait) {
-                        let mut next_gamestate = GameState::DrawCard;
-                        let len = _wait_vec_vec.len();
-                        println!("wait len after reply{}", len);
-                        if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
-                            next_gamestate = _wait_vec.0;
-                            if let Some(&(_, ref _closure)) = _wait_vec.2.get(_reply) {
-                                (*_closure)(_p, &mut remaining_cards);
+                let mut next_gamestate = GameState::DrawCard;
+                if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
+                    if let Some(_reply) = reply {
+                        if let (Some(_p), Some(_gamestate), mut _wait_vec_vec) =
+                            (self.players.get_mut(player_id),
+                             self.gamestates.get_mut(player_id),
+                             &mut wait_for_input[player_id]) {
+                            if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
+                                next_gamestate = _wait_vec.0;
+                                if let Some(&(_, ref _closure)) = _wait_vec.2.get(_reply) {
+                                    (*_closure)(_p, &mut remaining_cards);
+                                }
                             }
-                            if len == 1 {
+
+                        }
+                        let len = wait_for_input[player_id].len();
+                        println!("reply's wait vec len:{}", len);
+                        if wait_for_input[player_id].len() == 1 {
+                            if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
                                 *_gamestate = next_gamestate;
-                            } else {
-                                *_gamestate = GameState::WaitForReply;
                             }
                         }
-
+                        continue_to_broadcast::<T>(&mut wait_for_input[player_id],
+                                                   &self.connections,
+                                                   &remaining_cards,
+                                                   self.players.clone(),
+                                                   self.gamestates.clone());
+                        
+                        if let (Some(_con), Some(_gamestate)) =
+                            (self.connections.get(player_id), self.gamestates.get_mut(player_id)) {
+                            continue_to_prob::<T>(&wait_for_input[player_id], _gamestate, &_con);
+                        }
+                        println!("End of reply's wait vec len:{}",
+                                 wait_for_input[player_id].len());
                     }
-                    continue_to_prob::<T>(&_wait, _gamestate, &_con);
                 }
-                println!("killserver P{:?}", killserver.clone());
+
                 if let Some(true) = killserver {
                     wait_for_break = true;
                 }
@@ -255,7 +248,8 @@ pub fn give_outstarting<D: TheDraft>(players: &mut Vec<Player>,
 }
 pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
                                     _g: &mut GameState,
-                                    con: &T) {
+                                    con: &T)
+                                    -> bool {
     if let Some(&Some(ref __w)) = wait_for_input_p.first() {
         println!("solo");
         *_g = GameState::WaitForReply;
@@ -268,5 +262,31 @@ pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
                                               "request": (header.clone(), temp_vec)
                                           });
         con.tx_send(OwnedMessage::Text(g.to_string()));
+        true
+    } else {
+        false
+    }
+}
+pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType,
+                                         con_vec: &Vec<T>,
+                                         remaining_cards: &Vec<usize>,
+                                         players: Vec<Player>,
+                                         gamestates: Vec<GameState>) {
+    if let None = wait_for_input_p.remove(0) {
+        for it in con_vec.iter() {
+            let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+            let ref con = it;
+            let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                       players: players.clone(),
+                                                       gamestates: gamestates.clone(),
+                                                       offer_row: offer_row,
+                                                   });
+            let g = json!({
+                                          "boardstate": k
+                                      });
+            con.tx_send(OwnedMessage::Text(g.to_string()));
+        }
+
+
     }
 }

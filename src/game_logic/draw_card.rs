@@ -44,7 +44,6 @@ impl game_logic::game_engine::TheDraft for TheDraftStruct {
         for _ in 0..2 {
             let between = Range::new(0, rand_id.len() - 1);
             let c = between.ind_sample(&mut rng) as usize;
-            println!("c {}", c);
             if let Some(&idz) = rand_id.get(c) {
                 two_cards_id.push(idz);
                 rand_id.remove(c);
