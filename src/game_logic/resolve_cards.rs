@@ -206,14 +206,7 @@ pub fn giveable_match(z: &mut Player,
                                                        Box::new(|ref mut p, _| {
                                                                     p.remover += 1;
                                                                 }))])));
-            /*     wait_tx.send(Some((player_id,
-                               choose_bet,
-                               vec![("Ink".to_owned(),
-                                     Box::new(|ref mut p, _| { p.ink += 1; })),
-                                    ("Ink Remover".to_owned(),
-                                     Box::new(|ref mut p, _| { p.remover += 1; }))])))
-                .unwrap();
-                */
+            wait_for_input[player_id].push(None);
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
@@ -238,16 +231,22 @@ pub fn giveable_match(z: &mut Player,
                 */
         }
         &cards::GIVEABLE::VPORCOIN(_x) => {
-            let j1 = format!("{} VP", _x);
-            let j2 = format!("{} Coin", _x);
-            let _xc = _x.clone();
-            let _xcc = _xc.clone();
-            /*  wait_tx.send(Some((player_id,
-                               choose_bet,
-                               vec![(j1, Box::new(move |ref mut p, _| { p.vp += _x; })),
-                                    (j2, Box::new(move |ref mut p, _| { p.coin += _x; }))])))
-                .unwrap();
-            */
+            let j1 = format!("{} vps", _x);
+            let j2 = format!("{} coins", _x);
+            let header = "You have the options to choose between vps and coins. Which one do you want?"
+                .to_owned();
+            wait_for_input[player_id].push(Some((choose_bet,
+                                                 vec![(GameState::Buy,
+                                                       j1,
+                                                       Box::new(move |ref mut p, _| {
+                                                                    p.vp += _x;
+                                                                })),
+                                                      (GameState::Buy,
+                                                       j2,
+                                                       Box::new(move |ref mut p, _| {
+                                                                    p.coin += _x;
+                                                                }))])));
+            wait_for_input[player_id].push(None);
         }
         &cards::GIVEABLE::VPORCOININK(_x) => {
             let j1 = format!("{} VP and 1 ink", _x);

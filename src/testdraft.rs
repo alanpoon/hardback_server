@@ -9,7 +9,7 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
                        cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.hand = vec![147, 154, 160, 174, 161];
-        _p.draft = vec![141, 148, 150, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -33,7 +33,7 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
                        cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.hand = vec![7, 14, 20, 18, 4];
-        _p.draft = vec![141, 148, 150, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -61,7 +61,7 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
         _p.hand = vec![41, 48, 54, 52, 38];
-        _p.draft = vec![141, 148, 150, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -90,7 +90,7 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
         _p.hand = vec![76, 83, 89, 87, 73];
-        _p.draft = vec![141, 148, 150, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -118,7 +118,7 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
         _p.hand = vec![132, 135, 108, 110, 124];
-        _p.draft = vec![141, 148, 150, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
