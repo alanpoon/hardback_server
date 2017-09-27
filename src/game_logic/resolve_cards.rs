@@ -80,6 +80,7 @@ pub fn resolve_giveable(card_index: usize,
         giveable_match(z,
                        player_id,
                        &cardmeta[card_index].giveables,
+                       card_index,
                        wait_for_input);
         println!("card_index:{:?}, player.vp:{}, player.coin:{}",
                  card_index,
@@ -101,7 +102,7 @@ pub fn resolve_genre_giveable(player_id: usize,
         for _o in genre_vec.clone() {
             if _o.len() >= 2 {
                 for &_c in _o {
-                    giveable_match(z, player_id, &cardmeta[_c].genre_giveables, wait_for_input);
+                    giveable_match(z, player_id, &cardmeta[_c].genre_giveables,_c, wait_for_input);
                     println!("genre card_index{}, player.vp:{}, player.coin:{}",
                              _c,
                              z.vp.clone(),
@@ -170,7 +171,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                         _ => None,
                     };
                 if let Some(_opts) = vec_option {
-                    _wait_vec.push(Some((header, _opts)));
+                    _wait_vec.push(Some((_c,header, _opts)));
                     _wait_vec.push(None);
                 }
             }
@@ -180,6 +181,7 @@ pub fn resolve_trash_giveable(player_id: usize,
 pub fn giveable_match(z: &mut Player,
                       player_id: usize,
                       giveables: &cards::GIVEABLE,
+                      card_index:usize,
                       wait_for_input: &mut [WaitForInputType; 4]) {
     let choose_bet = "Choose between".to_owned();
     match giveables {
@@ -195,7 +197,7 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
-            wait_for_input[player_id].push(Some((choose_bet,
+            wait_for_input[player_id].push(Some((card_index,choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
                                                        Box::new(|ref mut p, _| {
@@ -235,7 +237,7 @@ pub fn giveable_match(z: &mut Player,
             let j2 = format!("{} coins", _x);
             let header = "You have the options to choose between vps and coins. Which one do you want?"
                 .to_owned();
-            wait_for_input[player_id].push(Some((choose_bet,
+            wait_for_input[player_id].push(Some((card_index,choose_bet,
                                                  vec![(GameState::Buy,
                                                        j1,
                                                        Box::new(move |ref mut p, _| {

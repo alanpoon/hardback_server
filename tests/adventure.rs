@@ -36,7 +36,7 @@ impl GameCon for Connection {
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((String, Vec<String>)),
+    request((usize,String, Vec<String>)),
     turn_index(usize),
     None,
 }
@@ -155,7 +155,7 @@ fn arrange_adventure_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request(("Do you want to trash this card for the benefit?"
+               Some(ShortRec::request((18,"Do you want to trash this card for the benefit?"
                                            .to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
     //assert 4
@@ -170,7 +170,7 @@ fn arrange_adventure_card() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request(("Do you want to trash this card for the benefit?"
+               Some(ShortRec::request((14,"Do you want to trash this card for the benefit?"
                                            .to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
 
@@ -185,7 +185,7 @@ fn arrange_adventure_card() {
 
     //assert 7
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request(("You can't afford to buy this card. Do you want to buy another card?"
+               Some(ShortRec::request((26,"You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned(),
                                        vec!["Yes".to_owned(),
                               "No, I want to end my buy phase".to_owned()]))));

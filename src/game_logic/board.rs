@@ -46,7 +46,7 @@ impl Board for BoardStruct {
              let j = format!("Player {} has played a card to force other players to lose a ink or ink remover.",
                             player_id);
             let _g: WaitForSingleInput=
-                (
+                (card_id,
                  j,
                  vec![(GameState::Spell,"lose a ink".to_owned(),
                        Box::new(|ref mut p, ref mut rmcards| { p.ink -= 1; })),

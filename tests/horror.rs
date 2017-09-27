@@ -36,7 +36,7 @@ impl GameCon for Connection {
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((String, Vec<String>)),
+    request((usize,String, Vec<String>)),
     turn_index(usize),
     None,
 }
@@ -144,7 +144,7 @@ fn arrange_horror_card() {
 
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request(("Choose between".to_owned(),
+               Some(ShortRec::request((38,"Choose between".to_owned(),
                                        vec!["Ink".to_owned(), "Ink Remover".to_owned()]))));
     //assert 4
     p.ink += 1;
@@ -157,7 +157,7 @@ fn arrange_horror_card() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request(("Choose between".to_owned(),
+               Some(ShortRec::request((38,"Choose between".to_owned(),
                                        vec!["2 vps".to_owned(), "2 coins".to_owned()]))));
 
     //assert 6

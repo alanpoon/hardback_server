@@ -199,7 +199,7 @@ impl<T> GameEngine<T>
                              &mut wait_for_input[player_id]) {
                             if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
                                 if let Some(&(ref next_gstate, _, ref _closure)) =
-                                    _wait_vec.1.get(_reply) {
+                                    _wait_vec.2.get(_reply) {
                                     (*_closure)(_p, &mut remaining_cards);
                                     next_gamestate = next_gstate.clone();
                                 }
@@ -261,12 +261,12 @@ pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
         println!("solo");
         *_g = GameState::WaitForReply;
         let mut temp_vec: Vec<String> = vec![];
-        let &(ref header, ref option_vec) = __w;
+        let &(card_index,ref header, ref option_vec) = __w;
         for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());
         }
         let g = json!({
-                                              "request": (header.clone(), temp_vec)
+                                              "request": (card_index,header.clone(), temp_vec)
                                           });
         con.tx_send(OwnedMessage::Text(g.to_string()));
         true

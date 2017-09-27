@@ -36,7 +36,7 @@ pub fn buy_card_from(position_index: usize,
                             }
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
-                                Some(Ok((j,
+                                Some(Ok((_c,j,
                                          vec![(GameState::Buy,
                                                "Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
@@ -57,7 +57,7 @@ pub fn buy_card_from(position_index: usize,
                         println!("You can't afford t");
                         let j = "You can't afford to buy this card. Do you want to buy another card?"
                             .to_owned();
-                        Some(Ok((j,
+                        Some(Ok((_c,j,
                                  vec![(GameState::Buy,
                                        "Yes".to_owned(),
                                        Box::new(|ref mut p, _| {})),
@@ -105,7 +105,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                     false => {
                         let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                         let cost = cardmeta[card_index].cost.clone();
-                        Some(Ok((j,
+                        Some(Ok((card_index,j,
                                  vec![(GameState::DrawCard,
                                        "Trade in 3 ink for one coin to buy this.".to_owned(),
                                        Box::new(move |ref mut p, _| {
@@ -130,7 +130,7 @@ pub fn buy_card_from_lockup(position_index: usize,
             false => {
                 let j = "You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned();
-                Some(Ok((j,
+                Some(Ok((card_index,j,
                          vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _| {})),
                               (GameState::DrawCard,
                                "No, I want to end my buy phase".to_owned(),
