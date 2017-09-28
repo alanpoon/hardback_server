@@ -42,12 +42,12 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                                  player_id,
                                  &mut _board,
                                  wait_for_input);
-               
+
             }
 
         }
     }
-      
+
     resolve_genre_giveable(player_id,
                            &mut _board,
                            wait_for_input,
@@ -58,14 +58,16 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                            wait_for_input,
                            &cardmeta,
                            &valid_card);
-        for t in &valid_card {
-            if let &Some(_c) = t {
+    for t in &valid_card {
+        if let &Some(_c) = t {
+            if let None = skip_cards.iter().position(|&x| x == _c) {
                 skip_cards.push(_c);
             }
         }
-        if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+    }
+    if let Some(ref mut _p) = _board.players.get_mut(player_id) {
         _p.skip_cards = skip_cards;
-      }
+    }
 }
 
 pub fn track_genre(card_index: usize,
@@ -130,10 +132,10 @@ pub fn resolve_genre_giveable(player_id: usize,
                                        _c,
                                        wait_for_input);
                         println!("genre card_index{}, player.vp:{}, player.coin:{}",
-                             _c,
-                             z.vp.clone(),
-                             z.coin.clone());
-                        
+                                 _c,
+                                 z.vp.clone(),
+                                 z.coin.clone());
+
                     }
                 }
             }
@@ -166,7 +168,7 @@ pub fn resolve_trash_giveable(player_id: usize,
         for &_oc in valid_card {
             if let Some(_c) = _oc {
                 let y = z.skip_cards.iter().position(|&x| x == _c);
-                println!("yyyy{:?}",y);
+                println!("yyyy{:?}", y);
                 if let None = z.skip_cards.iter().position(|&x| x == _c) {
                     let header = "Do you want to trash this card for the benefit?".to_owned();
                     let vec_option: Option<Vec<(GameState,
@@ -175,33 +177,33 @@ pub fn resolve_trash_giveable(player_id: usize,
                         match cardmeta[_c].trash {
                             GIVEABLE::VP(_x) => {
                                 Some(vec![(GameState::Buy,
-                                       "Yes".to_owned(),
-                                       Box::new(move |ref mut p, _| {
-                                p.vp += _x;
-                                let index = p.hand
-                                    .iter()
-                                    .position(|&x| x == _c)
-                                    .unwrap();
-                                p.hand.remove(index);
-                            })),
-                                      (GameState::Buy,
-                                       "No".to_owned(),
-                                       Box::new(|ref mut p, _| {}))])
+                                           "Yes".to_owned(),
+                                           Box::new(move |ref mut p, _| {
+                                    p.vp += _x;
+                                    let index = p.hand
+                                        .iter()
+                                        .position(|&x| x == _c)
+                                        .unwrap();
+                                    p.hand.remove(index);
+                                })),
+                                          (GameState::Buy,
+                                           "No".to_owned(),
+                                           Box::new(|ref mut p, _| {}))])
                             }
                             GIVEABLE::COIN(_x) => {
                                 Some(vec![(GameState::Buy,
-                                       "Yes".to_owned(),
-                                       Box::new(move |ref mut p, _| {
-                                p.coin += _x;
-                                let index = p.hand
-                                    .iter()
-                                    .position(|&x| x == _c)
-                                    .unwrap();
-                                p.hand.remove(index);
-                            })),
-                                      (GameState::Buy,
-                                       "No".to_owned(),
-                                       Box::new(|ref mut p, _| {}))])
+                                           "Yes".to_owned(),
+                                           Box::new(move |ref mut p, _| {
+                                    p.coin += _x;
+                                    let index = p.hand
+                                        .iter()
+                                        .position(|&x| x == _c)
+                                        .unwrap();
+                                    p.hand.remove(index);
+                                })),
+                                          (GameState::Buy,
+                                           "No".to_owned(),
+                                           Box::new(|ref mut p, _| {}))])
                             }
                             _ => None,
                         };
@@ -209,7 +211,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                         _wait_vec.push(Some((_c, header, _opts)));
                         _wait_vec.push(None);
                     }
-                  
+
                 }
             }
         }

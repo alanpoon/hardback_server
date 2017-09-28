@@ -2,15 +2,16 @@ use server_lib::codec::{GameState, Player};
 use server_lib::cards::*;
 use server_lib::cards;
 use game_logic::resolve_cards;
+
 pub struct BoardStruct {
     pub players: Vec<Player>,
     pub offer_row: Vec<usize>,
 }
-impl BoardStruct{
-    pub fn new(players:Vec<Player>,remaining_cards:&Vec<usize>)->BoardStruct{
-        BoardStruct{
-            players:players,
-            offer_row:
+impl BoardStruct {
+    pub fn new(players: Vec<Player>, remaining_cards: &Vec<usize>) -> BoardStruct {
+        BoardStruct {
+            players: players,
+            offer_row: (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect(),
         }
     }
 }
@@ -94,8 +95,7 @@ impl Board for BoardStruct {
             (self.players.get(player_id), wait_for_input.get_mut(player_id)) {
             let index = _p.arranged.iter().position(|x| x.0 == card_id);
             let _g: WaitForSingleInput = (card_id,
-                                          "Do you want to uncover adjacent cards?"
-                                              .to_owned(),
+                                          "Do you want to uncover adjacent cards?".to_owned(),
                                           vec![(GameState::UncoverAdjacent(index, card_id),
                                                 "Yes".to_owned(),
                                                 Box::new(move |ref mut p, ref mut rmcards| {})),
@@ -127,14 +127,7 @@ impl Board for BoardStruct {
                              wait_for_input: &mut [WaitForInputType; 4]) {
     }
 }
-impl BoardStruct {
-    pub fn new(players: Vec<Player>, remaining_cards: &Vec<usize>) -> BoardStruct {
-        BoardStruct {
-            players: players,
-            offer_row: (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect(),
-        }
-    }
-}
+
 pub fn get_valid_cards(_p: &mut Player) -> Vec<Option<usize>> {
     let mut valid_card = vec![];
     for it in _p.arranged.iter() {

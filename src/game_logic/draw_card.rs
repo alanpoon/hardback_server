@@ -135,7 +135,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                 }
                 _p.arranged = vec![];
                 _p.inked_cards = vec![];
-                _p.skip_cards =vec![];
+                _p.skip_cards = vec![];
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {
@@ -151,27 +151,26 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      players: &Vec<Player>,
                                      remaining_cards: &Vec<usize>,
                                      turn_index: usize) {
-    let mut need_boardcast = false;
+    let mut needtempboardcast = false;
     let mut need_turn_index = false;
     if let Some(ref mut _g) = gamestates.get_mut(turn_index) {
         if let GameState::DrawCard = **_g {
             **_g = GameState::TurnToSubmit;
-            need_boardcast = true;
+            needtempboardcast = true;
             need_turn_index = true;
-        }
-        else if let GameState::UncoverAdjacent(_,_)=**_g{
+        } else if let GameState::UncoverAdjacent(_, _) = **_g {
             **_g = GameState::TurnToSubmit;
-            need_boardcast = true;
+            needtempboardcast = true;
         }
     }
-    if need_boardcast {
+    if needtempboardcast {
         for _con in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-            if need_turn_index{
-            let g = json!({
-                              "turn_index": turn_index
-                          });
-            _con.tx_send(OwnedMessage::Text(g.to_string()));
+            if need_turn_index {
+                let g = json!({
+                                  "turn_index": turn_index
+                              });
+                _con.tx_send(OwnedMessage::Text(g.to_string()));
             }
             let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                        players: players.clone(),
@@ -191,10 +190,9 @@ pub fn uncover_cards(players: &mut Vec<Player>,
                      gamestates: &mut Vec<GameState>,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      remaining_cards: &Vec<usize>,
-                     turn_index: &mut usize,
-                     wait_vec) {
-        let mut _board = BroadStruct::new(players.clone(),&remaining_cards);
-    for mut it in _board.players.iter_mut().zip(gamestates.iter_mut()) {
+                     wait_vec: &mut [WaitForInputType; 4]) {
+    let mut tempboard = BoardStruct::new(players.clone(), &remaining_cards);
+    for mut it in tempboard.players.iter_mut().zip(gamestates.iter_mut()) {
         let (ref mut _p, ref mut game_state) = it;
         //((x,y), z)
         match game_state {
@@ -219,6 +217,7 @@ pub fn uncover_cards(players: &mut Vec<Player>,
                     } else {
                         if let Some(&mut (covered_card, ref mut _wild)) =
                             _p.arranged.get_mut(_position_card - 1) {
+                            println!("removing wild");
                             //wild
                             if let &mut Some(_) = _wild {
                                 *_wild = None;
@@ -233,14 +232,27 @@ pub fn uncover_cards(players: &mut Vec<Player>,
                         }
                     }
                     //resolve cards again
-                   
-                    game_logic::resolve_cards::resolve_cards(_board.clone(),
-                                                                         player_id,
-                                                                         &cardmeta,
-                                                                         wait_vec);
+
                 }
             }
             _ => {}
         }
     }
+    for (player_id, ref mut _gamestates) in
+        (0..tempboard.players.len()).zip(gamestates.iter_mut()) {
+        match _gamestates {
+            &mut &mut GameState::UncoverAdjacent(_, _) => {
+                game_logic::resolve_cards::resolve_cards(&mut tempboard,
+                                                         player_id,
+                                                         &cardmeta,
+                                                         wait_vec);
+            }
+            _ => {}
+        }
+    }
+    for it in tempboard.players.iter().zip(players.iter_mut()) {
+        let (_tb_p, mut _p) = it;
+        *_p = _tb_p.clone();
+    }
+
 }

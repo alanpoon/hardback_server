@@ -67,7 +67,7 @@ impl<T> GameEngine<T>
                                                  &mut self.gamestates,
                                                  &cardmeta,
                                                  &remaining_cards,
-                                                 &mut turn_index);
+                                                 &mut wait_for_input);
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
@@ -78,9 +78,7 @@ impl<T> GameEngine<T>
                 println!("receive from client {}", count_rec);
                 count_rec += 1;
 
-                let mut offer_row =
-                    (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
-                let mut temp_board = BoardStruct::new(self.players.clone(), offer_row);
+                let mut temp_board = BoardStruct::new(self.players.clone(), &remaining_cards);
                 let mut type_is_reply = false;
                 let &GameCommand { reply, killserver, .. } = &game_command;
                 if let Some(_) = reply {

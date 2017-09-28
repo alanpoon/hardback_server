@@ -82,10 +82,10 @@ fn arrange_mystery2_card() {
         k2.killserver = Some(true);
         tx.send((0, k2)).unwrap();
         std::thread::sleep(three_seconds);
-        //assert 4 
+        //assert 4 + assert 5 feedback
         let mut k3 = GameCommand::new();
         k3.reply = Some(0);
-        tx.send((0,k3)).unwrap();
+        tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
     });
 
@@ -144,13 +144,21 @@ fn arrange_mystery2_card() {
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::UncoverAdjacent(Some(1),72)],
+                                        gamestates: vec![GameState::UncoverAdjacent(Some(1), 72)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                     })));
     //assert 5
-    p.arranged = vec![(42, None), (72, None), (178, None), (87, Some("p".to_owned())), (73, Some("t".to_owned()))];
-      assert_eq!(iter_o.next(),
+    p.arranged = vec![(42, None),
+                      (72, None),
+                      (178, None),
+                      (87, Some("p".to_owned())),
+                      (73, Some("t".to_owned()))];
+    p.vp += 2;
+    p.coin += 1;
+    p.skip_cards.push(42);
+    p.skip_cards.push(178);
+    assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
