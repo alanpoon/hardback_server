@@ -145,6 +145,7 @@ fn arrange_adventure_card() {
 
     //Test submit word, you can trash cards for benefit
     p.vp = 5;
+     p.skip_cards=vec![18,4];
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -162,6 +163,7 @@ fn arrange_adventure_card() {
     //assert 4
     p.vp += 2;
     p.hand = vec![7, 14, 20, 4];
+   
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],

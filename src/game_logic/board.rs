@@ -6,6 +6,14 @@ pub struct BoardStruct {
     pub players: Vec<Player>,
     pub offer_row: Vec<usize>,
 }
+impl BoardStruct{
+    pub fn new(players:Vec<Player>,remaining_cards:&Vec<usize>)->BoardStruct{
+        BoardStruct{
+            players:players,
+            offer_row:
+        }
+    }
+}
 impl Board for BoardStruct {
     fn two_cent_per_adv(&mut self,
                         player_id: usize,
@@ -86,7 +94,7 @@ impl Board for BoardStruct {
             (self.players.get(player_id), wait_for_input.get_mut(player_id)) {
             let index = _p.arranged.iter().position(|x| x.0 == card_id);
             let _g: WaitForSingleInput = (card_id,
-                                          "Do you want to want to uncover adjacent row card?"
+                                          "Do you want to uncover adjacent cards?"
                                               .to_owned(),
                                           vec![(GameState::UncoverAdjacent(index, card_id),
                                                 "Yes".to_owned(),
@@ -120,10 +128,10 @@ impl Board for BoardStruct {
     }
 }
 impl BoardStruct {
-    pub fn new(players: Vec<Player>, offer_row: Vec<usize>) -> BoardStruct {
+    pub fn new(players: Vec<Player>, remaining_cards: &Vec<usize>) -> BoardStruct {
         BoardStruct {
             players: players,
-            offer_row: offer_row,
+            offer_row: (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect(),
         }
     }
 }

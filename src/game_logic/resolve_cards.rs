@@ -42,11 +42,12 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                                  player_id,
                                  &mut _board,
                                  wait_for_input);
-                skip_cards.push(_c.clone());
+               
             }
 
         }
     }
+      
     resolve_genre_giveable(player_id,
                            &mut _board,
                            wait_for_input,
@@ -57,6 +58,14 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                            wait_for_input,
                            &cardmeta,
                            &valid_card);
+        for t in &valid_card {
+            if let &Some(_c) = t {
+                skip_cards.push(_c);
+            }
+        }
+        if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+        _p.skip_cards = skip_cards;
+      }
 }
 
 pub fn track_genre(card_index: usize,
@@ -124,7 +133,7 @@ pub fn resolve_genre_giveable(player_id: usize,
                              _c,
                              z.vp.clone(),
                              z.coin.clone());
-                        z.skip_cards.push(_c);
+                        
                     }
                 }
             }
@@ -156,6 +165,8 @@ pub fn resolve_trash_giveable(player_id: usize,
         (board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
         for &_oc in valid_card {
             if let Some(_c) = _oc {
+                let y = z.skip_cards.iter().position(|&x| x == _c);
+                println!("yyyy{:?}",y);
                 if let None = z.skip_cards.iter().position(|&x| x == _c) {
                     let header = "Do you want to trash this card for the benefit?".to_owned();
                     let vec_option: Option<Vec<(GameState,
@@ -198,7 +209,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                         _wait_vec.push(Some((_c, header, _opts)));
                         _wait_vec.push(None);
                     }
-                    z.skip_cards.push(_c);
+                  
                 }
             }
         }

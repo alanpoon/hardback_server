@@ -41,7 +41,7 @@ enum ShortRec {
     None,
 }
 #[test]
-fn arrange_mystery_card() {
+fn arrange_mystery2_card() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -82,6 +82,11 @@ fn arrange_mystery_card() {
         k2.killserver = Some(true);
         tx.send((0, k2)).unwrap();
         std::thread::sleep(three_seconds);
+        //assert 4 
+        let mut k3 = GameCommand::new();
+        k3.reply = Some(0);
+        tx.send((0,k3)).unwrap();
+        std::thread::sleep(three_seconds);
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -121,17 +126,35 @@ fn arrange_mystery_card() {
                                         turn_index: 0,
                                     })));
     p.vp += 1;
+    p.skip_cards.push(72);
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::WaitForReply],
+                                        gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
                Some(ShortRec::request((72,
-                                       "Do you want to lock up any offer row card?".to_owned(),
+                                       "Do you want to uncover adjacent cards?".to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
+    //assert 4
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::UncoverAdjacent(Some(1),72)],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                    })));
+    //assert 5
+    p.arranged = vec![(42, None), (72, None), (178, None), (87, Some("p".to_owned())), (73, Some("t".to_owned()))];
+      assert_eq!(iter_o.next(),
+               Some(ShortRec::board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                    })));
 }

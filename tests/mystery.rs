@@ -141,6 +141,7 @@ fn arrange_mystery_card() {
 
 
     p.coin += 1;
+    p.skip_cards.push(87);
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -154,7 +155,7 @@ fn arrange_mystery_card() {
                Some(ShortRec::request((87,
                                        "Do you want to lock up any offer row card?".to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
-
+    
     //assert 4
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
