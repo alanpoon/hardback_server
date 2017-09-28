@@ -36,7 +36,7 @@ impl GameCon for Connection {
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((usize,String, Vec<String>)),
+    request((usize, String, Vec<String>)),
     turn_index(usize),
     None,
 }
@@ -133,7 +133,7 @@ fn arrange_adventure_card() {
                       (18, None),
                       (4, None)];
     p.hand = vec![7, 14, 20, 18, 4];
-    p.draft = vec![141, 148, 150, 177, 70];
+    p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -155,7 +155,8 @@ fn arrange_adventure_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((18,"Do you want to trash this card for the benefit?"
+               Some(ShortRec::request((18,
+                                       "Do you want to trash this card for the benefit?"
                                            .to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
     //assert 4
@@ -170,7 +171,8 @@ fn arrange_adventure_card() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((14,"Do you want to trash this card for the benefit?"
+               Some(ShortRec::request((4,
+                                       "Do you want to trash this card for the benefit?"
                                            .to_owned(),
                                        vec!["Yes".to_owned(), "No".to_owned()]))));
 
@@ -202,7 +204,7 @@ fn arrange_adventure_card() {
     assert_eq!(iter_o.next(), Some(ShortRec::turn_index(0)));
     p.discard.extend(p.hand.clone());
     p.arranged = vec![];
-    p.hand = vec![70, 177, 150, 148, 141];
+    p.hand = vec![70, 177, 7, 148, 141];
     p.draft = vec![];
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {

@@ -110,6 +110,34 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
         remaining_deck
     }
 }
+pub struct TheMysteryUnCoverDraftStruct {}
+impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
+    fn player_starting(&self,
+                       _p: &mut Player,
+                       cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                       owned_deck: &mut Vec<usize>) {
+        _p.coin = 10;
+        _p.hand = vec![42, 72, 178, 87, 73];
+        _p.draft = vec![141, 148, 7, 177, 70];
+        owned_deck.extend(_p.hand.clone());
+        owned_deck.extend(_p.draft.clone());
+    }
+    fn deck_starting(&self,
+                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     owned_deck: &Vec<usize>)
+                     -> Vec<usize> {
+        //start 4coin,4ink
+        let mut remaining_deck = vec![26, 23, 38, 80, 94, 98, 119, 1]; //a:26 use ink,x:23 can afford,d:38 cannot afford,l:80,94,98,119
+        let mut owned_reserved_deck = owned_deck.clone();
+        owned_reserved_deck.extend(remaining_deck.clone());
+        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in cardmeta.iter().rev() {
+            if !owned_reserved_deck.contains(&id) {
+                remaining_deck.push(id);
+            }
+        }
+        remaining_deck
+    }
+}
 pub struct TheRomanceDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn player_starting(&self,

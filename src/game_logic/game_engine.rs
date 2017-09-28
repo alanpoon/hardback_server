@@ -59,9 +59,15 @@ impl<T> GameEngine<T>
             if duration_since_last_update < sixteen_ms {
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
+
             game_logic::draw_card::redraw_cards_to_hand_size(&mut self.players,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
+            game_logic::draw_card::uncover_cards(&mut self.players,
+                                                 &mut self.gamestates,
+                                                 &cardmeta,
+                                                 &remaining_cards,
+                                                 &mut turn_index);
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
@@ -85,6 +91,7 @@ impl<T> GameEngine<T>
                                        use_remover,
                                        ref arranged,
                                        submit_word,
+                                       lockup,
                                        buyoffer,
                                        buylockup,
                                        .. },
@@ -143,19 +150,27 @@ impl<T> GameEngine<T>
                             } else {
                                 **_gamestate = GameState::DrawCard;
                             }
-                            if let Some((true, z)) = buylockup {
+
+                        }
+                        &mut &mut GameState::LockUp => {
+                            if let Some((true, z)) = lockup {
                                 //z:index of player.lockup
-                                **_gamestate = GameState::DrawCard;
-                                game_logic::purchase::buy_card_from_lockup(z,
-                                                                           &cardmeta,
-                                                                           _board,
-                                                                           player_id,
-                                                                           wait_vec);
+                                println!("there is lockup");
+                                game_logic::purchase::lockup_a_card(z,
+                                                                    _board,
+                                                                    player_id,
+                                                                    &mut remaining_cards,
+                                                                    wait_vec,
+                                                                    &mut type_is_reply);
+                                **_gamestate = GameState::Buy;
                             } else {
-                                **_gamestate = GameState::DrawCard;
+                                **_gamestate = GameState::Buy;
                             }
                         }
-                        _ => {}
+
+                        _ => {
+                            println!("stateless, {:?}", _gamestate.clone());
+                        }
                     }
                 }
                 //save temp_board.players to self.players
@@ -261,7 +276,7 @@ pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
         println!("solo");
         *_g = GameState::WaitForReply;
         let mut temp_vec: Vec<String> = vec![];
-        let &(card_index,ref header, ref option_vec) = __w;
+        let &(card_index, ref header, ref option_vec) = __w;
         for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());
         }

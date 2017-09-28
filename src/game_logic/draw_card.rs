@@ -179,3 +179,52 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
     }
 
 }
+pub fn uncover_cards(players: &mut Vec<Player>,
+                     gamestates: &mut Vec<GameState>,
+                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     remaining_cards: &Vec<usize>,
+                     turn_index: &mut usize) {
+    for mut it in players.iter_mut().zip(gamestates.iter_mut()) {
+        let (ref mut _p, ref mut game_state) = it;
+        //((x,y), z)
+        match game_state {
+            &mut &mut GameState::UncoverAdjacent(position_card, uncoverer_card_index) => {
+                println!("uncoverinngg.g.");
+                if let Some(_position_card) = position_card {
+                    if _position_card == 0 {
+                        if let Some(&mut (covered_card, ref mut _wild)) = _p.arranged.get_mut(1) {
+                            //wild
+                            if let &mut Some(_) = _wild {
+                                *_wild = None;
+                            }
+                        }
+                    } else if _position_card == _p.arranged.len() - 1 {
+                        if let Some(&mut (covered_card, ref mut _wild)) =
+                            _p.arranged.get_mut(_position_card - 1) {
+                            //wild
+                            if let &mut Some(_) = _wild {
+                                *_wild = None;
+                            }
+                        }
+                    } else {
+                        if let Some(&mut (covered_card, ref mut _wild)) =
+                            _p.arranged.get_mut(_position_card - 1) {
+                            //wild
+                            if let &mut Some(_) = _wild {
+                                *_wild = None;
+                            }
+                        }
+                        if let Some(&mut (covered_card, ref mut _wild)) =
+                            _p.arranged.get_mut(_position_card + 1) {
+                            //wild
+                            if let &mut Some(_) = _wild {
+                                *_wild = None;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}

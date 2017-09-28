@@ -36,7 +36,8 @@ pub fn buy_card_from(position_index: usize,
                             }
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
-                                Some(Ok((_c,j,
+                                Some(Ok((_c,
+                                         j,
                                          vec![(GameState::Buy,
                                                "Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
@@ -57,7 +58,8 @@ pub fn buy_card_from(position_index: usize,
                         println!("You can't afford t");
                         let j = "You can't afford to buy this card. Do you want to buy another card?"
                             .to_owned();
-                        Some(Ok((_c,j,
+                        Some(Ok((_c,
+                                 j,
                                  vec![(GameState::Buy,
                                        "Yes".to_owned(),
                                        Box::new(|ref mut p, _| {})),
@@ -105,7 +107,8 @@ pub fn buy_card_from_lockup(position_index: usize,
                     false => {
                         let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                         let cost = cardmeta[card_index].cost.clone();
-                        Some(Ok((card_index,j,
+                        Some(Ok((card_index,
+                                 j,
                                  vec![(GameState::DrawCard,
                                        "Trade in 3 ink for one coin to buy this.".to_owned(),
                                        Box::new(move |ref mut p, _| {
@@ -130,7 +133,8 @@ pub fn buy_card_from_lockup(position_index: usize,
             false => {
                 let j = "You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned();
-                Some(Ok((card_index,j,
+                Some(Ok((card_index,
+                         j,
                          vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _| {})),
                               (GameState::DrawCard,
                                "No, I want to end my buy phase".to_owned(),
@@ -144,4 +148,18 @@ pub fn buy_card_from_lockup(position_index: usize,
         }
     }
 
+}
+pub fn lockup_a_card(position_index: usize,
+                     _board: &mut BoardStruct,
+                     player_id: usize,
+                     remainingcards: &mut Vec<usize>,
+                     wait_for_input: &mut [WaitForInputType; 4],
+                     type_is_reply: &mut bool) {
+    if let (Some(ref mut _p), Some(ref mut _w)) =
+        (_board.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
+        _p.lockup.push(remainingcards[position_index]);
+        _w.push(None);
+        remainingcards.remove(position_index);
+        *type_is_reply = false;
+    }
 }
