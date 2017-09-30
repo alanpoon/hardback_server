@@ -128,7 +128,7 @@ fn arrange_adventure_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.arranged = vec![(7, Some("h".to_owned())),
-                      (14, Some("o".to_owned())),
+                      (14, Some("o".to_owned())), //two_cent_per_adv
                       (20, Some("u".to_owned())),
                       (18, None),
                       (4, None)];

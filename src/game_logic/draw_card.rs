@@ -1,7 +1,7 @@
 use server_lib::codec::*;
-use server_lib::cards::{self, Board, WaitForInputType};
+use server_lib::cards::{self, Board, WaitForInputType, WaitForSingleInput};
 use game_logic::board::BoardStruct;
-use game_logic::game_engine::GameCon;
+use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use websocket::message::OwnedMessage;
 use rand::distributions::{IndependentSample, Range};
 use rand::Rng;
@@ -153,17 +153,16 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      turn_index: usize) {
     let mut needtempboardcast = false;
     let mut need_turn_index = false;
+    println!("gamestate in update {:?}", gamestates.clone());
     if let Some(ref mut _g) = gamestates.get_mut(turn_index) {
         if let GameState::DrawCard = **_g {
             **_g = GameState::TurnToSubmit;
             needtempboardcast = true;
             need_turn_index = true;
-        } else if let GameState::UncoverAdjacent(_, _) = **_g {
-            **_g = GameState::TurnToSubmit;
-            needtempboardcast = true;
         }
     }
     if needtempboardcast {
+        println!("needtempboardcast true");
         for _con in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
             if need_turn_index {
@@ -186,62 +185,21 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
     }
 
 }
-pub fn uncover_cards(players: &mut Vec<Player>,
-                     gamestates: &mut Vec<GameState>,
-                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
-                     remaining_cards: &Vec<usize>,
-                     wait_vec: &mut [WaitForInputType; 4]) {
+pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
+                                 gamestates: &mut Vec<GameState>,
+                                 connections: &Vec<T>,
+                                 cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                                 remaining_cards: &Vec<usize>,
+                                 wait_vec: &mut [WaitForInputType; 4],
+                                 turn_index: usize) {
     let mut tempboard = BoardStruct::new(players.clone(), &remaining_cards);
-    for mut it in tempboard.players.iter_mut().zip(gamestates.iter_mut()) {
-        let (ref mut _p, ref mut game_state) = it;
-        //((x,y), z)
-        match game_state {
-            &mut &mut GameState::UncoverAdjacent(position_card, uncoverer_card_index) => {
-                println!("uncoverinngg.g.");
-                if let Some(_position_card) = position_card {
-                    if _position_card == 0 {
-                        if let Some(&mut (covered_card, ref mut _wild)) = _p.arranged.get_mut(1) {
-                            //wild
-                            if let &mut Some(_) = _wild {
-                                *_wild = None;
-                            }
-                        }
-                    } else if _position_card == _p.arranged.len() - 1 {
-                        if let Some(&mut (covered_card, ref mut _wild)) =
-                            _p.arranged.get_mut(_position_card - 1) {
-                            //wild
-                            if let &mut Some(_) = _wild {
-                                *_wild = None;
-                            }
-                        }
-                    } else {
-                        if let Some(&mut (covered_card, ref mut _wild)) =
-                            _p.arranged.get_mut(_position_card - 1) {
-                            println!("removing wild");
-                            //wild
-                            if let &mut Some(_) = _wild {
-                                *_wild = None;
-                            }
-                        }
-                        if let Some(&mut (covered_card, ref mut _wild)) =
-                            _p.arranged.get_mut(_position_card + 1) {
-                            //wild
-                            if let &mut Some(_) = _wild {
-                                *_wild = None;
-                            }
-                        }
-                    }
-                    //resolve cards again
-
-                }
-            }
-            _ => {}
-        }
-    }
+    let mut player_that_responsible = None;
     for (player_id, ref mut _gamestates) in
         (0..tempboard.players.len()).zip(gamestates.iter_mut()) {
         match _gamestates {
             &mut &mut GameState::UncoverAdjacent(_, _) => {
+                player_that_responsible = Some(player_id);
+                **_gamestates = GameState::Buy;
                 game_logic::resolve_cards::resolve_cards(&mut tempboard,
                                                          player_id,
                                                          &cardmeta,
@@ -250,9 +208,39 @@ pub fn uncover_cards(players: &mut Vec<Player>,
             _ => {}
         }
     }
-    for it in tempboard.players.iter().zip(players.iter_mut()) {
-        let (_tb_p, mut _p) = it;
-        *_p = _tb_p.clone();
+    if let Some(player_that_responsible) = player_that_responsible {
+        for it in tempboard.players.iter().zip(players.iter_mut()) {
+            let (_tb_p, mut _p) = it;
+            *_p = _tb_p.clone();
+        }
+
+        let game_state_c = gamestates.clone();
+        println!("game_sssstate {:?}", game_state_c);
+        match wait_vec[player_that_responsible].first() {
+            Some(&Some(ref x)) => {
+                println!("there is some {:?}", x.0.clone());
+            }
+            Some(&None) => {
+                println!("there is really none");
+            }
+            _ => {
+                println!("there is no first");
+            }
+
+        }
+        if let (Some(ref mut _g), ref mut _w) =
+            (gamestates.get_mut(player_that_responsible), &mut wait_vec[player_that_responsible]) {
+            continue_to_broadcast::<T>(_w,
+                                       &connections,
+                                       &remaining_cards,
+                                       players.clone(),
+                                       game_state_c.clone(),
+                                       turn_index);
+            if let (_w, Some(_con)) = (_w, connections.get(player_that_responsible)) {
+                continue_to_prob::<T>(_w, _g, _con);
+            }
+        }
     }
+
 
 }

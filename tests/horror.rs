@@ -41,7 +41,7 @@ enum ShortRec {
     None,
 }
 #[test]
-fn arrange_horror_card() {
+fn horror() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -115,7 +115,7 @@ fn arrange_horror_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(41, Some("h".to_owned())),
+    p.arranged = vec![(41, Some("h".to_owned())), //minus_other_ink
                       (48, Some("o".to_owned())),
                       (54, Some("u".to_owned())),
                       (52, None),
@@ -133,6 +133,7 @@ fn arrange_horror_card() {
 
     p.vp += 2;
     p.coin += 2;
+    p.skip_cards = vec![52, 38];
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {

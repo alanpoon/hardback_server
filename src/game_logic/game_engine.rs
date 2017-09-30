@@ -63,16 +63,21 @@ impl<T> GameEngine<T>
             game_logic::draw_card::redraw_cards_to_hand_size(&mut self.players,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
-            game_logic::draw_card::uncover_cards(&mut self.players,
-                                                 &mut self.gamestates,
-                                                 &cardmeta,
-                                                 &remaining_cards,
-                                                 &mut wait_for_input);
+            game_logic::draw_card::uncover_cards::<T>(&mut self.players,
+                                                      &mut self.gamestates,
+                                                      &self.connections,
+                                                      &cardmeta,
+                                                      &remaining_cards,
+                                                      &mut wait_for_input,
+                                                      turn_index);
+
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
                                                      &remaining_cards,
                                                      turn_index);
+
+
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 count_rec = 0;
                 println!("receive from client {}", count_rec);
@@ -144,6 +149,12 @@ impl<T> GameEngine<T>
                                                                     _board,
                                                                     player_id,
                                                                     wait_vec);
+                                //broadcast for every purchase
+                                if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
+                                    if _w.len() == 0 {
+                                        _w.push(None);
+                                    }
+                                }
 
                             } else {
                                 **_gamestate = GameState::DrawCard;
@@ -247,7 +258,7 @@ impl<T> GameEngine<T>
 
             }
             count_rec += 1;
-            if (wait_for_break) & (count_rec >= 30) {
+            if (wait_for_break) & (count_rec >= 15) {
                 println!("closing server");
                 break 'game;
             }
