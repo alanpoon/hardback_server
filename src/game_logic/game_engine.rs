@@ -95,8 +95,9 @@ impl<T> GameEngine<T>
                                        ref arranged,
                                        submit_word,
                                        lockup,
-                                       buyoffer,
-                                       buylockup,
+                                       buy_offer,
+                                       buy_lockup,
+                                       trash_other,
                                        .. },
                         ref mut _board,
                         Some(ref con),
@@ -140,7 +141,7 @@ impl<T> GameEngine<T>
 
                         &mut &mut GameState::Buy => {
                             println!("Buy");
-                            if let Some((true, z)) = buyoffer {
+                            if let Some((true, z)) = buy_offer {
                                 //z top of remaining deck
                                 **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from(z,
@@ -176,7 +177,22 @@ impl<T> GameEngine<T>
                                 **_gamestate = GameState::Buy;
                             }
                         }
-
+                        &mut &mut GameState::TrashOther => {
+                            if let Some((true, z)) = trash_other {
+                                game_logic::purchase::trash_another_card(z,
+                                                                         _board,
+                                                                         player_id,
+                                                                         wait_vec,
+                                                                         &mut type_is_reply);
+                                **_gamestate = GameState::Buy;
+                                //broadcast for every TrashOther
+                                if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
+                                    if _w.len() == 0 {
+                                        _w.push(None);
+                                    }
+                                }
+                            }
+                        }
                         _ => {
                             println!("stateless, {:?}", _gamestate.clone());
                         }

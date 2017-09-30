@@ -202,7 +202,7 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
 
                 player_that_responsible = Some(player_id);
                 **_gamestates = GameState::Buy;
-                println!("resolveagain {:?}",players.clone().get(player_id));
+                println!("resolveagain {:?}", players.clone().get(player_id));
 
                 game_logic::resolve_cards::resolve_cards(&mut tempboard,
                                                          player_id,

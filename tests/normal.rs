@@ -79,12 +79,12 @@ fn arrange_normal_card() {
         std::thread::sleep(three_seconds);
         //assert 3
         let mut k3 = GameCommand::new();
-        k3.buyoffer = Some((true, 0));
+        k3.buy_offer = Some((true, 0));
         tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
         //assert 4
         let mut k4 = GameCommand::new();
-        k4.buyoffer = Some((true, 0));
+        k4.buy_offer = Some((true, 0));
         tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);
     });

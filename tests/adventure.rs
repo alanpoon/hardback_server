@@ -89,7 +89,7 @@ fn arrange_adventure_card() {
 
         //assert 7
         let mut k5 = GameCommand::new(); //buy first card, not enough coin
-        k5.buyoffer = Some((true, 0));
+        k5.buy_offer = Some((true, 0));
         k5.killserver = Some(true);
         tx.send((0, k5)).unwrap();
         std::thread::sleep(three_seconds);

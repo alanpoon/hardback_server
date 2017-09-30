@@ -174,6 +174,20 @@ impl Board for BoardStruct {
                    player_id: usize,
                    card_id: usize,
                    wait_for_input: &mut [WaitForInputType; 4]) {
+        if let (Some(ref mut _p), Some(ref mut _w)) =
+            (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
+            let _g: WaitForSingleInput = (card_id,
+                                          "Do you want to trash another card for one cent?"
+                                              .to_owned(),
+                                          vec![(GameState::TrashOther,
+                                                "Yes".to_owned(),
+                                                Box::new(move |ref mut p, ref mut rmcards| {})),
+                                               (GameState::Buy,
+                                                "No".to_owned(),
+                                                Box::new(move |ref mut p, ref mut rmcards| {}))]);
+            _w.push(Some(_g));
+            _w.push(None);
+        }
     }
     fn one_vp_per_wild(&mut self,
                        player_id: usize,

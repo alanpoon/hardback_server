@@ -88,7 +88,7 @@ fn arrange_uncover_card() {
         std::thread::sleep(three_seconds);
         //assert 6 Buy
         let mut k4 = GameCommand::new();
-        k4.buyoffer = Some((true, 0));
+        k4.buy_offer = Some((true, 0));
         k4.killserver = Some(true);
         tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);

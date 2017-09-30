@@ -163,3 +163,14 @@ pub fn lockup_a_card(position_index: usize,
         *type_is_reply = false;
     }
 }
+pub fn trash_another_card(position_index: usize,
+                          _board: &mut BoardStruct,
+                          player_id: usize,
+                          wait_for_input: &mut [WaitForInputType; 4],
+                          type_is_reply: &mut bool) {
+    if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+        _p.hand.remove(position_index);
+        _p.coin += 1;
+        *type_is_reply = false;
+    }
+}
