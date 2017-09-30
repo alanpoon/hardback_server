@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::TheMysteryUnCoverDraftStruct;
+use hardback_server::testdraft::TheRomanceDraftStruct;
 
 #[derive(Clone)]
 pub struct Connection {
@@ -41,7 +41,7 @@ enum ShortRec {
     None,
 }
 #[test]
-fn arrange_mystery2_card() {
+fn doubleadjacent() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -51,27 +51,24 @@ fn arrange_mystery2_card() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections)
-                               .run(rx, TheMysteryUnCoverDraftStruct {});
+                           GameEngine::new(vec![p], connections).run(rx, TheRomanceDraftStruct {});
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(42, Some("a".to_owned())),
-                                (72, None),
-                                (178, Some("a".to_owned())),
-                                (82, Some("p".to_owned())),
-                                (73, Some("t".to_owned()))]);
+        k1.arranged = Some(vec![(105, None),
+                                (135, None),
+                                (108, Some("a".to_owned())),
+                                (110, Some("p".to_owned())),
+                                (111, Some("t".to_owned()))]);
         /*
                         purchase         giveable        genre                 trash
-              (42,"i",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VPORCOIN(2),GIVEABLE::NONE,Genre::HORROR,false,None,None),
-        (72,"d",4,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(2),GIVEABLE::NONE,Genre::MYSTERY,false,Some(Box::new(|ref mut b, p,c,w| {
-            //mystery, Non-gen:uncover adjacent wild
-            b.uncover_adjacent(p,c,w);
-        })),None),
-                (178,"t",0,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::NONE,GIVEABLE::NONE,Genre::NONE,false,None,None),
-
+        (105,"z",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p,c,w| {
+            //rommanc, Non-gen:double adjacent
+            b.double_adjacent(p,c,w);
+        })),None), 
+        (135,"o",8,GIVEABLE::NONE,GIVEABLE::VPCOIN(1,2),GIVEABLE::VPCOIN(1,1),GIVEABLE::NONE,Genre::ROMANCE,true,None,None),
         }))),
         */
         tx.send((0, k1)).unwrap();
@@ -81,16 +78,11 @@ fn arrange_mystery2_card() {
         k2.submit_word = Some(true);
         tx.send((0, k2)).unwrap();
         std::thread::sleep(three_seconds);
-        //assert 4 + assert 5 feedback
+        //assert 4
         let mut k3 = GameCommand::new();
         k3.reply = Some(0);
+        k3.killserver = Some(true);
         tx.send((0, k3)).unwrap();
-        std::thread::sleep(three_seconds);
-        //assert 6 Buy
-        let mut k4 = GameCommand::new();
-        k4.buyoffer = Some((true, 0));
-        k4.killserver = Some(true);
-        tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);
     });
 
@@ -115,12 +107,12 @@ fn arrange_mystery2_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(42, Some("a".to_owned())),
-                      (72, None),
-                      (178, Some("a".to_owned())),
-                      (82, Some("p".to_owned())),
-                      (73, Some("t".to_owned()))];
-    p.hand = vec![42, 72, 178, 82, 73];
+    p.arranged = vec![(105, None),
+                      (135, None),
+                      (108, Some("a".to_owned())),
+                      (110, Some("p".to_owned())),
+                      (111, Some("t".to_owned()))];
+    p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
@@ -130,8 +122,10 @@ fn arrange_mystery2_card() {
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                     })));
-    p.vp += 1;
-    p.skip_cards.push(72);
+    p.coin += 7;
+    p.vp += 2;
+    p.skip_cards.push(105);
+    p.skip_cards.push(135);
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -142,42 +136,19 @@ fn arrange_mystery2_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((72,
-                                       "Do you want to uncover adjacent cards?".to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
-    //assert 4
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::UncoverAdjacent(Some(1), 72)],
-                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                    })));
+               Some(ShortRec::request((105,
+                                       "There are a few valid cards adjacent to this card, can be doubled."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()]))));
+
     //assert 5
-    p.arranged = vec![(42, None),
-                      (72, None),
-                      (178, None),
-                      (82, Some("p".to_owned())),
-                      (73, Some("t".to_owned()))];
     p.vp += 2;
-    p.coin += 1;
-    p.skip_cards.push(42);
-    p.skip_cards.push(178);
+    p.coin += 3;
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                    })));
-    //assert 6
-    p.discard.push(26);
-    p.coin -= 5;
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::DrawCard],
-                                        offer_row: vec![23, 38, 80, 94, 98, 119, 1],
                                         turn_index: 0,
                                     })));
 }

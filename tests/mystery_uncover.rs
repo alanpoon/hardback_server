@@ -150,20 +150,19 @@ fn arrange_uncover_card() {
                Some(ShortRec::request((72,
                                        "There are a few wild cards adjacent to this card, can be opened".to_owned(),
                                        vec!["Continue".to_owned()]))));
+    //assert 4
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::UncoverAdjacent(Some(1), 72)],
+                                        gamestates: vec![GameState::ResolveAgain(Some(1), 72)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                     })));
-    //assert 4
     p.vp += 2;
     p.coin += 1;
     p.skip_cards.push(42);
     p.skip_cards.push(178);
-    //assert 6
-
+    //assert 5
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
@@ -226,8 +225,6 @@ fn one_vp_per_wild_card() {
         k4.killserver = Some(true);
         tx.send((0, k4)).unwrap();
         std::thread::sleep(three_seconds);
-
-
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -294,19 +291,16 @@ fn one_vp_per_wild_card() {
     //assert 5
     assert_eq!(iter_o.next(),
                Some(ShortRec::request((73,
-                                       "Do you want to uncover adjacent cards?".to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
+                                       "There are no adjacent wild cards that can be flipped over."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()]))));
     //assert 6
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::UncoverAdjacent(Some(4), 73)],
+                                        gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                     })));
-    //assert 7
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::request((73,
-                                       "There are no covered cards beside this card".to_owned(),
-                                       vec!["Continue".to_owned()]))));
+
 }

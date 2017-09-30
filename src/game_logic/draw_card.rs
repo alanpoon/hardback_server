@@ -192,14 +192,18 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
                                  remaining_cards: &Vec<usize>,
                                  wait_vec: &mut [WaitForInputType; 4],
                                  turn_index: usize) {
+
     let mut tempboard = BoardStruct::new(players.clone(), &remaining_cards);
     let mut player_that_responsible = None;
     for (player_id, ref mut _gamestates) in
         (0..tempboard.players.len()).zip(gamestates.iter_mut()) {
         match _gamestates {
-            &mut &mut GameState::UncoverAdjacent(_, _) => {
+            &mut &mut GameState::ResolveAgain(_, _) => {
+
                 player_that_responsible = Some(player_id);
                 **_gamestates = GameState::Buy;
+                println!("resolveagain {:?}",players.clone().get(player_id));
+
                 game_logic::resolve_cards::resolve_cards(&mut tempboard,
                                                          player_id,
                                                          &cardmeta,

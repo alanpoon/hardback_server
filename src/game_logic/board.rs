@@ -90,24 +90,23 @@ impl Board for BoardStruct {
                         player_id: usize,
                         card_id: usize,
                         wait_for_input: &mut [WaitForInputType; 4]) {
-        let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let index = _p.arranged.iter().position(|x| x.0 == card_id);
-            if !there_is_wild_beside(_p, index, card_id) {
+            if !there_is_wild_beside(_p, index) {
                 let _g: WaitForSingleInput =
                     (card_id,
                      "There are no adjacent wild cards that can be flipped over.".to_owned(),
                      vec![(GameState::Buy,
-                           "Yes".to_owned(),
+                           "Continue".to_owned(),
                            Box::new(move |ref mut p, ref mut rmcards| {}))]);
                 _w.push(Some(_g));
-                //  _w.push(None);
+                _w.push(None);
             } else {
                 let _g: WaitForSingleInput =
                     (card_id,
                      "There are a few wild cards adjacent to this card, can be opened".to_owned(),
-                     vec![(GameState::UncoverAdjacent(index, card_id),
+                     vec![(GameState::ResolveAgain(index, card_id),
                            "Continue".to_owned(),
                            Box::new(move |ref mut p, ref mut rmcards| {}))]);
                 _w.push(Some(_g));
@@ -121,6 +120,55 @@ impl Board for BoardStruct {
                        player_id: usize,
                        card_id: usize,
                        wait_for_input: &mut [WaitForInputType; 4]) {
+
+        if let (Some(ref mut _p), Some(ref mut _w)) =
+            (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
+            let index = _p.arranged.iter().position(|x| x.0 == card_id);
+            let (there_is, cards_to_double) = there_is_valid_beside(_p, index);
+            if !there_is {
+                let _g: WaitForSingleInput =
+                    (card_id,
+                     "There are no adjacent valid cards that you double their benefits."
+                         .to_owned(),
+                     vec![(GameState::Buy,
+                           "Continue".to_owned(),
+                           Box::new(move |ref mut p, ref mut rmcards| {}))]);
+                _w.push(Some(_g));
+                _w.push(None);
+            } else {
+                let _g: WaitForSingleInput =
+                    (card_id,
+                     "There are a few valid cards adjacent to this card, can be doubled."
+                         .to_owned(),
+                     vec![(GameState::Buy,
+                           "Continue".to_owned(),
+                           Box::new(move |ref mut p, ref mut rmcards| {
+                        let cardmeta: [cards::ListCard<BoardStruct>; 180] =
+                            cards::populate::<BoardStruct>();
+                        for card in cards_to_double.clone() {
+                            if let Some(pos) = p.skip_cards.iter().position(|x| *x == card) {
+                                p.skip_cards.remove(pos);
+                            }
+                        }
+
+                        let mut tempboard = BoardStruct::new(vec![p.clone()], &rmcards);
+                        let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![],
+                                                                         vec![]];
+                        resolve_cards::resolve_cards(&mut tempboard,
+                                                     player_id,
+                                                     // 0,
+                                                     &cardmeta,
+                                                     &mut wait_for_input);
+                        if let Some(_p) = tempboard.players.get(player_id) {
+                            **p = _p.clone();
+                        }
+                    }))]);
+                _w.push(Some(_g));
+                _w.push(None);
+
+            }
+
+        }
     }
     fn trash_other(&mut self,
                    player_id: usize,
@@ -131,7 +179,6 @@ impl Board for BoardStruct {
                        player_id: usize,
                        card_id: usize,
                        wait_for_input: &mut [WaitForInputType; 4]) {
-        let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let num_wild = _p.arranged
@@ -170,10 +217,7 @@ pub fn get_valid_cards(_p: &mut Player) -> Vec<Option<usize>> {
     }
     valid_card
 }
-pub fn there_is_wild_beside(_p: &mut Player,
-                            position_card: Option<usize>,
-                            uncoverer_card_index: usize)
-                            -> bool {
+fn there_is_wild_beside(_p: &mut Player, position_card: Option<usize>) -> bool {
     let mut there_is_wild_beside = false;
     if let Some(_position_card) = position_card {
         if _position_card == 0 {
@@ -211,8 +255,55 @@ pub fn there_is_wild_beside(_p: &mut Player,
                 }
             }
         }
-        //resolve cards again
-
     }
     there_is_wild_beside
+}
+fn there_is_valid_beside(_p: &mut Player, position_card: Option<usize>) -> (bool, Vec<usize>) {
+    let mut there_is_valid_beside = false;
+    let mut cards_to_double = vec![];
+    if let Some(_position_card) = position_card {
+        if _position_card == 0 {
+            if let Some(&mut (card_index, ref mut _wild)) = _p.arranged.get_mut(1) {
+                if let &mut None = _wild {
+                    cards_to_double.push(card_index);
+                    there_is_valid_beside = true;
+                }
+            }
+        } else if _position_card == _p.arranged.len() - 1 {
+            if let Some(&mut (card_index, ref mut _wild)) =
+                _p.arranged.get_mut(_position_card - 1) {
+                //remove wild
+                if let &mut None = _wild {
+                    cards_to_double.push(card_index);
+                    there_is_valid_beside = true;
+                }
+            }
+        } else {
+            if let Some(&mut (card_index, ref mut _wild)) =
+                _p.arranged.get_mut(_position_card - 1) {
+                //remove wild
+                if let &mut None = _wild {
+                    cards_to_double.push(card_index);
+                    there_is_valid_beside = true;
+                }
+            }
+            if let Some(&mut (card_index, ref mut _wild)) =
+                _p.arranged.get_mut(_position_card + 1) {
+                //remove wild
+                if let &mut None = _wild {
+                    cards_to_double.push(card_index);
+                    there_is_valid_beside = true;
+                }
+            }
+        }
+
+    }
+    (there_is_valid_beside, cards_to_double)
+}
+fn remove_skip_card(_p: &mut Player, card_index: usize) {
+    println!("tttremove_caaaaaaaaaaaaaaa{:?}", _p.skip_cards.clone());
+    if let Some(_index) = _p.skip_cards.iter().position(|x| *x == card_index) {
+        println!("remove_caaaaaaaaaaaaaaa{}", _index);
+        _p.skip_cards.remove(_index);
+    }
 }
