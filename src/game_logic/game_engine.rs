@@ -193,6 +193,17 @@ impl<T> GameEngine<T>
                                 }
                             }
                         }
+                         &mut &mut GameState::PutBackDiscard(ind,responsible)=>{
+                              if let Some(true) = putback_discard{
+                                game_logic::purchase::putback_discard(ind,responsible,
+                                                                         _board,
+                                                                         player_id,
+                                                                         &mut remaining_cards,
+                                                                         wait_vec,
+                                                                         &mut type_is_reply);
+                              }
+   
+                         }
                         _ => {
                             println!("stateless, {:?}", _gamestate.clone());
                         }
