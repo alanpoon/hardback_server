@@ -25,18 +25,28 @@ pub struct Connection {
     pub player_num: Option<usize>,
     pub sender: mpsc::Sender<OwnedMessage>,
 }
+
 impl GameCon for Connection {
-    fn tx_send(&self, msg: OwnedMessage) {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
+        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
+        if let Some(Some(_)) = boardstate.clone() {
+            if let Some(0) = self.player_num {
+                log.push(msg.clone());
+            }
+        } else if let Some(Some(_)) = request.clone() {
+            log.push(msg.clone());
+        }
+
         self.sender
             .clone()
-            .send(msg)
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
             .unwrap();
     }
 }
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((usize, String, Vec<String>)),
+    request((usize, usize, String, Vec<String>, Option<u16>)),
     turn_index(usize),
     None,
 }
@@ -51,8 +61,10 @@ fn arrange_adventure_card() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
                            GameEngine::new(vec![p], connections).run(rx,
-                                                                     TheAdventureDraftStruct {});
+                                                                     TheAdventureDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -141,6 +153,7 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 
     //Test submit word, you can trash cards for benefit
@@ -153,13 +166,16 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((18,
+               Some(ShortRec::request((0,
+                                       18,
                                        "Do you want to trash this card for the benefit?"
                                            .to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
+                                       vec!["Yes".to_owned(), "No".to_owned()],
+                                       None))));
     //assert 4
     p.vp += 2;
     p.hand = vec![7, 14, 20, 4];
@@ -170,13 +186,16 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::WaitForReply],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((4,
+               Some(ShortRec::request((0,
+                                       4,
                                        "Do you want to trash this card for the benefit?"
                                            .to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
+                                       vec!["Yes".to_owned(), "No".to_owned()],
+                                       None))));
 
     //assert 6
     assert_eq!(iter_o.next(),
@@ -185,14 +204,15 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 
     //assert 7
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((26,"You can't afford to buy this card. Do you want to buy another card?"
+               Some(ShortRec::request((0,26,"You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned(),
                                        vec!["Yes".to_owned(),
-                              "No, I want to end my buy phase".to_owned()]))));
+                              "No, I want to end my buy phase".to_owned()],None))));
 
     //assert 8
     assert_eq!(iter_o.next(),
@@ -201,6 +221,7 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::DrawCard],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 9
     assert_eq!(iter_o.next(), Some(ShortRec::turn_index(0)));
@@ -214,5 +235,6 @@ fn arrange_adventure_card() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 }

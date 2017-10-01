@@ -25,6 +25,9 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
         }
         remaining_deck
     }
+    fn ticks(&self) -> Option<u16> {
+        None
+    }
 }
 pub struct TheAdventureDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
@@ -51,6 +54,9 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
             }
         }
         remaining_deck
+    }
+    fn ticks(&self) -> Option<u16> {
+        None
     }
 }
 pub struct TheHorrorDraftStruct {}
@@ -79,6 +85,9 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
             }
         }
         remaining_deck
+    }
+    fn ticks(&self) -> Option<u16> {
+        None
     }
 }
 
@@ -109,6 +118,9 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
         }
         remaining_deck
     }
+    fn ticks(&self) -> Option<u16> {
+        None
+    }
 }
 pub struct TheMysteryUnCoverDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
@@ -137,6 +149,9 @@ impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
         }
         remaining_deck
     }
+    fn ticks(&self) -> Option<u16> {
+        None
+    }
 }
 pub struct TheRomanceDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
@@ -164,5 +179,8 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
             }
         }
         remaining_deck
+    }
+    fn ticks(&self) -> Option<u16> {
+        None
     }
 }

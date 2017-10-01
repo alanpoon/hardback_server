@@ -26,10 +26,19 @@ pub struct Connection {
     pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl GameCon for Connection {
-    fn tx_send(&self, msg: OwnedMessage) {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
+        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
+        if let Some(Some(_)) = boardstate.clone() {
+            if let Some(0) = self.player_num {
+                log.push(msg.clone());
+            }
+        } else if let Some(Some(_)) = request.clone() {
+            log.push(msg.clone());
+        }
+
         self.sender
             .clone()
-            .send(msg)
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
             .unwrap();
     }
 }
@@ -62,7 +71,10 @@ fn arrange_normal_card() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections).run(rx, TheNormalDraftStruct {});
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheNormalDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -112,6 +124,7 @@ fn arrange_normal_card() {
                              gamestates: vec![GameState::TurnToSubmit],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
                              turn_index: 0,
+                             ticks: None,
                          })));
     //Test submit word
     p.vp = 3;
@@ -122,6 +135,7 @@ fn arrange_normal_card() {
                              gamestates: vec![GameState::Buy],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
                              turn_index: 0,
+                             ticks: None,
                          })));
     p.discard = vec![179];
     //Test buy card
@@ -131,6 +145,7 @@ fn arrange_normal_card() {
                              gamestates: vec![GameState::DrawCard],
                              offer_row: vec![178, 176, 175, 173, 172, 171, 170],
                              turn_index: 0,
+                             ticks: None,
                          })));
 
 }

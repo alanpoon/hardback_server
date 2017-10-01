@@ -175,74 +175,79 @@ pub fn trash_another_card(position_index: usize,
     }
 }
 pub fn putback_discard(countdown: usize,
-                        responsible:usize,
-                          _board: &mut BoardStruct,
-                          player_id: usize,
-                          remainingcards:&mut Vec<usize>,
-                          wait_for_input: &mut [WaitForInputType; 4],
-                          type_is_reply: &mut bool) {
- 
-        match countdown{
-            2=>{
-               if let Some(ref mut _p)= _board.players.get_mut(player_id){
-                    if let Some(_c) = remainingcards.get(7){
-                        if !_p.discard.contains(_c){
-                            _p.discard.push(remainingcards.remove(8));
-                         
-                        } else {
-                             _p.discard.push(remainingcards.remove(7));
-                        }
+                       responsible: usize,
+                       _board: &mut BoardStruct,
+                       player_id: usize,
+                       remainingcards: &mut Vec<usize>,
+                       wait_for_input: &mut [WaitForInputType; 4],
+                       type_is_reply: &mut bool) {
+
+    match countdown {
+        2 => {
+            if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+                if let Some(_c) = remainingcards.clone().get(7) {
+                    if !_p.discard.contains(_c) {
+                        _p.discard.push(remainingcards.remove(8));
+                    } else {
+                        _p.discard.push(remainingcards.remove(7));
                     }
                 }
             }
-            1=>{
-                if let Some(ref mut _p)= _board.players.get_mut(player_id){
-                    if let (Some(_c1),Some(_c2)) = (remainingcards.get(7),remainingcards.get(8)){
-                        let mut veczz =vec![];
-                        if !_p.discard.contains(_c1){
-                            veczz.push(_c1);
-                        }
-                        if !_p.discard.contains(_c2){
-                            veczz.push(_c2);
-                        }
-                        _p.discard.push(remainingcards.remove(7+veczz.len()));
-                }
-            }
-            0=>{
-                if let Some(ref mut _p)= _board.players.get_mut(player_id){
-                    if let (Some(_c1),Some(_c2),Some(_c3)) = (remainingcards.get(7),remainingcards.get(8),remainingcards.get(9)){
-                        let mut veczz =vec![];
-                        if !_p.discard.contains(_c1){
-                            veczz.push(_c1);
-                        }
-                        if !_p.discard.contains(_c2){
-                            veczz.push(_c2);
-                        }
-                         if !_p.discard.contains(_c3){
-                            veczz.push(_c3);
-                        }
-                        _p.discard.push(remainingcards.remove(7+veczz.len()));
+        }
+        1 => {
+            if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+                if let (Some(_c1), Some(_c2)) =
+                    (remainingcards.clone().get(7), remainingcards.clone().get(8)) {
+                    let mut veczz = vec![];
+                    if !_p.discard.contains(_c1) {
+                        veczz.push(_c1);
+                    }
+                    if !_p.discard.contains(_c2) {
+                        veczz.push(_c2);
+                    }
+                    _p.discard.push(remainingcards.remove(7 + veczz.len()));
                 }
             }
         }
-         if let ref mut _w = wait_for_input[player_id]{
-             if countdown==0{
-               _w.push(None);
-             } else if countdown-1>=0{
-                 let _g: WaitForSingleInput =
-                                (responsible,
-                                "Do you want to put back the card or add to your own discard pile?",
-                                vec![(GameState::PutBackDiscard(countdown-1,responsible),
-                                    "Put back the card".to_owned(),
-                                    Box::new(move |ref mut p, ref mut rmcards| {
-                                        })),(GameState::PutBackDiscard(countdown-1,responsible),
-                                    "Add to own discard pile.".to_owned(),
-                                    Box::new(move |ref mut p, ref mut rmcards| {
-                                        }))]);
-                            _w.push(_g);
-                            _w.push(None);
+        0 => {
+            if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+                if let (Some(_c1), Some(_c2), Some(_c3)) =
+                    (remainingcards.clone().get(7),
+                     remainingcards.clone().get(8),
+                     remainingcards.clone().get(9)) {
+                    let mut veczz = vec![];
+                    if !_p.discard.contains(_c1) {
+                        veczz.push(_c1);
+                    }
+                    if !_p.discard.contains(_c2) {
+                        veczz.push(_c2);
+                    }
+                    if !_p.discard.contains(_c3) {
+                        veczz.push(_c3);
+                    }
+                    _p.discard.push(remainingcards.remove(7 + veczz.len()));
+                }
             }
         }
+        _ => {}
+    }
+    if countdown == 0 {
+        wait_for_input[player_id].push(None);
+    } else if countdown - 1 >= 0 {
+        let _g: WaitForSingleInput =
+            (responsible,
+             "Do you want to put back the card or add to your own discard pile?".to_owned(),
+             vec![(GameState::PutBackDiscard(countdown - 1, responsible),
+                   "Put back the card".to_owned(),
+                   Box::new(move |ref mut p, ref mut rmcards| {})),
+                  (GameState::PutBackDiscard(countdown - 1, responsible),
+                   "Add to own discard pile.".to_owned(),
+                   Box::new(move |ref mut p, ref mut rmcards| {}))]);
+        wait_for_input[player_id].push(Some(_g));
+        wait_for_input[player_id].push(None);
+    }
+
 
     *type_is_reply = false;
+
 }

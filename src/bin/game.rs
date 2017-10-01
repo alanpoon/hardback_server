@@ -3,6 +3,7 @@ use futures::{Sink, Future};
 use websocket::message::OwnedMessage;
 use lobby::Lobby;
 use server_lib::RealDecisionMaker;
+use server_lib::codec::*;
 use logic_lib::game_logic::game_engine::GameCon;
 use std;
 use std::fmt;
@@ -17,6 +18,7 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
     let mut lobby = Lobby::new();
     let mut tables = HashMap::new();
     let mut last_update = std::time::Instant::now();
+
     loop {
         let sixteen_ms = std::time::Duration::from_millis(16);
         let now = std::time::Instant::now();
@@ -59,10 +61,10 @@ pub struct Connection {
     pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl GameCon for Connection {
-    fn tx_send(&self, msg: OwnedMessage) {
+    fn tx_send(&self, msg: ClientReceivedMsg,log:&mut Vec<ClientReceivedMsg>) {
         self.sender
             .clone()
-            .send(msg)
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
             .wait()
             .unwrap();
     }

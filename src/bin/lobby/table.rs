@@ -27,6 +27,7 @@ impl Table {
         }
         let connections = (*self).players.clone();
         println!("t.start_game");
-        std::thread::spawn(|| { GameEngine::new(player_vec, connections).run(rx); });
+            let mut log:Vec<ClientReceivedMsg> = vec![]; 
+        std::thread::spawn(|| { GameEngine::new(player_vec, connections).run(rx,&mut log); });
     }
 }

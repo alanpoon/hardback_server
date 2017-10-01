@@ -21,7 +21,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
             .collect::<Vec<Option<usize>>>();
         skip_cards = _p.skip_cards.clone();
     }
-    println!("wad are the cards skipped{:?}",skip_cards.clone());
+    println!("wad are the cards skipped{:?}", skip_cards.clone());
 
     let mut adv_vec = vec![];
     let mut hor_vec = vec![];

@@ -9,7 +9,8 @@ pub fn use_ink_or_remover<T: GameCon>(_board: &mut BoardStruct,
                                       player_id: usize,
                                       con: &T,
                                       use_ink: Option<usize>,
-                                      use_remover: Option<usize>) {
+                                      use_remover: Option<usize>,
+                                      log: &mut Vec<ClientReceivedMsg>) {
     if let Some(_p) = _board.players.get_mut(player_id) {
         if let Some(z) = use_ink {
             _p.inked_cards.push(z);
@@ -19,10 +20,10 @@ pub fn use_ink_or_remover<T: GameCon>(_board: &mut BoardStruct,
             } else {
                 let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
                                                             .to_owned());
-                let g = json!({
-                                  "boardstate": k
-                              });
-                con.tx_send(OwnedMessage::Text(g.to_string()));
+
+                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                h.set_boardstate(k);
+                con.tx_send(h, log);
 
             }
         }

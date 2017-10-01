@@ -2,17 +2,17 @@ use std::sync::mpsc;
 use server_lib::codec::*;
 use server_lib::cards;
 use server_lib::cards::*;
-use websocket::message::OwnedMessage;
 use game_logic::board::BoardStruct;
 use game_logic;
 use std;
 
 pub trait GameCon {
-    fn tx_send(&self, OwnedMessage);
+    fn tx_send(&self, ClientReceivedMsg, &mut Vec<ClientReceivedMsg>);
 }
 pub trait TheDraft {
     fn player_starting(&self, &mut Player, &[cards::ListCard<BoardStruct>; 180], &mut Vec<usize>);
     fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
+    fn ticks(&self) -> Option<u16>;
 }
 pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
@@ -41,7 +41,10 @@ impl<T> GameEngine<T>
             gamestates: gamestates_v,
         }
     }
-    pub fn run<D: TheDraft>(&mut self, rx: mpsc::Receiver<(usize, GameCommand)>, debug_struct: D) {
+    pub fn run<D: TheDraft>(&mut self,
+                            rx: mpsc::Receiver<(usize, GameCommand)>,
+                            debug_struct: D,
+                            log: &mut Vec<ClientReceivedMsg>) {
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         let mut turn_index = 0;
@@ -49,7 +52,7 @@ impl<T> GameEngine<T>
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
         let mut wait_for_break = false;
-
+        let mut ticks: Option<u16> = debug_struct.ticks();
         let mut count_rec = 0;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);
@@ -69,13 +72,17 @@ impl<T> GameEngine<T>
                                                       &cardmeta,
                                                       &remaining_cards,
                                                       &mut wait_for_input,
-                                                      turn_index);
+                                                      turn_index,
+                                                      ticks,
+                                                      log);
 
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
                                                      &remaining_cards,
-                                                     turn_index);
+                                                     turn_index,
+                                                     ticks,
+                                                     log);
 
 
             while let Ok((player_id, game_command)) = rx.try_recv() {
@@ -98,6 +105,7 @@ impl<T> GameEngine<T>
                                        buy_offer,
                                        buy_lockup,
                                        trash_other,
+                                       putback_discard,
                                        .. },
                         ref mut _board,
                         Some(ref con),
@@ -117,7 +125,8 @@ impl<T> GameEngine<T>
                                                                        player_id,
                                                                        con,
                                                                        use_ink,
-                                                                       use_remover);
+                                                                       use_remover,
+                                                                       log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                         }
                         &mut &mut GameState::TurnToSubmit => {
@@ -126,7 +135,8 @@ impl<T> GameEngine<T>
                                                                        player_id,
                                                                        con,
                                                                        use_ink,
-                                                                       use_remover);
+                                                                       use_remover,
+                                                                       log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             if let Some(true) = game_logic::spell::turn_to_submit(_board,
                                                                                   player_id,
@@ -193,17 +203,17 @@ impl<T> GameEngine<T>
                                 }
                             }
                         }
-                         &mut &mut GameState::PutBackDiscard(ind,responsible)=>{
-                              if let Some(true) = putback_discard{
-                                game_logic::purchase::putback_discard(ind,responsible,
-                                                                         _board,
-                                                                         player_id,
-                                                                         &mut remaining_cards,
-                                                                         wait_vec,
-                                                                         &mut type_is_reply);
-                              }
-   
-                         }
+                        &mut &mut GameState::PutBackDiscard(ind, responsible) => {
+                            if let Some(true) = putback_discard {
+                                game_logic::purchase::putback_discard(ind,
+                                                                      responsible,
+                                                                      _board,
+                                                                      player_id,
+                                                                      &mut remaining_cards,
+                                                                      wait_vec,
+                                                                      &mut type_is_reply);
+                            }
+                        }
                         _ => {
                             println!("stateless, {:?}", _gamestate.clone());
                         }
@@ -227,14 +237,16 @@ impl<T> GameEngine<T>
                                                &remaining_cards,
                                                self.players.clone(),
                                                self.gamestates.clone(),
-                                               turn_index);
+                                               turn_index,
+                                               ticks,
+                                               log);
                     println!("after broadcast len {:?}", wait_for_input[player_id].len());
 
                     if let (_w, Some(_g), Some(_con)) =
                         (&mut wait_for_input[player_id],
                          self.gamestates.get_mut(player_id),
                          self.connections.get(player_id)) {
-                        continue_to_prob::<T>(_w, _g, _con);
+                        continue_to_prob::<T>(player_id, _w, _g, _con, ticks, log);
                         println!("after prob len {:?}", _w.len());
 
                     }
@@ -268,11 +280,18 @@ impl<T> GameEngine<T>
                                                    &remaining_cards,
                                                    self.players.clone(),
                                                    self.gamestates.clone(),
-                                                   turn_index);
+                                                   turn_index,
+                                                   ticks,
+                                                   log);
 
                         if let (Some(_con), Some(_gamestate)) =
                             (self.connections.get(player_id), self.gamestates.get_mut(player_id)) {
-                            continue_to_prob::<T>(&wait_for_input[player_id], _gamestate, &_con);
+                            continue_to_prob::<T>(player_id,
+                                                  &wait_for_input[player_id],
+                                                  _gamestate,
+                                                  &_con,
+                                                  ticks,
+                                                  log);
                         }
                         println!("End of reply's wait vec len:{}",
                                  wait_for_input[player_id].len());
@@ -285,6 +304,10 @@ impl<T> GameEngine<T>
 
             }
             count_rec += 1;
+            if let Some(mut tick) = ticks {
+                tick += 1;
+            }
+
             if (wait_for_break) & (count_rec >= 15) {
                 println!("closing server");
                 break 'game;
@@ -304,9 +327,12 @@ pub fn give_outstarting<D: TheDraft>(players: &mut Vec<Player>,
     }
     owned_deck
 }
-pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
+pub fn continue_to_prob<T: GameCon>(player_num: usize,
+                                    wait_for_input_p: &WaitForInputType,
                                     _g: &mut GameState,
-                                    con: &T)
+                                    con: &T,
+                                    ticks: Option<u16>,
+                                    mut log: &mut Vec<ClientReceivedMsg>)
                                     -> bool {
     if let Some(&Some(ref __w)) = wait_for_input_p.first() {
         println!("solo");
@@ -316,10 +342,10 @@ pub fn continue_to_prob<T: GameCon>(wait_for_input_p: &WaitForInputType,
         for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());
         }
-        let g = json!({
-                                              "request": (card_index,header.clone(), temp_vec)
-                                          });
-        con.tx_send(OwnedMessage::Text(g.to_string()));
+
+        let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+        h.set_request((player_num, card_index, header.clone(), temp_vec, ticks));
+        con.tx_send(h, log);
         true
     } else {
         false
@@ -330,7 +356,9 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
                                          remaining_cards: &Vec<usize>,
                                          players: Vec<Player>,
                                          gamestates: Vec<GameState>,
-                                         turn_index: usize) {
+                                         turn_index: usize,
+                                         ticks: Option<u16>,
+                                         log: &mut Vec<ClientReceivedMsg>) {
     let mut remove_first = false;
     match wait_for_input_p.first() {
         Some(&Some(ref x)) => {
@@ -347,11 +375,14 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
                                                            gamestates: gamestates.clone(),
                                                            offer_row: offer_row,
                                                            turn_index: turn_index,
+                                                           ticks: ticks,
                                                        });
                 let g = json!({
-                                          "boardstate": k
-                                      });
-                con.tx_send(OwnedMessage::Text(g.to_string()));
+                                  "boardstate": k
+                              });
+                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                h.set_boardstate(k);
+                con.tx_send(h, log);
             }
 
             println!("there is really none");

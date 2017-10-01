@@ -26,17 +26,26 @@ pub struct Connection {
     pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl GameCon for Connection {
-    fn tx_send(&self, msg: OwnedMessage) {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
+        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
+        if let Some(Some(_)) = boardstate.clone() {
+            if let Some(0) = self.player_num {
+                log.push(msg.clone());
+            }
+        } else if let Some(Some(_)) = request.clone() {
+            log.push(msg.clone());
+        }
+
         self.sender
             .clone()
-            .send(msg)
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
             .unwrap();
     }
 }
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((usize, String, Vec<String>)),
+    request((usize, usize, String, Vec<String>, Option<u16>)),
     turn_index(usize),
     None,
 }
@@ -51,7 +60,10 @@ fn doubleadjacent() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections).run(rx, TheRomanceDraftStruct {});
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheRomanceDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -103,7 +115,6 @@ fn doubleadjacent() {
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -121,6 +132,7 @@ fn doubleadjacent() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     p.coin += 7;
     p.vp += 2;
@@ -133,13 +145,14 @@ fn doubleadjacent() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((105,
+               Some(ShortRec::request((0,105,
                                        "There are a few valid cards adjacent to this card, can be doubled."
                                            .to_owned(),
-                                       vec!["Continue".to_owned()]))));
+                                       vec!["Continue".to_owned()],None))));
 
     //assert 5
     p.vp += 2;
@@ -150,6 +163,7 @@ fn doubleadjacent() {
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 }
 #[test]
@@ -163,7 +177,10 @@ fn trash_other() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections).run(rx, TheRomanceDraftStruct {});
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheRomanceDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -219,7 +236,6 @@ fn trash_other() {
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -237,6 +253,7 @@ fn trash_other() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     p.vp += 1;
     p.skip_cards.push(110);
@@ -247,13 +264,16 @@ fn trash_other() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((110,
+               Some(ShortRec::request((0,
+                                       110,
                                        "Do you want to trash another card for one cent?"
                                            .to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
+                                       vec!["Yes".to_owned(), "No".to_owned()],
+                                       None))));
     //assert 4
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -261,6 +281,7 @@ fn trash_other() {
                                         gamestates: vec![GameState::TrashOther],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 5
     p.hand = vec![135, 108, 110, 111];
@@ -271,6 +292,7 @@ fn trash_other() {
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 }
 #[test]
@@ -284,7 +306,10 @@ fn keep_or_discard() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections).run(rx, TheRomanceDraftStruct {});
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheRomanceDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -339,7 +364,6 @@ fn keep_or_discard() {
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -357,6 +381,7 @@ fn keep_or_discard() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     p.vp += 1;
     p.skip_cards.push(110);
@@ -367,13 +392,14 @@ fn keep_or_discard() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((110,
+               Some(ShortRec::request((0,110,
                                        "You may draw three cards from the top of deck and choose to keep or discard each of them."
                                            .to_owned(),
-                                       vec!["Continue".to_owned()]))));
+                                       vec!["Continue".to_owned()],None))));
     //assert 4
     assert_eq!(iter_o.next(),
                Some(ShortRec::board(BoardCodec {
@@ -381,6 +407,7 @@ fn keep_or_discard() {
                                         gamestates: vec![GameState::PutBackDiscard(2, 110)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 
 }

@@ -26,17 +26,26 @@ pub struct Connection {
     pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl GameCon for Connection {
-    fn tx_send(&self, msg: OwnedMessage) {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
+        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
+        if let Some(Some(_)) = boardstate.clone() {
+            if let Some(0) = self.player_num {
+                log.push(msg.clone());
+            }
+        } else if let Some(Some(_)) = request.clone() {
+            log.push(msg.clone());
+        }
+
         self.sender
             .clone()
-            .send(msg)
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
             .unwrap();
     }
 }
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
     board(BoardCodec),
-    request((usize, String, Vec<String>)),
+    request((usize, usize, String, Vec<String>, Option<u16>)),
     turn_index(usize),
     None,
 }
@@ -51,7 +60,10 @@ fn arrange_mystery_card() {
                                sender: con_tx,
                            }];
     std::thread::spawn(|| {
-                           GameEngine::new(vec![p], connections).run(rx, TheMysteryDraftStruct {});
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheMysteryDraftStruct {},
+                                                                     &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -137,6 +149,7 @@ fn arrange_mystery_card() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 
 
@@ -149,12 +162,15 @@ fn arrange_mystery_card() {
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((87,
+               Some(ShortRec::request((0,
+                                       87,
                                        "Do you want to lock up any offer row card?".to_owned(),
-                                       vec!["Yes".to_owned(), "No".to_owned()]))));
+                                       vec!["Yes".to_owned(), "No".to_owned()],
+                                       None))));
 
     //assert 4
     assert_eq!(iter_o.next(),
@@ -163,6 +179,7 @@ fn arrange_mystery_card() {
                                         gamestates: vec![GameState::LockUp],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
     p.lockup.push(26);
     //assert 5
@@ -172,6 +189,7 @@ fn arrange_mystery_card() {
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![23, 38, 80, 94, 98, 119, 1],
                                         turn_index: 0,
+                                        ticks: None,
                                     })));
 
 }
