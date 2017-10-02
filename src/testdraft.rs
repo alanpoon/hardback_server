@@ -1,7 +1,10 @@
 use game_logic;
 use server_lib::cards;
 use server_lib::codec::*;
+use game_logic::game_engine::GameCon;
 use game_logic::board::BoardStruct;
+use websocket::message::OwnedMessage;
+use std::sync::mpsc;
 pub struct TheNormalDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn player_starting(&self,
@@ -183,4 +186,36 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
+}
+
+#[derive(Clone)]
+pub struct Connection {
+    pub name: String,
+    pub player_num: Option<usize>,
+    pub sender: mpsc::Sender<OwnedMessage>,
+}
+
+impl GameCon for Connection {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
+        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
+        if let Some(Some(_)) = boardstate.clone() {
+            if let Some(0) = self.player_num {
+                log.push(msg.clone());
+            }
+        } else if let Some(Some(_)) = request.clone() {
+            log.push(msg.clone());
+        }
+
+        self.sender
+            .clone()
+            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
+            .unwrap();
+    }
+}
+#[derive(Debug,PartialEq,Clone)]
+pub enum ShortRec {
+    board(BoardCodec),
+    request((usize, usize, String, Vec<String>, Option<u16>)),
+    turn_index(usize),
+    None,
 }
