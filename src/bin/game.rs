@@ -2,13 +2,13 @@ use futures::sync::mpsc;
 use futures::{Sink, Future};
 use websocket::message::OwnedMessage;
 use lobby::Lobby;
-use server_lib::RealDecisionMaker;
-use server_lib::codec::*;
+use codec_lib::RealDecisionMaker;
+use codec_lib::codec::*;
 use logic_lib::game_logic::game_engine::GameCon;
 use std;
 use std::fmt;
 use std::collections::HashMap;
-use server_lib::cards;
+use codec_lib::cards;
 pub enum GameRxType {
     Sender(String, mpsc::Sender<OwnedMessage>),
     Message(String, OwnedMessage),

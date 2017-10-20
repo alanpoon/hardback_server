@@ -1,6 +1,6 @@
-use server_lib::codec::{GameState, Player};
-use server_lib::cards::*;
-use server_lib::cards;
+use codec_lib::codec::{GameState, Player};
+use codec_lib::cards::*;
+use codec_lib::cards;
 use game_logic::resolve_cards;
 
 pub struct BoardStruct {

@@ -1,6 +1,6 @@
 use game_logic;
-use server_lib::cards;
-use server_lib::codec::*;
+use codec_lib::cards;
+use codec_lib::codec::*;
 use game_logic::game_engine::GameCon;
 use game_logic::board::BoardStruct;
 use websocket::message::OwnedMessage;

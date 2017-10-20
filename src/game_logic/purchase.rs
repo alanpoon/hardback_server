@@ -1,7 +1,7 @@
 use std::sync::mpsc;
-use server_lib::codec::*;
-use server_lib::cards;
-use server_lib::cards::{WaitForInputType, WaitForSingleInput};
+use codec_lib::codec::*;
+use codec_lib::cards;
+use codec_lib::cards::{WaitForInputType, WaitForSingleInput};
 use game_logic::board::BoardStruct;
 use game_logic::resolve_cards;
 

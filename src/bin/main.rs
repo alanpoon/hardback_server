@@ -7,15 +7,17 @@ extern crate serde_json;
 extern crate rand;
 extern crate itertools;
 pub extern crate hardback_server;
-pub extern crate hardback_server_lib;
+pub extern crate hardback_codec;
 
 mod handler;
 pub mod game;
 #[allow(non_snake_case)]
 pub mod lobby;
-pub use hardback_server_lib as server_lib;
+pub use hardback_codec as codec_lib;
 pub use hardback_server as logic_lib;
 const CONNECTION: &'static str = "127.0.0.1:8080";
+
+
 fn main() {
 
     let (game_tx, game_rx) = std::sync::mpsc::channel();

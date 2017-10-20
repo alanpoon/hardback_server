@@ -1,6 +1,6 @@
-use server_lib::codec::*;
-use server_lib::cards;
-use server_lib::cards::{Board, WaitForInputType};
+use codec_lib::codec::*;
+use codec_lib::cards;
+use codec_lib::cards::{Board, WaitForInputType};
 use websocket::message::OwnedMessage;
 use game_logic::game_engine::GameCon;
 use game_logic::wordapi;

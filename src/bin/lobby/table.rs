@@ -1,6 +1,7 @@
 use game::Connection;
 use std::sync::mpsc;
-use server_lib::codec::*;
+use codec_lib::codec::*;
+use logic_lib::testdraft::TheNormalDraftStruct;
 use logic_lib::game_logic::GameEngine;
 use std;
 
@@ -27,7 +28,9 @@ impl Table {
         }
         let connections = (*self).players.clone();
         println!("t.start_game");
-            let mut log:Vec<ClientReceivedMsg> = vec![]; 
-        std::thread::spawn(|| { GameEngine::new(player_vec, connections).run(rx,&mut log); });
+           
+        std::thread::spawn(|| { 
+             let mut log:Vec<ClientReceivedMsg> = vec![]; 
+            GameEngine::new(player_vec, connections).run(rx,TheNormalDraftStruct{},&mut log); });
     }
 }

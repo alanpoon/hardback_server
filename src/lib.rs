@@ -5,7 +5,7 @@ extern crate rust_wordnik;
 extern crate rand;
 #[macro_use]
 extern crate serde_json;
-pub extern crate hardback_server_lib;
+pub extern crate hardback_codec;
 pub mod game_logic;
 pub mod testdraft;
-pub use hardback_server_lib as server_lib;
+pub use hardback_codec as codec_lib;

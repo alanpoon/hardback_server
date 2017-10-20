@@ -1,5 +1,5 @@
-use server_lib::codec::*;
-use server_lib::cards::{self, Board, WaitForInputType, WaitForSingleInput};
+use codec_lib::codec::*;
+use codec_lib::cards::{self, Board, WaitForInputType, WaitForSingleInput};
 use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use websocket::message::OwnedMessage;

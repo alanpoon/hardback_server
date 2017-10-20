@@ -1,6 +1,6 @@
-use server_lib::codec::*;
-use server_lib::cards;
-use server_lib::cards::{GIVEABLE, WaitForInputType, WaitForSingleInput};
+use codec_lib::codec::*;
+use codec_lib::cards;
+use codec_lib::cards::{GIVEABLE, WaitForInputType, WaitForSingleInput};
 use game_logic::board::BoardStruct;
 
 pub fn resolve_cards(mut _board: &mut BoardStruct,

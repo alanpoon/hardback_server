@@ -5,8 +5,8 @@ use game::Connection;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
-use server_lib::codec::*;
-use server_lib::cards;
+use codec_lib::codec::*;
+use codec_lib::cards;
 use itertools::Itertools;
 #[derive(Clone)]
 pub struct Lobby {
@@ -125,7 +125,7 @@ impl Lobby {
                                        leaveTable,
                                        joinLobby,
                                        namechange,
-                                       chat,
+                                       message,
                                        location }) => {
                     if let Some(Some(_)) = newTable {
                         let con_c = self.clone();
@@ -195,7 +195,7 @@ impl Lobby {
                             con.name = _namechange;
                         }
                     }
-                    if let (Some(Some(_chat)), Some(Some(_location))) = (chat, location) {
+                    if let (Some(Some(_chat)), Some(Some(_location))) = (message, location) {
                         let mut table_n = None;
                         let mut sender_n = "defaultname";
                         if let Some(con) = self.connections.get(&addr) {
@@ -203,7 +203,7 @@ impl Lobby {
                             sender_n = &con.name
                         }
                         let g = json!({
-                            "chat": _chat.clone(),
+                            "message": _chat.clone(),
                             "location":_location.clone(),
                             "type":"chat",
                             "sender":sender_n
