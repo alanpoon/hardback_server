@@ -61,7 +61,7 @@ pub struct Connection {
     pub sender: mpsc::Sender<OwnedMessage>,
 }
 impl GameCon for Connection {
-    fn tx_send(&self, msg: ClientReceivedMsg,log:&mut Vec<ClientReceivedMsg>) {
+    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
         self.sender
             .clone()
             .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))

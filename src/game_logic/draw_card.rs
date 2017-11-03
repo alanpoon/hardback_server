@@ -167,7 +167,6 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
         }
     }
     if needtempboardcast {
-        println!("needtempboardcast true");
         for _con in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
             if need_turn_index {
