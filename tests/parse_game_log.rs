@@ -5,14 +5,14 @@ extern crate rust_wordnik;
 extern crate rand;
 #[macro_use]
 extern crate serde_json;
-pub extern crate hardback_server_lib;
+pub extern crate hardback_codec;
 pub extern crate hardback_server;
-pub use hardback_server_lib as server_lib;
+pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
-use server_lib::codec::*;
-use server_lib::cards;
-use server_lib::cards::*;
+use codec_lib::codec::*;
+use codec_lib::cards;
+use codec_lib::cards::*;
 use std::io::prelude::*;
 use std::fs::File;
 use hardback_server::game_logic::board::BoardStruct;

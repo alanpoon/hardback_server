@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
  "cardgame_macros 0.1.0 (git+https://github.com/alanpoon/cardgame_macros.git)",
  "futures 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "hardback_codec 0.1.0 (git+https://github.com/alanpoon/hardback_codec.git)",
+ "hardback_codec 0.1.0",
  "itertools 0.6.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust_wordnik 0.1.0 (git+https://github.com/alanpoon/rust_wordnik.git)",
@@ -154,7 +154,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "hardback_codec"
 version = "0.1.0"
-source = "git+https://github.com/alanpoon/hardback_codec.git#073e2b22fd812b9267ae29bb43604a356c0f8629"
 dependencies = [
  "cardgame_macros 0.1.0 (git+https://github.com/alanpoon/cardgame_macros.git)",
  "serde 1.0.14 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -841,7 +840,6 @@ dependencies = [
 "checksum futures 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)" = "a82bdc62350ca9d7974c760e9665102fc9d740992a528c2254aa930e53b783c4"
 "checksum futures-cpupool 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "77d49e7de8b91b20d6fda43eea906637eff18b96702eb6b2872df8bfab1ad2b5"
 "checksum gcc 0.3.53 (registry+https://github.com/rust-lang/crates.io-index)" = "e8310f7e9c890398b0e80e301c4f474e9918d2b27fca8f48486ca775fa9ffc5a"
-"checksum hardback_codec 0.1.0 (git+https://github.com/alanpoon/hardback_codec.git)" = "<none>"
 "checksum httparse 1.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "af2f2dd97457e8fb1ae7c5a420db346af389926e36f43768b96f101546b04a07"
 "checksum hyper 0.10.13 (registry+https://github.com/rust-lang/crates.io-index)" = "368cb56b2740ebf4230520e2b90ebb0461e69034d85d1945febd9b3971426db2"
 "checksum hyper 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)" = "641abc3e3fcf0de41165595f801376e01106bca1fd876dda937730e477ca004c"

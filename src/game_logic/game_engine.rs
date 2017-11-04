@@ -13,6 +13,7 @@ pub trait TheDraft {
     fn player_starting(&self, &mut Player, &[cards::ListCard<BoardStruct>; 180], &mut Vec<usize>);
     fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
     fn ticks(&self) -> Option<u16>;
+    fn show_draft(&self) -> bool;
 }
 pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
@@ -25,14 +26,8 @@ impl<T> GameEngine<T>
 {
     pub fn new(players: Vec<Player>, connections: Vec<T>) -> Self {
         let mut gamestates_v = vec![];
-        let mut c = 0;
         for _ in &players {
-            if c == 0 {
-                gamestates_v.push(GameState::TurnToSubmit);
-            } else {
-                gamestates_v.push(GameState::Spell);
-            }
-            c += 1;
+            gamestates_v.push(GameState::ShowDraft);
         }
         GameEngine {
             turn_index: 0,
@@ -53,6 +48,13 @@ impl<T> GameEngine<T>
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
         let mut wait_for_break = false;
         let mut ticks: Option<u16> = debug_struct.ticks();
+        if debug_struct.show_draft() {
+            game_logic::show_draft::give_player_index(&self.connections, log);
+            game_logic::show_draft::broadcast(&mut self.gamestates,
+                                              &self.connections,
+                                              &self.players,
+                                              log);
+        }
         let mut count_rec = 0;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);

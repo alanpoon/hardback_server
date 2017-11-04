@@ -75,6 +75,9 @@ impl game_logic::game_engine::TheDraft for TheDraftStruct {
     fn ticks(&self) -> Option<u16> {
         Some(0)
     }
+    fn show_draft(&self) -> bool {
+        true
+    }
 }
 #[cfg(not(test))]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
@@ -158,7 +161,6 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      log: &mut Vec<ClientReceivedMsg>) {
     let mut needtempboardcast = false;
     let mut need_turn_index = false;
-    println!("gamestate in update {:?}", gamestates.clone());
     if let Some(ref mut _g) = gamestates.get_mut(turn_index) {
         if let GameState::DrawCard = **_g {
             **_g = GameState::TurnToSubmit;
