@@ -1,9 +1,7 @@
 use std::sync::mpsc;
 use codec_lib::codec::*;
 use codec_lib::cards;
-use codec_lib::cards::*;
 use game_logic::board::BoardStruct;
-use game_logic;
 
 use std;
 pub trait GameConReplay {
@@ -27,7 +25,7 @@ impl<T> GameEngine<T>
             gamestates: vec![],
             turn_index: 0,
         };
-        if let Some(&ClientReceivedMsg { ref boardstate, ref request, .. }) = log.first() {
+        if let Some(&ClientReceivedMsg { ref boardstate, .. }) = log.first() {
             if let &Some(Some(Ok(ref _boardstate))) = boardstate {
                 let b = _boardstate.clone();
                 g = GameEngine {
@@ -44,8 +42,8 @@ impl<T> GameEngine<T>
     pub fn run(&mut self,
                rx: mpsc::Receiver<Replay>, //is_play,ticks
                log: &Vec<ClientReceivedMsg>) {
-        let mut last_update = std::time::Instant::now();
-        let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
+        let last_update = std::time::Instant::now();
+        let _cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         let mut ticks: u16 = 0;
         let mut log_iter = log.iter();
         log_iter.next();

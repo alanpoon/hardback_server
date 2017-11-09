@@ -1,13 +1,15 @@
 #[allow(non_snake_case)]
 pub mod table;
+pub mod game;
+pub mod handler;
 pub use self::table::Table;
-use game::Connection;
+use lobby::game::Connection;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use futures::{Future, Sink};
 use codec_lib::codec::*;
-use codec_lib::cards;
 use itertools::Itertools;
+
 #[derive(Clone)]
 pub struct Lobby {
     pub connections: HashMap<String, Connection>,
@@ -22,7 +24,7 @@ impl Lobby {
     }
     pub fn make_table(&mut self, player: Connection) {
         let table_n = self.table_index;
-        if let Some(mut c) = self.connections.get_mut(&player.addr) {
+        if let Some(c) = self.connections.get_mut(&player.addr) {
             c.table = Some(table_n);
             c.player_num = Some(0);
         }
@@ -68,14 +70,14 @@ impl Lobby {
     pub fn add_connection(&mut self, player: Connection) {
         self.connections.insert(player.addr.clone(), player);
     }
+    #[allow(unused_mut)]
     pub fn broadcast_tableinfo(&self) {
-        println!("{:?}", self.connections.clone());
+        println!("broadcast{:?}", self.connections.clone());
         let mut table_infos: Vec<TableInfo> = vec![];
         for (key, mut group) in &(self.connections.clone()).into_iter().group_by(|elt| {
                                                                                      (*elt).1.table
                                                                                  }) {
             // Check that the sum of each group is +/- 4.
-
             let mut number_of_player = 3;
             let mut game_started = false;
             let mut player_vec = vec![];
@@ -85,7 +87,7 @@ impl Lobby {
                 game_started = _g.1.game_started;
                 player_vec.push(_g.1.name.clone());
             }
-            if let (Some(table_num), false) = (key, game_started) {
+            if let (Some(_table_num), false) = (key, game_started) {
                 let t = TableInfo::new(player_vec, number_of_player);
                 table_infos.push(t);
             }
@@ -110,6 +112,7 @@ impl Lobby {
             })
             .collect::<Vec<()>>();
     }
+    #[allow(non_snake_case)]
     pub fn from_json(&mut self,
                      addr: String,
                      msg: OwnedMessage,
@@ -170,18 +173,18 @@ impl Lobby {
 
 
                         }
-                    } else if let Some(Some(_joinTable)) = joinTable {
+                    } else if let Some(Some(_join_table)) = joinTable {
                         if let Some(con) = self.connections.get_mut(&addr) {
-                            con.table = Some(_joinTable);
+                            con.table = Some(_join_table);
                         }
-                    } else if let Some(Some(_changePlayers)) = changePlayers {
+                    } else if let Some(Some(_change_players)) = changePlayers {
                         let mut tl = None;
                         if let Some(con) = self.connections.get(&addr) {
                             tl = con.table;
                         }
                         let iter_lobby = self.connections.iter_mut();
                         iter_lobby.filter(|&(_, ref c)| c.table == tl)
-                            .map(|(_, c)| c.number_of_player = _changePlayers.clone())
+                            .map(|(_, c)| c.number_of_player = _change_players.clone())
                             .collect::<Vec<()>>();
                     } else if let Some(Some(_leaveTable)) = leaveTable {
                         if let Some(con) = self.connections.get_mut(&addr) {

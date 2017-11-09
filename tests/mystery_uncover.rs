@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::TheMysteryUnCoverDraftStruct;
+use hardback_server::testdraft::{ShortRec, TheMysteryUnCoverDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -43,13 +43,7 @@ impl GameCon for Connection {
             .unwrap();
     }
 }
-#[derive(Debug,PartialEq,Clone)]
-enum ShortRec {
-    board(BoardCodec),
-    request((usize, usize, String, Vec<String>, Option<u16>)),
-    turn_index(usize),
-    None,
-}
+
 #[test]
 fn arrange_uncover_card() {
     let (tx, rx) = mpsc::channel();
@@ -112,11 +106,11 @@ fn arrange_uncover_card() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }

@@ -74,11 +74,11 @@ fn game_log() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }
@@ -94,7 +94,7 @@ fn game_log() {
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],

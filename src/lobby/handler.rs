@@ -5,7 +5,7 @@ use websocket::message::OwnedMessage;
 use websocket::server::InvalidConnection;
 use websocket::async::Server;
 use std;
-use game::GameRxType;
+use lobby::game::GameRxType;
 pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
     let mut core = Core::new().unwrap();
     let handle = core.handle();

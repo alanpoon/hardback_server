@@ -45,10 +45,10 @@ impl GameCon for Connection {
 }
 #[derive(Debug,PartialEq,Clone)]
 enum ShortRec {
-    board(BoardCodec),
-    request((usize, usize, String, Vec<String>, Option<u16>)), //player_id,card_id,
-    turn_index(usize),
-    player_index(usize),
+    Board(BoardCodec),
+    Request((usize, usize, String, Vec<String>, Option<u16>)), //player_id,card_id,
+    Turn_index(usize),
+    Player_index(usize),
     None,
 }
 #[test]
@@ -76,20 +76,20 @@ fn notifydraft() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 } else if let Some(Some(_player_index)) = player_index {
-                    y = ShortRec::player_index(_player_index);
+                    y = ShortRec::Player_index(_player_index);
                 }
 
             }
         }
         y
     });
-    assert_eq!(iter_o.next(), Some(ShortRec::player_index(0)));
+    assert_eq!(iter_o.next(), Some(ShortRec::Player_index(0)));
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
@@ -98,7 +98,7 @@ fn notifydraft() {
     p.draft = vec![147, 154, 160, 174, 161, 141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::ShowDraft],
                                         offer_row: vec![],

@@ -1,8 +1,7 @@
 use codec_lib::codec::*;
-use codec_lib::cards::{self, Board, WaitForInputType, WaitForSingleInput};
+use codec_lib::cards::{self, WaitForInputType};
 use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
-use websocket::message::OwnedMessage;
 use rand::distributions::{IndependentSample, Range};
 use rand::Rng;
 use rand;
@@ -19,7 +18,7 @@ impl game_logic::game_engine::TheDraft for TheDraftStruct {
         let mut rand_id = vec![];
         let mut two_cards_id = vec![];
         let mut remaining_deck = vec![];
-        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in cardmeta.iter() {
+        for &cards::ListCard { letter, ref genre, id, .. } in cardmeta.iter() {
             if !owned_deck.contains(&id) {
                 //if it is not owned
                 remaining_deck.push(id);
@@ -63,7 +62,7 @@ impl game_logic::game_engine::TheDraft for TheDraftStruct {
                      owned_deck: &Vec<usize>)
                      -> Vec<usize> {
         let mut remaining_deck = vec![];
-        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in cardmeta.iter() {
+        for &cards::ListCard { ref genre, id, .. } in cardmeta.iter() {
             if !owned_deck.contains(&id) {
                 remaining_deck.push(id);
             }
@@ -170,7 +169,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
     }
     if needtempboardcast {
         for _con in cons.iter() {
-            let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+            let offer_row = (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
             if need_turn_index {
 
                 let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();

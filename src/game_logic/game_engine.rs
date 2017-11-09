@@ -19,7 +19,6 @@ pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
     connections: Vec<T>,
     gamestates: Vec<GameState>,
-    turn_index: usize,
 }
 impl<T> GameEngine<T>
     where T: GameCon
@@ -30,7 +29,6 @@ impl<T> GameEngine<T>
             gamestates_v.push(GameState::ShowDraft);
         }
         GameEngine {
-            turn_index: 0,
             players: players,
             connections: connections,
             gamestates: gamestates_v,
@@ -47,7 +45,7 @@ impl<T> GameEngine<T>
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
         let mut wait_for_break = false;
-        let mut ticks: Option<u16> = debug_struct.ticks();
+        let ticks: Option<u16> = debug_struct.ticks();
         if debug_struct.show_draft() {
             game_logic::show_draft::give_player_index(&self.connections, log);
             game_logic::show_draft::broadcast(&mut self.gamestates,
@@ -306,8 +304,8 @@ impl<T> GameEngine<T>
 
             }
             count_rec += 1;
-            if let Some(mut tick) = ticks {
-                tick += 1;
+            if let Some(mut _tick) = ticks {
+                _tick += 1;
             }
 
             if (wait_for_break) & (count_rec >= 15) {
@@ -334,7 +332,7 @@ pub fn continue_to_prob<T: GameCon>(player_num: usize,
                                     _g: &mut GameState,
                                     con: &T,
                                     ticks: Option<u16>,
-                                    mut log: &mut Vec<ClientReceivedMsg>)
+                                    log: &mut Vec<ClientReceivedMsg>)
                                     -> bool {
     if let Some(&Some(ref __w)) = wait_for_input_p.first() {
         println!("solo");
@@ -379,9 +377,6 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
                                                            turn_index: turn_index,
                                                            ticks: ticks,
                                                        });
-                let g = json!({
-                                  "boardstate": k
-                              });
                 let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
                 h.set_boardstate(k);
                 con.tx_send(h, log);

@@ -1,8 +1,8 @@
-use game::Connection;
 use std::sync::mpsc;
 use codec_lib::codec::*;
-use logic_lib::testdraft::TheNormalDraftStruct;
-use logic_lib::game_logic::GameEngine;
+use testdraft::TheNormalDraftStruct;
+use game_logic::GameEngine;
+use lobby::game::Connection;
 use std;
 
 pub struct Table {

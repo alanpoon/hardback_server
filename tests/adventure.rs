@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::TheAdventureDraftStruct;
+use hardback_server::testdraft::{ShortRec, TheAdventureDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -43,13 +43,7 @@ impl GameCon for Connection {
             .unwrap();
     }
 }
-#[derive(Debug,PartialEq,Clone)]
-enum ShortRec {
-    board(BoardCodec),
-    request((usize, usize, String, Vec<String>, Option<u16>)),
-    turn_index(usize),
-    None,
-}
+
 #[test]
 fn arrange_adventure_card() {
     let (tx, rx) = mpsc::channel();
@@ -126,11 +120,11 @@ fn arrange_adventure_card() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }
@@ -148,7 +142,7 @@ fn arrange_adventure_card() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -161,7 +155,7 @@ fn arrange_adventure_card() {
     p.skip_cards = vec![18, 4];
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -170,7 +164,7 @@ fn arrange_adventure_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        18,
                                        "Do you want to trash this card for the benefit?"
                                            .to_owned(),
@@ -181,7 +175,7 @@ fn arrange_adventure_card() {
     p.hand = vec![7, 14, 20, 4];
 
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::WaitForReply],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -190,7 +184,7 @@ fn arrange_adventure_card() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        4,
                                        "Do you want to trash this card for the benefit?"
                                            .to_owned(),
@@ -199,7 +193,7 @@ fn arrange_adventure_card() {
 
     //assert 6
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -209,14 +203,14 @@ fn arrange_adventure_card() {
 
     //assert 7
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,26,"You can't afford to buy this card. Do you want to buy another card?"
+               Some(ShortRec::Request((0,26,"You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned(),
                                        vec!["Yes".to_owned(),
                               "No, I want to end my buy phase".to_owned()],None))));
 
     //assert 8
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::DrawCard],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -224,13 +218,13 @@ fn arrange_adventure_card() {
                                         ticks: None,
                                     })));
     //assert 9
-    assert_eq!(iter_o.next(), Some(ShortRec::turn_index(0)));
+    assert_eq!(iter_o.next(), Some(ShortRec::Turn_index(0)));
     p.discard.extend(p.hand.clone());
     p.arranged = vec![];
     p.hand = vec![70, 177, 7, 148, 141];
     p.draft = vec![];
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],

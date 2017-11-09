@@ -1,4 +1,3 @@
-use std::sync::mpsc;
 use codec_lib::codec::*;
 use codec_lib::cards;
 use codec_lib::cards::{WaitForInputType, WaitForSingleInput};
@@ -46,10 +45,10 @@ pub fn buy_card_from(position_index: usize,
                                                         })),
                                               (GameState::Buy,
                                                "No, I want to another card".to_owned(),
-                                               Box::new(|ref mut p, ref mut rmcards| {})),
+                                               Box::new(|_, ref mut rmcards| {})),
                                               (GameState::DrawCard,
                                                "No, I want to end my buy phase.".to_owned(),
-                                               Box::new(|ref mut p, ref mut rmcards| {}))])))
+                                               Box::new(|_, _| {}))])))
 
                             }
                         }
@@ -60,12 +59,10 @@ pub fn buy_card_from(position_index: usize,
                             .to_owned();
                         Some(Ok((_c,
                                  j,
-                                 vec![(GameState::Buy,
-                                       "Yes".to_owned(),
-                                       Box::new(|ref mut p, _| {})),
+                                 vec![(GameState::Buy, "Yes".to_owned(), Box::new(|_, _| {})),
                                       (GameState::DrawCard,
                                        "No, I want to end my buy phase".to_owned(),
-                                       Box::new(|ref mut p, _| {}))])))
+                                       Box::new(|_, _| {}))])))
                     }
                 }
             }
@@ -122,10 +119,10 @@ pub fn buy_card_from_lockup(position_index: usize,
                         })),
                                       (GameState::Buy,
                                        "No, I want to buy another card.".to_owned(),
-                                       Box::new(|ref mut p, _| {})),
+                                       Box::new(|_, _| {})),
                                       (GameState::DrawCard,
                                        "No, I want to end buy phase.".to_owned(),
-                                       Box::new(|ref mut p, _| {}))])))
+                                       Box::new(|_, _| {}))])))
 
                     }
                 }
@@ -166,7 +163,7 @@ pub fn lockup_a_card(position_index: usize,
 pub fn trash_another_card(position_index: usize,
                           _board: &mut BoardStruct,
                           player_id: usize,
-                          wait_for_input: &mut [WaitForInputType; 4],
+                          _wait_for_input: &mut [WaitForInputType; 4],
                           type_is_reply: &mut bool) {
     if let Some(ref mut _p) = _board.players.get_mut(player_id) {
         _p.hand.remove(position_index);
@@ -174,6 +171,7 @@ pub fn trash_another_card(position_index: usize,
         *type_is_reply = false;
     }
 }
+#[allow(unused_comparisons)]
 pub fn putback_discard(countdown: usize,
                        responsible: usize,
                        _board: &mut BoardStruct,
@@ -233,16 +231,16 @@ pub fn putback_discard(countdown: usize,
     }
     if countdown == 0 {
         wait_for_input[player_id].push(None);
-    } else if countdown - 1 >= 0 {
+    } else if countdown - 1 >= 0usize {
         let _g: WaitForSingleInput =
             (responsible,
              "Do you want to put back the card or add to your own discard pile?".to_owned(),
              vec![(GameState::PutBackDiscard(countdown - 1, responsible),
                    "Put back the card".to_owned(),
-                   Box::new(move |ref mut p, ref mut rmcards| {})),
+                   Box::new(move |ref mut _p, ref mut _rmcards| {})),
                   (GameState::PutBackDiscard(countdown - 1, responsible),
                    "Add to own discard pile.".to_owned(),
-                   Box::new(move |ref mut p, ref mut rmcards| {}))]);
+                   Box::new(move |_, _| {}))]);
         wait_for_input[player_id].push(Some(_g));
         wait_for_input[player_id].push(None);
     }

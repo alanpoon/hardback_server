@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::TheRomanceDraftStruct;
+use hardback_server::testdraft::{ShortRec, TheRomanceDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -42,13 +42,7 @@ impl GameCon for Connection {
             .unwrap();
     }
 }
-#[derive(Debug,PartialEq,Clone)]
-enum ShortRec {
-    board(BoardCodec),
-    request((usize, usize, String, Vec<String>, Option<u16>)),
-    turn_index(usize),
-    None,
-}
+
 #[test]
 fn doubleadjacent() {
     let (tx, rx) = mpsc::channel();
@@ -105,11 +99,11 @@ fn doubleadjacent() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }
@@ -127,7 +121,7 @@ fn doubleadjacent() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -140,7 +134,7 @@ fn doubleadjacent() {
     p.skip_cards.push(135);
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -149,7 +143,7 @@ fn doubleadjacent() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,105,
+               Some(ShortRec::Request((0,105,
                                        "There are a few valid cards adjacent to this card, can be doubled."
                                            .to_owned(),
                                        vec!["Continue".to_owned()],None))));
@@ -158,7 +152,7 @@ fn doubleadjacent() {
     p.vp += 2;
     p.coin += 3;
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -226,11 +220,11 @@ fn trash_other() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }
@@ -248,7 +242,7 @@ fn trash_other() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -259,7 +253,7 @@ fn trash_other() {
     p.skip_cards.push(110);
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -268,7 +262,7 @@ fn trash_other() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        110,
                                        "Do you want to trash another card for one cent?"
                                            .to_owned(),
@@ -276,7 +270,7 @@ fn trash_other() {
                                        None))));
     //assert 4
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TrashOther],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -287,7 +281,7 @@ fn trash_other() {
     p.hand = vec![135, 108, 110, 111];
     p.coin += 1;
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -354,11 +348,11 @@ fn keep_or_discard() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::Turn_index(_turn_index);
                 }
             }
         }
@@ -376,7 +370,7 @@ fn keep_or_discard() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -387,7 +381,7 @@ fn keep_or_discard() {
     p.skip_cards.push(110);
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -396,13 +390,13 @@ fn keep_or_discard() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,110,
+               Some(ShortRec::Request((0,110,
                                        "You may draw three cards from the top of deck and choose to keep or discard each of them."
                                            .to_owned(),
                                        vec!["Continue".to_owned()],None))));
     //assert 4
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::PutBackDiscard(2, 110)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
