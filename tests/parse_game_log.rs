@@ -11,8 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
 use std::io::prelude::*;
 use std::fs::File;
 use hardback_server::game_logic::board::BoardStruct;
@@ -78,7 +76,7 @@ fn game_log() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }

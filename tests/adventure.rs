@@ -11,9 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
@@ -124,7 +121,7 @@ fn arrange_adventure_card() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
@@ -218,7 +215,7 @@ fn arrange_adventure_card() {
                                         ticks: None,
                                     })));
     //assert 9
-    assert_eq!(iter_o.next(), Some(ShortRec::Turn_index(0)));
+    assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
     p.discard.extend(p.hand.clone());
     p.arranged = vec![];
     p.hand = vec![70, 177, 7, 148, 141];

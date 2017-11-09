@@ -270,5 +270,6 @@ pub enum ShortRec {
     Board(BoardCodec),
     Request((usize, usize, String, Vec<String>, Option<u16>)),
     TurnIndex(usize),
+    PlayerIndex(usize),
     None,
 }

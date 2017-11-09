@@ -11,10 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::{ShortRec, TheHorrorDraftStruct};
@@ -112,13 +108,12 @@ fn horror() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -131,7 +126,7 @@ fn horror() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -144,7 +139,7 @@ fn horror() {
     p.skip_cards = vec![52, 38];
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -154,7 +149,7 @@ fn horror() {
 
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        38,
                                        "Choose between".to_owned(),
                                        vec!["Ink".to_owned(), "Ink Remover".to_owned()],
@@ -162,7 +157,7 @@ fn horror() {
     //assert 4
     p.ink += 1;
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::WaitForReply],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -171,7 +166,7 @@ fn horror() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        38,
                                        "Choose between".to_owned(),
                                        vec!["2 vps".to_owned(), "2 coins".to_owned()],
@@ -180,7 +175,7 @@ fn horror() {
     //assert 6
     p.vp += 2;
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],

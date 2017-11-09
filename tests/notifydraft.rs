@@ -11,10 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::TheStartingDraftStruct;
@@ -47,8 +43,8 @@ impl GameCon for Connection {
 enum ShortRec {
     Board(BoardCodec),
     Request((usize, usize, String, Vec<String>, Option<u16>)), //player_id,card_id,
-    Turn_index(usize),
-    Player_index(usize),
+    TurnIndex(usize),
+    PlayerIndex(usize),
     None,
 }
 #[test]
@@ -80,17 +76,16 @@ fn notifydraft() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 } else if let Some(Some(_player_index)) = player_index {
-                    y = ShortRec::Player_index(_player_index);
+                    y = ShortRec::PlayerIndex(_player_index);
                 }
 
             }
         }
         y
     });
-    assert_eq!(iter_o.next(), Some(ShortRec::Player_index(0)));
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+    assert_eq!(iter_o.next(), Some(ShortRec::PlayerIndex(0)));
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.arranged = vec![];

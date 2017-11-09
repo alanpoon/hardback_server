@@ -22,3 +22,6 @@ path = "src/bin/main.rs"
 [lib]
 name = "hardback_server"
 path = "src/lib.rs"
+
+[dev-dependencies]
+serde="1.0"

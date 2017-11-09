@@ -11,10 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::{ShortRec, TheMysteryUnCoverDraftStruct};
@@ -110,13 +106,12 @@ fn arrange_uncover_card() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -129,7 +124,7 @@ fn arrange_uncover_card() {
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -145,7 +140,7 @@ fn arrange_uncover_card() {
                       (73, Some("t".to_owned()))];
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -154,12 +149,12 @@ fn arrange_uncover_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,72,
+               Some(ShortRec::Request((0,72,
                                        "There are a few wild cards adjacent to this card, can be opened".to_owned(),
                                        vec!["Continue".to_owned()],None))));
     //assert 4
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::ResolveAgain(Some(1), 72)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -172,7 +167,7 @@ fn arrange_uncover_card() {
     p.skip_cards.push(178);
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -184,7 +179,7 @@ fn arrange_uncover_card() {
     p.discard.push(26);
     p.coin -= 5;
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::DrawCard],
                                         offer_row: vec![23, 38, 80, 94, 98, 119, 1],
@@ -245,17 +240,16 @@ fn one_vp_per_wild_card() {
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::board(_boardstate);
+                    y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
-                    y = ShortRec::request(_request);
+                    y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
         y
     });
-    let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
@@ -267,7 +261,7 @@ fn one_vp_per_wild_card() {
     p.hand = vec![42, 72, 178, 82, 73];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -280,7 +274,7 @@ fn one_vp_per_wild_card() {
     p.skip_cards.push(73);
     //assert 2
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -289,7 +283,7 @@ fn one_vp_per_wild_card() {
                                     })));
     //assert 3
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        82,
                                        "You gain 3 vp from this card.".to_owned(),
                                        vec!["Continue".to_owned()],
@@ -297,7 +291,7 @@ fn one_vp_per_wild_card() {
     p.vp += 3;
     //assert 4
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::WaitForReply],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
@@ -306,7 +300,7 @@ fn one_vp_per_wild_card() {
                                     })));
     //assert 5
     assert_eq!(iter_o.next(),
-               Some(ShortRec::request((0,
+               Some(ShortRec::Request((0,
                                        73,
                                        "There are no adjacent wild cards that can be flipped over."
                                            .to_owned(),
@@ -314,7 +308,7 @@ fn one_vp_per_wild_card() {
                                        None))));
     //assert 6
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::Buy],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],

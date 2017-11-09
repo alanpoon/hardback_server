@@ -11,10 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::{ShortRec, TheRomanceDraftStruct};
@@ -103,7 +99,7 @@ fn doubleadjacent() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
@@ -224,7 +220,7 @@ fn trash_other() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
@@ -352,7 +348,7 @@ fn keep_or_discard() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }

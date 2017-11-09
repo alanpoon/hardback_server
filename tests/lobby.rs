@@ -5,25 +5,25 @@ extern crate rust_wordnik;
 extern crate rand;
 #[macro_use]
 extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 pub extern crate hardback_codec;
 pub extern crate hardback_server;
 pub use hardback_codec as codec_lib;
-use websocket::ClientBuilder;
+
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
-use hardback_server::game_logic::game_engine::*;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
-use hardback_server::lobby::{game, table, handler};
-use std::sync::mpsc;
+use hardback_server::lobby::{game, handler};
 use websocket::message::OwnedMessage;
 use websocket::ClientBuilder;
 use tokio_core::reactor::Core;
-use hardback_server::testdraft::TheStartingDraftStruct;
 use futures::sync::mpsc;
-const CONNECTION: &'static str = "127.0.0.1:8080";
+use futures::{Sink, Future, Stream};
+use std::error::Error;
+//use hardback_server::testdraft::{ShortRec};
 
+const CONNECTION_SERVER: &'static str = "127.0.0.1:8080";
+const CONNECTION_CLIENT: &'static str = "ws://127.0.0.1:8080";
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -42,56 +42,13 @@ pub enum ConnectionStatus {
     Error(ConnectionError),
     Ok,
 }
-impl GameCon for Connection {
-    fn tx_send(&self, msg: ClientReceivedMsg, log: &mut Vec<ClientReceivedMsg>) {
-        let ClientReceivedMsg { boardstate, request, .. } = msg.clone();
-        if let Some(Some(_)) = boardstate.clone() {
-            if let Some(0) = self.player_num {
-                log.push(msg.clone());
-            }
-        } else if let Some(Some(_)) = request.clone() {
-            log.push(msg.clone());
-        }
-
+impl Connection {
+    fn tx_send(&self, msg: ServerReceivedMsg) {
         self.sender
             .clone()
-            .send(OwnedMessage::Text(ClientReceivedMsg::serialize_send(msg).unwrap()))
+            .send(OwnedMessage::Text(ServerReceivedMsg::serialize_send(msg).unwrap()))
+            .wait()
             .unwrap();
-    }
-}
-#[derive(Debug,PartialEq,Clone)]
-enum ShortRec {
-    board(BoardCodec),
-    request((usize, usize, String, Vec<String>, Option<u16>)), //player_id,card_id,
-    turn_index(usize),
-    player_index(usize),
-    None,
-}
-#[test]
-fn lobby() {
-    let (game_tx, game_rx) = std::sync::mpsc::channel();
-    let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
-    let (futures_tx, futures_rx) = mpsc::channel(3);
-    std::thread::spawn(move || {
-                           println!("running handler");
-                           handler::run(CONNECTION, game_tx);
-                       });
-    std::thread::spawn(move || { game::run(game_rx); });
-
-    let mut connected = false;
-    match run_owned_message(CONNECTION, proxy_tx.clone(), futures_rx) {
-        Ok(_) => connected = true,
-        Err(err) => {
-            println!("reconnecting");
-            connected = false;
-        }
-    }
-
-
-    loop {
-        while let Ok(s) = proxy_rx.try_recv() {
-            println!("s: {:?}", s);
-        }
     }
 }
 pub fn run_owned_message(con: &'static str,
@@ -101,7 +58,7 @@ pub fn run_owned_message(con: &'static str,
     println!("run");
     let gui_c = gui.clone();
     match ClientBuilder::new(con) {
-        Ok(c) => {
+        Ok(_c) => {
             let mut core = Core::new().unwrap();
             let runner = ClientBuilder::new(con)
             .unwrap()
@@ -111,7 +68,7 @@ pub fn run_owned_message(con: &'static str,
                 let (to_server, from_server) = duplex.split();
                 let reader = from_server.for_each(move |msg| {
                     // ... convert it to a string for display in the GUI...
-                    let content = match msg {
+                    let _content = match msg {
                         OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
                         OwnedMessage::Ping(d) => Some(OwnedMessage::Ping(d)),
                         OwnedMessage::Text(f) => {
@@ -138,7 +95,7 @@ pub fn run_owned_message(con: &'static str,
             });
             match core.run(runner) {
                 Ok(_) => {
-                    println!("connected");
+                    println!("_connected");
                     let g = serde_json::to_string(&ConnectionStatus::Ok).unwrap();
                     gui.clone().send(OwnedMessage::Text(g)).unwrap();
                     Ok(())
@@ -156,4 +113,89 @@ pub fn run_owned_message(con: &'static str,
         }
     }
 
+}
+#[derive(Debug,PartialEq,Clone)]
+pub enum ShortRec {
+    Board(BoardCodec),
+    Request((usize, usize, String, Vec<String>, Option<u16>)),
+    TurnIndex(usize),
+    PlayerIndex(usize),
+    Tables,
+    None,
+}
+#[test]
+fn lobby() {
+    let (game_tx, game_rx) = std::sync::mpsc::channel();
+    let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
+    let (_futures_tx, futures_rx) = mpsc::channel(3);
+    let _con = Connection {
+        name: "defaultplayer".to_owned(),
+        player_num: Some(0),
+        sender: _futures_tx,
+    };
+    std::thread::spawn(move || {
+                           println!("running handler");
+                           handler::run(CONNECTION_SERVER, game_tx);
+                       });
+    std::thread::spawn(move || { game::run(game_rx); });
+
+    std::thread::spawn(move || {
+        let mut _connected = false;
+        match run_owned_message(CONNECTION_CLIENT, proxy_tx.clone(), futures_rx) {
+            Ok(_) => _connected = true,
+            Err(_err) => {
+                println!("reconnecting");
+                _connected = false;
+            }
+        }
+    });
+    std::thread::spawn(move || {
+                           let three_seconds = std::time::Duration::new(4, 0);
+                           let mut h = ServerReceivedMsg::deserialize_receive("{}").unwrap();
+                           h.set_new_table(true);
+                           _con.tx_send(h);
+                       });
+
+    let mut iter_o = proxy_rx.iter().enumerate().map(|(index, x)| {
+        let mut y = ShortRec::None;
+        if let OwnedMessage::Text(z) = x {
+            println!("z {:?}", z.clone());
+            if let Ok(ClientReceivedMsg { boardstate,
+                                          request,
+                                          turn_index,
+                                          player_index,
+                                          type_name,
+                                          tables,
+                                          tablenumber,
+                                          .. }) = ClientReceivedMsg::deserialize_receive(&z) {
+                println!("iterenumerate:{:?}", index + 1);
+                if let Some(Some(Ok(_boardstate))) = boardstate {
+                    y = ShortRec::Board(_boardstate);
+                } else if let Some(Some(_request)) = request {
+                    y = ShortRec::Request(_request);
+                } else if let Some(Some(_turn_index)) = turn_index {
+                    y = ShortRec::TurnIndex(_turn_index);
+                } else if let Some(Some(_player_index)) = player_index {
+                    y = ShortRec::PlayerIndex(_player_index);
+                } else if let (Some(Some(_type_name)), Some(Some(_tables)), Some(_tablenumber)) =
+                    (type_name, tables, tablenumber) {
+                    if _type_name == "lobby" {
+                        y = ShortRec::Tables;
+                    }
+                }
+            }
+        }
+        y
+    });
+    assert_eq!(iter_o.next(), Some(ShortRec::Tables));
+    /*
+    assert_eq!(iter_o.next(),
+            Some(ShortRec::Board(BoardCodec {
+                                    players: vec![p.clone()],
+                                    gamestates: vec![GameState::TurnToSubmit],
+                                    offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                    turn_index: 0,
+                                    ticks: None,
+                                })));
+                                */
 }

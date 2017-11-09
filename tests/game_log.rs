@@ -5,18 +5,16 @@ extern crate rust_wordnik;
 extern crate rand;
 #[macro_use]
 extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 pub extern crate hardback_codec;
 pub extern crate hardback_server;
 pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use codec_lib::cards;
-use codec_lib::cards::*;
 use std::io::prelude::*;
 use std::fs::File;
-use hardback_server::game_logic::board::BoardStruct;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::{ShortRec, TheRomanceDraftStruct};
@@ -103,7 +101,7 @@ fn game_log() {
                 } else if let Some(Some(_request)) = request {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::Turn_index(_turn_index);
+                    y = ShortRec::TurnIndex(_turn_index);
                 }
             }
         }
@@ -119,7 +117,7 @@ fn game_log() {
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),
-               Some(ShortRec::board(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
                                         gamestates: vec![GameState::TurnToSubmit],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
