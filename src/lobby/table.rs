@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use codec_lib::codec::*;
-use testdraft::TheNormalDraftStruct;
+use testdraft::TheStartingDraftStruct;
 use game_logic::GameEngine;
 use lobby::game::Connection;
 use std;
@@ -31,7 +31,7 @@ impl Table {
         std::thread::spawn(|| {
                                let mut log: Vec<ClientReceivedMsg> = vec![];
                                GameEngine::new(player_vec, connections).run(rx,
-                                                                            TheNormalDraftStruct {},
+                                                                            TheStartingDraftStruct {},
                                                                             &mut log);
                            });
     }

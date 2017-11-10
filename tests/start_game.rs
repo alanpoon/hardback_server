@@ -115,7 +115,7 @@ pub enum ShortRec {
     None,
 }
 #[test]
-fn lobby() {
+fn start_game() {
     let (game_tx, game_rx) = std::sync::mpsc::channel();
     let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
     let (_futures_tx, futures_rx) = mpsc::channel(3);
@@ -135,9 +135,7 @@ fn lobby() {
                 _connected = false;
             }
         }
-        //sleep if not connection is drop
-        let ten_seconds = std::time::Duration::new(10, 0);
-        std::thread::sleep(ten_seconds);
+
     });
     std::thread::spawn(move || {
         let _con = Connection {
@@ -148,9 +146,13 @@ fn lobby() {
         let three_seconds = std::time::Duration::new(3, 0);
         let ten_seconds = std::time::Duration::new(10, 0);
         std::thread::sleep(three_seconds);
-        let mut h = ServerReceivedMsg::deserialize_receive("{}").unwrap();
-        h.set_new_table(true);
-        _con.tx_send(h);
+        let mut h2 = ServerReceivedMsg::deserialize_receive("{}").unwrap();
+        h2.set_new_table(true);
+        _con.tx_send(h2);
+        std::thread::sleep(three_seconds);
+        let mut h3 = ServerReceivedMsg::deserialize_receive("{}").unwrap();
+        h3.set_ready(true);
+        _con.tx_send(h3);
         //sleep if not connection is drop
         std::thread::sleep(ten_seconds);
     });
@@ -193,6 +195,7 @@ fn lobby() {
     });
     assert_eq!(iter_o.next(), Some(ShortRec::ConnectionOk));
     assert_eq!(iter_o.next(), Some(ShortRec::Tables));
+    assert_eq!(iter_o.next(), Some(ShortRec::PlayerIndex(0)));
     /*assert_eq!(iter_o.next(),
             Some(ShortRec::Board(BoardCodec {
                                     players: vec![p.clone()],

@@ -34,15 +34,12 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
                     println!("found connection");
                     let mut j = vec![];
                     let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                    //notify connection is successfull
                     h.set_connection_status(ConnectionStatus::Ok);
                     con.tx_send(h, &mut j);
-                    /* to do
-                    notify the conection that the connection is successful
-                    */
                     lobby.connections.insert(addr, con);
                 }
                 GameRxType::Message(addr, msg) => {
-
                     lobby.from_json(addr, msg, &mut tables);
                 }
                 GameRxType::Close(addr) => {

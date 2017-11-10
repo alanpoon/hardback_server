@@ -72,7 +72,6 @@ impl Lobby {
     }
     #[allow(unused_mut)]
     pub fn broadcast_tableinfo(&self) {
-        println!("broadcast{:?}", self.connections.clone());
         let mut table_infos: Vec<TableInfo> = vec![];
         for (key, mut group) in &(self.connections.clone()).into_iter().group_by(|elt| {
                                                                                      (*elt).1.table
@@ -119,7 +118,7 @@ impl Lobby {
                      tables: &mut HashMap<usize, Table>) {
 
         if let OwnedMessage::Text(z) = msg {
-            println!("from_json z:{:?}",z);
+            println!("!!!from_json z:{:?}",z);
             match ServerReceivedMsg::deserialize_receive(&z) {
                 Ok(ServerReceivedMsg { gamecommand,
                                        newTable,
@@ -132,7 +131,6 @@ impl Lobby {
                                        message,
                                        location }) => {
                     if let Some(Some(_)) = newTable {
-                        println!("server received newTable");
                         let con_c = self.clone();
                         if let Some(con) = con_c.connections.get(&addr) {
                             self.make_table(con.clone());
@@ -220,7 +218,6 @@ impl Lobby {
                                               c.table == table_n
                                           })
                             .map(|(_, c)| {
-                                println!("uii{}", c.addr);
                                 c.sender
                                     .clone()
                                     .send(OwnedMessage::Text(g.to_string()))
