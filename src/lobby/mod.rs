@@ -119,6 +119,7 @@ impl Lobby {
                      tables: &mut HashMap<usize, Table>) {
 
         if let OwnedMessage::Text(z) = msg {
+            println!("from_json z:{:?}",z);
             match ServerReceivedMsg::deserialize_receive(&z) {
                 Ok(ServerReceivedMsg { gamecommand,
                                        newTable,
@@ -131,6 +132,7 @@ impl Lobby {
                                        message,
                                        location }) => {
                     if let Some(Some(_)) = newTable {
+                        println!("server received newTable");
                         let con_c = self.clone();
                         if let Some(con) = con_c.connections.get(&addr) {
                             self.make_table(con.clone());

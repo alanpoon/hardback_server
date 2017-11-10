@@ -27,14 +27,22 @@ pub fn run(game_rx: std::sync::mpsc::Receiver<GameRxType>) {
             std::thread::sleep(sixteen_ms - duration_since_last_update);
         }
         while let Ok(z) = game_rx.try_recv() {
+            println!("zz,");
             match z {
                 GameRxType::Sender(addr, _sender) => {
                     let con = Connection::new(_sender, addr.clone());
                     println!("found connection");
+                    let mut j = vec![];
+                    let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                    h.set_connection_status(ConnectionStatus::Ok);
+                    con.tx_send(h, &mut j);
+                    /* to do
+                    notify the conection that the connection is successful
+                    */
                     lobby.connections.insert(addr, con);
                 }
                 GameRxType::Message(addr, msg) => {
-                    println!("zz,{:?}", msg.clone());
+
                     lobby.from_json(addr, msg, &mut tables);
                 }
                 GameRxType::Close(addr) => {

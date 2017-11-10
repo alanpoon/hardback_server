@@ -30,18 +30,7 @@ pub struct Connection {
     pub player_num: Option<usize>,
     pub sender: mpsc::Sender<OwnedMessage>,
 }
-#[derive(Serialize,Deserialize)]
-pub enum ConnectionError {
-    NotConnectedToInternet,
-    CannotFindServer,
-    InvalidDestination,
-}
-#[derive(Serialize,Deserialize)]
-#[serde(tag = "connection_status", content = "c")]
-pub enum ConnectionStatus {
-    Error(ConnectionError),
-    Ok,
-}
+
 impl Connection {
     fn tx_send(&self, msg: ServerReceivedMsg) {
         self.sender
@@ -101,6 +90,7 @@ pub fn run_owned_message(con: &'static str,
                     Ok(())
                 }
                 Err(_er) => {
+                    println!("_not_connected");
                     let g = serde_json::to_string(&ConnectionStatus::Error(ConnectionError::CannotFindServer)).unwrap();
                     gui.clone().send(OwnedMessage::Text(g)).unwrap();
                     Err(ConnectionError::CannotFindServer)
@@ -121,6 +111,7 @@ pub enum ShortRec {
     TurnIndex(usize),
     PlayerIndex(usize),
     Tables,
+    ConnectionOk,
     None,
 }
 #[test]
@@ -128,11 +119,7 @@ fn lobby() {
     let (game_tx, game_rx) = std::sync::mpsc::channel();
     let (proxy_tx, proxy_rx) = std::sync::mpsc::channel();
     let (_futures_tx, futures_rx) = mpsc::channel(3);
-    let _con = Connection {
-        name: "defaultplayer".to_owned(),
-        player_num: Some(0),
-        sender: _futures_tx,
-    };
+
     std::thread::spawn(move || {
                            println!("running handler");
                            handler::run(CONNECTION_SERVER, game_tx);
@@ -148,13 +135,25 @@ fn lobby() {
                 _connected = false;
             }
         }
+        //sleep if not connection is drop
+        let ten_seconds = std::time::Duration::new(10, 0);
+        std::thread::sleep(ten_seconds);
     });
     std::thread::spawn(move || {
-                           let three_seconds = std::time::Duration::new(4, 0);
-                           let mut h = ServerReceivedMsg::deserialize_receive("{}").unwrap();
-                           h.set_new_table(true);
-                           _con.tx_send(h);
-                       });
+        let _con = Connection {
+            name: "defaultplayer".to_owned(),
+            player_num: Some(0),
+            sender: _futures_tx,
+        };
+        let three_seconds = std::time::Duration::new(3, 0);
+        let ten_seconds = std::time::Duration::new(10, 0);
+        std::thread::sleep(three_seconds);
+        let mut h = ServerReceivedMsg::deserialize_receive("{}").unwrap();
+        h.set_new_table(true);
+        _con.tx_send(h);
+        //sleep if not connection is drop
+        std::thread::sleep(ten_seconds);
+    });
 
     let mut iter_o = proxy_rx.iter().enumerate().map(|(index, x)| {
         let mut y = ShortRec::None;
@@ -167,6 +166,7 @@ fn lobby() {
                                           type_name,
                                           tables,
                                           tablenumber,
+                                          connection_status,
                                           .. }) = ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index + 1);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
@@ -182,14 +182,18 @@ fn lobby() {
                     if _type_name == "lobby" {
                         y = ShortRec::Tables;
                     }
+                } else if let Some(Some(_connection_status)) = connection_status {
+                    if let ConnectionStatus::Ok = _connection_status {
+                        y = ShortRec::ConnectionOk;
+                    }
                 }
             }
         }
         y
     });
+    assert_eq!(iter_o.next(), Some(ShortRec::ConnectionOk));
     assert_eq!(iter_o.next(), Some(ShortRec::Tables));
-    /*
-    assert_eq!(iter_o.next(),
+    /*assert_eq!(iter_o.next(),
             Some(ShortRec::Board(BoardCodec {
                                     players: vec![p.clone()],
                                     gamestates: vec![GameState::TurnToSubmit],
@@ -197,5 +201,6 @@ fn lobby() {
                                     turn_index: 0,
                                     ticks: None,
                                 })));
-                                */
+      */
+
 }
