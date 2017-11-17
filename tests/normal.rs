@@ -79,7 +79,7 @@ fn arrange_normal_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(147, None), (154, None), (160, None), (174, None), (161, None)]);
+        k1.arranged = Some(vec![(147,false, None), (154,false, None), (160,false, None), (174,false, None), (161,false, None)]);
         //  k.killserver = Some(true);
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
@@ -113,7 +113,7 @@ fn arrange_normal_card() {
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(147, None), (154, None), (160, None), (174, None), (161, None)];
+    p.arranged = vec![(147,false, None), (154,false, None), (160,false, None), (174,false, None), (161,false, None)];
     p.hand = vec![147, 154, 160, 174, 161];
     p.draft = vec![141, 148, 150, 177, 70];
 

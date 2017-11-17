@@ -109,11 +109,11 @@ fn game_log() {
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.coin = 10;
-    p.arranged = vec![(105, Some("a".to_owned())),
-                      (135, Some("d".to_owned())),
-                      (108, Some("a".to_owned())),
-                      (110, None),
-                      (111, Some("t".to_owned()))];
+    p.arranged = vec![(105,false, Some("a".to_owned())),
+                      (135,false, Some("d".to_owned())),
+                      (108,false, Some("a".to_owned())),
+                      (110,false, None),
+                      (111,false, Some("t".to_owned()))];
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),

@@ -17,7 +17,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
     if let Some(_p) = _board.players.get(player_id) {
         valid_card = _p.arranged
             .iter()
-            .map(|x| if let None = x.1 { Some(x.0) } else { None })
+            .map(|x| if let None = x.2 { Some(x.0) } else { None })
             .collect::<Vec<Option<usize>>>();
         skip_cards = _p.skip_cards.clone();
     }

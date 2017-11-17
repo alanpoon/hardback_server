@@ -130,11 +130,11 @@ fn arrange_adventure_card() {
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(7, Some("h".to_owned())),
-                      (14, Some("o".to_owned())), //two_cent_per_adv
-                      (20, Some("u".to_owned())),
-                      (18, None),
-                      (4, None)];
+    p.arranged = vec![(7,false, Some("h".to_owned())),
+                      (14,false, Some("o".to_owned())), //two_cent_per_adv
+                      (20,false, Some("u".to_owned())),
+                      (18,false, None),
+                      (4,false, None)];
     p.hand = vec![7, 14, 20, 18, 4];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1

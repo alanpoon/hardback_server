@@ -97,7 +97,8 @@ impl<T> GameEngine<T>
                     type_is_reply = true;
                 }
 
-                if let (&GameCommand { use_ink,
+                if let (&GameCommand { take_card_use_ink,
+                                       use_ink,
                                        use_remover,
                                        ref arranged,
                                        submit_word,
@@ -127,6 +128,8 @@ impl<T> GameEngine<T>
                                                                        use_ink,
                                                                        use_remover,
                                                                        log);
+                                                                       
+                            game_logic::spell::take_card_use_ink(_board,player_id,take_card_use_ink,wait_vec);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                         }
                         &mut &mut GameState::TurnToSubmit => {
