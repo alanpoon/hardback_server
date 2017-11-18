@@ -104,7 +104,6 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                     }
                 }
                 _p.arranged = vec![];
-                _p.inked_cards = vec![];
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {
@@ -139,7 +138,6 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                     }
                 }
                 _p.arranged = vec![];
-                _p.inked_cards = vec![];
                 _p.skip_cards = vec![];
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;

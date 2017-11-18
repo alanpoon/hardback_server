@@ -11,7 +11,6 @@ pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::testdraft::{ShortRec, TheAdventureDraftStruct};
@@ -42,7 +41,7 @@ impl GameCon for Connection {
 }
 
 #[test]
-fn arrange_adventure_card() {
+fn adventure() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -61,11 +60,11 @@ fn arrange_adventure_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(7, Some("h".to_owned())),
-                                (14, Some("o".to_owned())),
-                                (20, Some("u".to_owned())),
-                                (18, None),
-                                (4, None)]);
+        k1.arranged = Some(vec![(7, false, Some("h".to_owned())),
+                                (14, false, Some("o".to_owned())),
+                                (20, false, Some("u".to_owned())),
+                                (18, false, None),
+                                (4, false, None)]);
 
         //:s=>GIVEABLE::VP(1) purchase ,GIVEABLE::VP(2) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::VP(2) thrash
         //:e=>GIVEABLE::NONE purchase ,GIVEABLE::VP(1) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::COIN(2) thrash
@@ -130,14 +129,15 @@ fn arrange_adventure_card() {
     let h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(7,false, Some("h".to_owned())),
-                      (14,false, Some("o".to_owned())), //two_cent_per_adv
-                      (20,false, Some("u".to_owned())),
-                      (18,false, None),
-                      (4,false, None)];
+    p.arranged = vec![(7, false, Some("h".to_owned())),
+                      (14, false, Some("o".to_owned())), //two_cent_per_adv
+                      (20, false, Some("u".to_owned())),
+                      (18, false, None),
+                      (4, false, None)];
     p.hand = vec![7, 14, 20, 18, 4];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
+
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],

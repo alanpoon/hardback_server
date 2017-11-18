@@ -52,6 +52,15 @@ impl<T> GameEngine<T>
                                               &self.connections,
                                               &self.players,
                                               log);
+        } else {
+            for (index, game_state) in self.gamestates.iter_mut().enumerate() {
+                if index == 0 {
+                    *game_state = GameState::TurnToSubmit;
+                } else {
+                    *game_state = GameState::Spell;
+                }
+
+            }
         }
         let mut count_rec = 0;
         'game: loop {
@@ -122,24 +131,30 @@ impl<T> GameEngine<T>
                     match _gamestate {
                         &mut &mut GameState::Spell => {
                             println!("spell");
-                            game_logic::spell::use_ink_or_remover::<T>(_board,
-                                                                       player_id,
-                                                                       con,
-                                                                       use_ink,
-                                                                       use_remover,
-                                                                       log);
-                                                                       
-                            game_logic::spell::take_card_use_ink(_board,player_id,take_card_use_ink,wait_vec);
+                            game_logic::spell::take_card_use_ink::<T>(_board,
+                                                                      player_id,
+                                                                      con,
+                                                                      take_card_use_ink,
+                                                                      log);
+                            game_logic::spell::use_remover::<T>(_board,
+                                                                player_id,
+                                                                con,
+                                                                use_remover,
+                                                                log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                         }
                         &mut &mut GameState::TurnToSubmit => {
                             println!("TurnToSubmit");
-                            game_logic::spell::use_ink_or_remover::<T>(_board,
-                                                                       player_id,
-                                                                       con,
-                                                                       use_ink,
-                                                                       use_remover,
-                                                                       log);
+                            game_logic::spell::take_card_use_ink::<T>(_board,
+                                                                      player_id,
+                                                                      con,
+                                                                      take_card_use_ink,
+                                                                      log);
+                            game_logic::spell::use_remover::<T>(_board,
+                                                                player_id,
+                                                                con,
+                                                                use_remover,
+                                                                log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             if let Some(true) = game_logic::spell::turn_to_submit(_board,
                                                                                   player_id,

@@ -45,11 +45,11 @@ fn game_log() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(105,false, Some("a".to_owned())),
-                                (135,false, Some("d".to_owned())),
-                                (108,false, Some("a".to_owned())),
-                                (110,false, None),
-                                (111,false, Some("t".to_owned()))]);
+        k1.arranged = Some(vec![(105, false, Some("a".to_owned())),
+                                (135, false, Some("d".to_owned())),
+                                (108, false, Some("a".to_owned())),
+                                (110, false, None),
+                                (111, false, Some("t".to_owned()))]);
         /*
                         purchase         giveable        genre                 trash
         (105,"z",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p,c,w| {
@@ -84,11 +84,11 @@ fn game_log() {
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.coin = 10;
-    p.arranged = vec![(105,false, Some("a".to_owned())),
-                      (135,false, Some("d".to_owned())),
-                      (108,false, Some("a".to_owned())),
-                      (110,false, None),
-                      (111,false, Some("t".to_owned()))];
+    p.arranged = vec![(105, false, Some("a".to_owned())),
+                      (135, false, Some("d".to_owned())),
+                      (108, false, Some("a".to_owned())),
+                      (110, false, None),
+                      (111, false, Some("t".to_owned()))];
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),
