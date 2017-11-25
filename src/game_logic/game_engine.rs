@@ -106,16 +106,16 @@ impl<T> GameEngine<T>
                     type_is_reply = true;
                 }
 
-                if let (&GameCommand { take_card_use_ink,
-                                       use_ink,
-                                       use_remover,
+                if let (&GameCommand { ref take_card_use_ink,
+                                       ref use_ink,
+                                       ref use_remover,
                                        ref arranged,
-                                       submit_word,
-                                       lockup,
-                                       buy_offer,
-                                       buy_lockup,
-                                       trash_other,
-                                       putback_discard,
+                                       ref submit_word,
+                                       ref lockup,
+                                       ref buy_offer,
+                                       ref buy_lockup,
+                                       ref trash_other,
+                                       ref putback_discard,
                                        .. },
                         ref mut _board,
                         Some(ref con),
@@ -135,6 +135,7 @@ impl<T> GameEngine<T>
                                                                       player_id,
                                                                       con,
                                                                       take_card_use_ink,
+                                                                      wait_vec,
                                                                       log);
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
@@ -149,6 +150,7 @@ impl<T> GameEngine<T>
                                                                       player_id,
                                                                       con,
                                                                       take_card_use_ink,
+                                                                      wait_vec,
                                                                       log);
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
@@ -169,7 +171,7 @@ impl<T> GameEngine<T>
 
                         &mut &mut GameState::Buy => {
                             println!("Buy");
-                            if let Some((true, z)) = buy_offer {
+                            if let &Some((true, z)) = buy_offer {
                                 //z top of remaining deck
                                 **_gamestate = GameState::DrawCard;
                                 game_logic::purchase::buy_card_from(z,
@@ -191,7 +193,7 @@ impl<T> GameEngine<T>
 
                         }
                         &mut &mut GameState::LockUp => {
-                            if let Some((true, z)) = lockup {
+                            if let &Some((true, z)) = lockup {
                                 //z:index of player.lockup
                                 println!("there is lockup");
                                 game_logic::purchase::lockup_a_card(z,
@@ -206,7 +208,7 @@ impl<T> GameEngine<T>
                             }
                         }
                         &mut &mut GameState::TrashOther => {
-                            if let Some((true, z)) = trash_other {
+                            if let &Some((true, z)) = trash_other {
                                 game_logic::purchase::trash_another_card(z,
                                                                          _board,
                                                                          player_id,
@@ -222,7 +224,7 @@ impl<T> GameEngine<T>
                             }
                         }
                         &mut &mut GameState::PutBackDiscard(ind, responsible) => {
-                            if let Some(true) = putback_discard {
+                            if let &Some(true) = putback_discard {
                                 game_logic::purchase::putback_discard(ind,
                                                                       responsible,
                                                                       _board,

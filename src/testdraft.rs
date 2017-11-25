@@ -240,7 +240,42 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
         false
     }
 }
-
+pub struct TheUseInkDraftStruct{}
+impl game_logic::game_engine::TheDraft for TheUseInkDraftStruct {
+    fn player_starting(&self,
+                       _p: &mut Player,
+                       _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                       owned_deck: &mut Vec<usize>) {
+        _p.coin = 10;
+        _p.ink = 3;
+        _p.hand = vec![105, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
+        _p.draft = vec![141, 148, 7, 177, 70];
+        owned_deck.extend(_p.hand.clone());
+        owned_deck.extend(_p.draft.clone());
+    }
+    fn deck_starting(&self,
+                     _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     owned_deck: &Vec<usize>)
+                     -> Vec<usize> {
+        //start 4coin,4ink
+        let mut remaining_deck = vec![26, 23, 38, 80, 94, 98, 119, 1]; //a:26 use ink,x:23 can afford,d:38 cannot afford,l:80,94,98,119
+        let mut owned_reserved_deck = owned_deck.clone();
+        owned_reserved_deck.extend(remaining_deck.clone());
+        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in
+            _cardmeta.iter().rev() {
+            if !owned_reserved_deck.contains(&id) {
+                remaining_deck.push(id);
+            }
+        }
+        remaining_deck
+    }
+    fn ticks(&self) -> Option<u16> {
+        None
+    }
+    fn show_draft(&self) -> bool {
+        false
+    }
+}
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -268,7 +303,7 @@ impl GameCon for Connection {
 #[derive(Debug,PartialEq,Clone)]
 pub enum ShortRec {
     Board(BoardCodec),
-    Request((usize, usize, String, Vec<String>, Option<u16>)),
+    Request((usize, usize, String, Vec<String>, Option<u16>)), //player_index,card_index,Vec of option,
     TurnIndex(usize),
     PlayerIndex(usize),
     None,

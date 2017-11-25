@@ -59,11 +59,11 @@ fn arrange_uncover_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(42, false, Some("a".to_owned())),
-                                (72, false, None),
-                                (178, false, Some("a".to_owned())),
-                                (82, false, Some("p".to_owned())),
-                                (73, false, Some("t".to_owned()))]);
+        k1.arranged = Some(vec![(42, false, Some("a".to_owned()),false),
+                                (72, false, None,false),
+                                (178, false, Some("a".to_owned()),false),
+                                (82, false, Some("p".to_owned()),false),
+                                (73, false, Some("t".to_owned()),false)]);
         /*
                         purchase         giveable        genre                 trash
               (42,"i",4,GIVEABLE::NONE,GIVEABLE::VP(2),GIVEABLE::VPORCOIN(2),GIVEABLE::NONE,Genre::HORROR,false,None,None),
@@ -115,11 +115,11 @@ fn arrange_uncover_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(42, false, Some("a".to_owned())),
-                      (72, false, None),
-                      (178, false, Some("a".to_owned())),
-                      (82, false, Some("p".to_owned())),
-                      (73, false, Some("t".to_owned()))];
+    p.arranged = vec![(42, false, Some("a".to_owned()),false),
+                      (72, false, None,false),
+                      (178, false, Some("a".to_owned()),false),
+                      (82, false, Some("p".to_owned()),false),
+                      (73, false, Some("t".to_owned()),false)];
     p.hand = vec![42, 72, 178, 82, 73];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
@@ -133,11 +133,11 @@ fn arrange_uncover_card() {
                                     })));
     p.vp += 1;
     p.skip_cards.push(72);
-    p.arranged = vec![(42, false, None),
-                      (72, false, None),
-                      (178, false, None),
-                      (82, false, Some("p".to_owned())),
-                      (73, false, Some("t".to_owned()))];
+    p.arranged = vec![(42, false, None,false),
+                      (72, false, None,false),
+                      (178, false, None,false),
+                      (82, false, Some("p".to_owned()),false),
+                      (73, false, Some("t".to_owned()),false)];
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
@@ -207,11 +207,11 @@ fn one_vp_per_wild_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(42, false, Some("a".to_owned())),
-                                (72, false, Some("d".to_owned())),
-                                (178, false, Some("a".to_owned())),
-                                (82, false, None), //one_vp_per_wild
-                                (73, false, None)]);
+        k1.arranged = Some(vec![(42, false, Some("a".to_owned()),false),
+                                (72, false, Some("d".to_owned()),false),
+                                (178, false, Some("a".to_owned()),false),
+                                (82, false, None,false), //one_vp_per_wild
+                                (73, false, None,false)]);
 
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
@@ -253,11 +253,11 @@ fn one_vp_per_wild_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(42, false, Some("a".to_owned())),
-                      (72, false, Some("d".to_owned())),
-                      (178, false, Some("a".to_owned())),
-                      (82, false, None), //one_vp_per_wild
-                      (73, false, None)]; //uncover
+    p.arranged = vec![(42, false, Some("a".to_owned()),false),
+                      (72, false, Some("d".to_owned()),false),
+                      (178, false, Some("a".to_owned()),false),
+                      (82, false, None,false), //one_vp_per_wild
+                      (73, false, None,false)]; //uncover
     p.hand = vec![42, 72, 178, 82, 73];
     p.draft = vec![141, 148, 7, 177, 70];
     assert_eq!(iter_o.next(),

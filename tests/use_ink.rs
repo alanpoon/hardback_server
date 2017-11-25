@@ -5,19 +5,15 @@ extern crate rust_wordnik;
 extern crate rand;
 #[macro_use]
 extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 pub extern crate hardback_codec;
 pub extern crate hardback_server;
 pub use hardback_codec as codec_lib;
 
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
-use std::io::prelude::*;
-use std::fs::File;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::{ShortRec, TheRomanceDraftStruct};
+use hardback_server::testdraft::{ShortRec, TheUseInkDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -45,7 +41,7 @@ impl GameCon for Connection {
 }
 
 #[test]
-fn game_log() {
+fn use_ink() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -54,40 +50,34 @@ fn game_log() {
                                player_num: Some(0),
                                sender: con_tx,
                            }];
-
     std::thread::spawn(|| {
-        let mut log: Vec<ClientReceivedMsg> = vec![];
-        GameEngine::new(vec![p], connections).run(rx, TheRomanceDraftStruct {}, &mut log);
-        let s = json!({
-                          "log": log
-                      });
-        let mut buffer = File::create("foo.txt").unwrap();
-
-        buffer.write(s.to_string().as_bytes()).unwrap();
-        println!("finish");
-    });
+                           let mut log: Vec<ClientReceivedMsg> = vec![];
+                           GameEngine::new(vec![p], connections).run(rx,
+                                                                     TheUseInkDraftStruct {},
+                                                                     &mut log);
+                       });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(105, false, Some("a".to_owned()),false),
-                                (135, false, Some("d".to_owned()),false),
-                                (108, false, Some("a".to_owned()),false),
-                                (110, false, None,false),
-                                (111, false, Some("t".to_owned()),false)]);
-        /*
-                        purchase         giveable        genre                 trash
-        (105,"z",5,GIVEABLE::NONE,GIVEABLE::COIN(2),GIVEABLE::COIN(2),GIVEABLE::NONE,Genre::ROMANCE,false,Some(Box::new(|ref mut b, p,c,w| {
-            //rommanc, Non-gen:double adjacent
-            b.double_adjacent(p,c,w);
-        })),None), 
-        (135,"o",8,GIVEABLE::NONE,GIVEABLE::VPCOIN(1,2),GIVEABLE::VPCOIN(1,1),GIVEABLE::NONE,Genre::ROMANCE,true,None,None),
-        }))),
-        */
-        k1.killserver = Some(true);
+        k1.arranged = Some(vec![(7, false, Some("h".to_owned()),false),
+                                (14, false, Some("o".to_owned()),false),
+                                (20, false, Some("u".to_owned()),false),
+                                (18, false, None,false),
+                                (4, false, None,false)]);
+
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
-
+        //assert 2 
+        let mut k2 = GameCommand::new();
+        k2.take_card_use_ink = Some(true);
+        tx.send((0, k2)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 3 confirm
+        let mut k3 = GameCommand::new();
+        k3.reply = Some(0);
+        tx.send((0,k3)).unwrap();
+        std::thread::sleep(three_seconds);
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -95,7 +85,7 @@ fn game_log() {
         if let OwnedMessage::Text(z) = x {
             if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate:{:?}", index + 1);
+                println!("iterenumerate:{:?}", index);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
                     y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
@@ -108,14 +98,18 @@ fn game_log() {
         y
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
-    p.coin = 10;
-    p.arranged = vec![(105, false, Some("a".to_owned()),false),
-                      (135, false, Some("d".to_owned()),false),
-                      (108, false, Some("a".to_owned()),false),
-                      (110, false, None,false),
-                      (111, false, Some("t".to_owned()),false)];
+    //Test arranged
+    p.arranged = vec![(7, false, Some("h".to_owned()),false),
+                      (14, false, Some("o".to_owned()),false), //two_cent_per_adv
+                      (20, false, Some("u".to_owned()),false),
+                      (18, false, None,false),
+                      (4, false, None,false)];
+    p.coin =10;
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
+    p.ink =3;
+    //assert 1
+
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
@@ -124,5 +118,23 @@ fn game_log() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-    loop {}
+
+    //Test use_ink
+    //assert 2 
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Request((0,141,
+                                       "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()],None))));
+    p.arranged.push((p.draft.remove(0),true,None,false));
+    p.ink-=1;
+    //assert 3
+    assert_eq!(iter_o.next(),
+            Some(ShortRec::Board(BoardCodec {
+                                    players: vec![p.clone()],
+                                    gamestates: vec![GameState::TurnToSubmit],
+                                    offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                    turn_index: 0,
+                                    ticks: None,
+                                })));
 }

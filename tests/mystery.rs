@@ -59,11 +59,11 @@ fn arrange_mystery_card() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(76, false, Some("h".to_owned())),
-                                (83, false, Some("o".to_owned())),
-                                (89, false, Some("u".to_owned())),
-                                (87, false, None),
-                                (73, false, Some("e".to_owned()))]);
+        k1.arranged = Some(vec![(76, false, Some("h".to_owned()),false),
+                                (83, false, Some("o".to_owned()),false),
+                                (89, false, Some("u".to_owned()),false),
+                                (87, false, None,false),
+                                (73, false, Some("e".to_owned()),false)]);
         /*
                         purchase             giveable                genre giveable      trash
                 (89,"u",2,GIVEABLE::NONE,GIVEABLE::COIN(1),GIVEABLE::COIN(1),GIVEABLE::NONE,Genre::MYSTERY,false,None,Some(Box::new(|ref mut b, p,c,w| {
@@ -124,11 +124,11 @@ fn arrange_mystery_card() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(76, false, Some("h".to_owned())),
-                      (83, false, Some("o".to_owned())),
-                      (89, false, Some("u".to_owned())),
-                      (87, false, None),
-                      (73, false, Some("e".to_owned()))];
+    p.arranged = vec![(76, false, Some("h".to_owned()),false),
+                      (83, false, Some("o".to_owned()),false),
+                      (89, false, Some("u".to_owned()),false),
+                      (87, false, None,false),
+                      (73, false, Some("e".to_owned()),false)];
     p.hand = vec![76, 83, 89, 87, 73];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1
