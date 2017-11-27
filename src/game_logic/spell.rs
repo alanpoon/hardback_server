@@ -8,32 +8,52 @@ use game_logic::board::BoardStruct;
 pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
                                player_id: usize,
                                con: &T,
-                               use_remover: &Option<Vec<usize>>,
+                               use_remover: Option<Vec<usize>>,
+                               wait_for_input: &mut [WaitForInputType; 4],
                                log: &mut Vec<ClientReceivedMsg>) {
-    if let (Some(ref mut _p), &Some(ref _r)) = (_board.players.get_mut(player_id), use_remover) {
-        let mut arrange_c = _p.arranged.clone();
-        let arrange_filter = _p.arranged.clone();
-        let filter = arrange_filter.iter()
-            .filter(|&&(card_i, _, _, _timeless)| _r.contains(&card_i))
-            .collect::<Vec<&(usize, bool, Option<String>, bool)>>();
-        if filter.is_empty() {
-            let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
-                                                        .to_owned());
-            let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-            h.set_boardstate(k);
-            con.tx_send(h, log);
-        } else {
-            for &mut (ref card_i, ref mut ink_bool, ref mut op_st, ref _timeless) in
-                arrange_c.iter_mut() {
-                if _r.contains(&card_i) {
-                    *ink_bool = false;
-                    *op_st = None;
+    if let Some(vec_r) = use_remover {
+        if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+            let p_c = _p.clone();
+            let arrange_filter = _p.arranged.clone();
+            let filter = arrange_filter.iter()
+                .filter(|&&(card_i, _, _, _timeless)| vec_r.contains(&card_i))
+                .collect::<Vec<&(usize, bool, Option<String>, bool)>>();
+            if filter.is_empty() {
+                let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
+                                                            .to_owned());
+                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                h.set_boardstate(k);
+                con.tx_send(h, log);
+            } else if p_c.remover == 0 {
+                let k: Result<BoardCodec, String> = Err("Not enough remover".to_owned());
+                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                h.set_boardstate(k);
+                con.tx_send(h, log);
+            } else {
+                for _r in vec_r {
+                    let _g: WaitForSingleInput =
+            (_r.clone(),
+             "You may convert this inked card back to a normal card using a remover token. You may add it back to your hand or use it to form word or a wild card.".to_owned(),
+             vec![(GameState::TurnToSubmit,
+                   "Continue".to_owned(),
+                   Box::new(move |ref mut _p, ref mut _rmcards| {
+                    _p.remover-=1;
+                    for &mut (ref _card,ref mut _ink_bool,_,_) in _p.arranged.iter_mut(){
+                        if *_card==_r.clone(){
+                            *_ink_bool = false;
+                        }
+                    }
+                    
+                   }))]);
+                    wait_for_input[player_id].push(Some(_g));
                 }
+                wait_for_input[player_id].push(None);
             }
-            _p.arranged = arrange_c;
-        }
 
+
+        }
     }
+
 }
 pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
                                      player_id: usize,

@@ -240,14 +240,15 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
         false
     }
 }
-pub struct TheUseInkDraftStruct {}
-impl game_logic::game_engine::TheDraft for TheUseInkDraftStruct {
+pub struct TheOverlayDraftStruct {}
+impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
         _p.ink = 3;
+        _p.remover = 2;
         _p.hand = vec![105, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
         _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());

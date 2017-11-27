@@ -13,7 +13,7 @@ use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::{ShortRec, TheUseInkDraftStruct};
+use hardback_server::testdraft::{ShortRec, TheOverlayDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -41,7 +41,7 @@ impl GameCon for Connection {
 }
 
 #[test]
-fn use_ink() {
+fn overlay() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -53,7 +53,7 @@ fn use_ink() {
     std::thread::spawn(|| {
                            let mut log: Vec<ClientReceivedMsg> = vec![];
                            GameEngine::new(vec![p], connections).run(rx,
-                                                                     TheUseInkDraftStruct {},
+                                                                     TheOverlayDraftStruct {},
                                                                      &mut log);
                        });
     std::thread::spawn(move || {
@@ -77,6 +77,31 @@ fn use_ink() {
         let mut k3 = GameCommand::new();
         k3.reply = Some(0);
         tx.send((0, k3)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 2
+        let mut k2b = GameCommand::new();
+        k2b.take_card_use_ink = Some(true);
+        tx.send((0, k2b)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 3 confirm
+        let mut k3b = GameCommand::new();
+        k3b.reply = Some(0);
+        tx.send((0, k3b)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 4
+        let mut k4 = GameCommand::new();
+        k4.use_remover = Some(vec![141, 148]);
+        tx.send((0, k4)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 5 confirm
+        let mut k5 = GameCommand::new();
+        k5.reply = Some(0);
+        tx.send((0, k5)).unwrap();
+        std::thread::sleep(three_seconds);
+        //assert 5 confirm
+        let mut k5b = GameCommand::new();
+        k5b.reply = Some(0);
+        tx.send((0, k5b)).unwrap();
         std::thread::sleep(three_seconds);
     });
 
@@ -105,11 +130,11 @@ fn use_ink() {
                       (18, false, None, false),
                       (4, false, None, false)];
     p.coin = 10;
+    p.remover = 2;
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
     p.ink = 3;
     //assert 1
-
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
@@ -118,7 +143,6 @@ fn use_ink() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-
     //Test use_ink
     //assert 2
     assert_eq!(iter_o.next(),
@@ -129,6 +153,58 @@ fn use_ink() {
     p.arranged.push((p.draft.remove(0), true, None, false));
     p.ink -= 1;
     //assert 3
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+    //Test use_ink
+    //assert 2b
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Request((0,148,
+                                       "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()],None))));
+    p.arranged.push((p.draft.remove(0), true, None, false));
+    p.ink -= 1;
+    //assert 3b
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+    //Test use_remover
+    //assert 4
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Request((0,141,
+                                       "You may convert this inked card back to a normal card using a remover token. You may add it back to your hand or use it to form word or a wild card."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()],None))));
+    p.remover -= 1;
+    for &mut (ref _ci, ref mut _ink, _, _) in p.arranged.iter_mut() {
+        if *_ci == 141 {
+            *_ink = false;
+        }
+    }
+    assert_eq!(iter_o.next(),
+              Some(ShortRec::Request((0,148,
+                                       "You may convert this inked card back to a normal card using a remover token. You may add it back to your hand or use it to form word or a wild card."
+                                           .to_owned(),
+                                       vec!["Continue".to_owned()],None))));
+    //assert 5
+    p.remover -= 1;
+    for &mut (ref _ci, ref mut _ink, _, _) in p.arranged.iter_mut() {
+        if *_ci == 148 {
+            *_ink = false;
+        }
+    }
+    //assert 6
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],

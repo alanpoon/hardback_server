@@ -140,7 +140,8 @@ impl<T> GameEngine<T>
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
                                                                 con,
-                                                                use_remover,
+                                                                use_remover.clone(),
+                                                                wait_vec,
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                         }
@@ -155,7 +156,8 @@ impl<T> GameEngine<T>
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
                                                                 con,
-                                                                use_remover,
+                                                                use_remover.clone(),
+                                                                wait_vec,
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             if let Some(true) = game_logic::spell::turn_to_submit(_board,
