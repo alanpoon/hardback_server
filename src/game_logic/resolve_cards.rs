@@ -2,7 +2,12 @@ use codec_lib::codec::*;
 use codec_lib::cards;
 use codec_lib::cards::{GIVEABLE, WaitForInputType};
 use game_logic::board::BoardStruct;
-
+#[derive(Clone)]
+pub enum CardType {
+    Inked,
+    Normal(usize),
+    OthersTimeless(usize),
+}
 pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -13,13 +18,35 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
         it.push(None);
     }
     let mut valid_card = vec![];
+    let mut own_timeless_class_card = vec![];
     let mut skip_cards = vec![];
-    if let Some(_p) = _board.players.get(player_id) {
+    if let Some(ref _p) = _board.players.get(player_id) {
         valid_card = _p.arranged
             .iter()
-            .map(|x| if let None = x.2 { Some(x.0) } else { None })
-            .collect::<Vec<Option<usize>>>();
+            .map(|ref x| if x.3 {
+                     if _p.timeless_classic.contains(&x.0) {
+                         //remove from timeless_class
+                         own_timeless_class_card.push(x.0);
+                         CardType::Normal(x.0)
+                     } else {
+                         CardType::OthersTimeless(x.0)
+                     }
+                 } else {
+                     if let None = x.2 {
+                         CardType::Normal(x.0)
+                     } else {
+                         CardType::Inked
+                     }
+                 })
+            .collect::<Vec<CardType>>();
         skip_cards = _p.skip_cards.clone();
+    }
+    if let Some(ref mut _p) = _board.players.get_mut(player_id) {
+        for _time in own_timeless_class_card {
+            if let Some(_card_position) = _p.timeless_classic.iter().position(|&x| x == _time) {
+                _p.timeless_classic.remove(_card_position);
+            }
+        }
     }
     println!("wad are the cards skipped{:?}", skip_cards.clone());
 
@@ -28,23 +55,33 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
     let mut mys_vec = vec![];
     let mut rom_vec = vec![];
     for t in &valid_card {
-        if let &Some(_c) = t {
-            track_genre(_c.clone(),
-                        &cardmeta,
-                        &mut adv_vec,
-                        &mut hor_vec,
-                        &mut mys_vec,
-                        &mut rom_vec);
+        match t {
+            &CardType::Normal(_c) => {
+                track_genre(_c.clone(),
+                            &cardmeta,
+                            &mut adv_vec,
+                            &mut hor_vec,
+                            &mut mys_vec,
+                            &mut rom_vec);
+                //skip_cards delay resolve, check if card is
+                if let None = skip_cards.iter().position(|&x| x == _c) {
+                    resolve_giveable(_c.clone(),
+                                     &cardmeta,
+                                     player_id,
+                                     &mut _board,
+                                     wait_for_input);
 
-            if let None = skip_cards.iter().position(|&x| x == _c) {
-                resolve_giveable(_c.clone(),
-                                 &cardmeta,
-                                 player_id,
-                                 &mut _board,
-                                 wait_for_input);
-
+                }
             }
-
+            &CardType::Inked => {}
+            &CardType::OthersTimeless(_c) => {
+                for ref mut _p in _board.players.iter_mut() {
+                    if let Some(_card_position) =
+                        _p.timeless_classic.iter().position(|&x| x == _c) {
+                        _p.timeless_classic.remove(_card_position);
+                    }
+                }
+            }
         }
     }
 
@@ -57,9 +94,9 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                            &mut _board,
                            wait_for_input,
                            &cardmeta,
-                           &valid_card);
+                           valid_card.clone());
     for t in &valid_card {
-        if let &Some(_c) = t {
+        if let &CardType::Normal(_c) = t {
             if let None = skip_cards.iter().position(|&x| x == _c) {
                 skip_cards.push(_c);
             }
@@ -162,11 +199,11 @@ pub fn resolve_trash_giveable(player_id: usize,
                               board: &mut BoardStruct,
                               wait_for_input: &mut [WaitForInputType; 4],
                               cardmeta: &[cards::ListCard<BoardStruct>; 180],
-                              valid_card: &Vec<Option<usize>>) {
+                              valid_card: Vec<CardType>) {
     if let (Some(ref mut z), ref mut _wait_vec) =
         (board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
-        for &_oc in valid_card {
-            if let Some(_c) = _oc {
+        for _oc in valid_card {
+            if let CardType::Normal(_c) = _oc {
                 let y = z.skip_cards.iter().position(|&x| x == _c);
                 println!("yyyy{:?}", y);
                 if let None = z.skip_cards.iter().position(|&x| x == _c) {
@@ -174,7 +211,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                     let vec_option: Option<Vec<(GameState,
                                                 String,
                                                 Box<Fn(&mut Player, &mut Vec<usize>)>)>> =
-                        match cardmeta[_c].trash {
+                        match cardmeta[_c.clone()].trash {
                             GIVEABLE::VP(_x) => {
                                 Some(vec![(GameState::Buy,
                                            "Yes".to_owned(),

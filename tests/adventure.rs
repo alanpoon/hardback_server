@@ -60,11 +60,11 @@ fn adventure() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(7, false, Some("h".to_owned()),false),
-                                (14, false, Some("o".to_owned()),false),
-                                (20, false, Some("u".to_owned()),false),
-                                (18, false, None,false),
-                                (4, false, None,false)]);
+        k1.arranged = Some(vec![(7, false, Some("h".to_owned()), false),
+                                (14, false, Some("o".to_owned()), false),
+                                (20, false, Some("u".to_owned()), false),
+                                (18, false, None, false),
+                                (4, false, None, false)]);
 
         //:s=>GIVEABLE::VP(1) purchase ,GIVEABLE::VP(2) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::VP(2) thrash
         //:e=>GIVEABLE::NONE purchase ,GIVEABLE::VP(1) giveable ,GIVEABLE::VP(1) genre,GIVEABLE::COIN(2) thrash
@@ -128,11 +128,11 @@ fn adventure() {
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(7, false, Some("h".to_owned()),false),
-                      (14, false, Some("o".to_owned()),false), //two_cent_per_adv
-                      (20, false, Some("u".to_owned()),false),
-                      (18, false, None,false),
-                      (4, false, None,false)];
+    p.arranged = vec![(7, false, Some("h".to_owned()), false),
+                      (14, false, Some("o".to_owned()), false), //two_cent_per_adv
+                      (20, false, Some("u".to_owned()), false),
+                      (18, false, None, false),
+                      (4, false, None, false)];
     p.hand = vec![7, 14, 20, 18, 4];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1

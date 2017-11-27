@@ -188,8 +188,12 @@ impl Board for BoardStruct {
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let num_wild = _p.arranged
                 .iter()
-                .filter(|&&(ref _cx, _, ref _w,ref _timeless)| if let &Some(_) = _w { true } else { false })
-                .collect::<Vec<&(usize, bool, Option<String>,bool)>>()
+                .filter(|&&(ref _cx, _, ref _w, ref _timeless)| if let &Some(_) = _w {
+                            true
+                        } else {
+                            false
+                        })
+                .collect::<Vec<&(usize, bool, Option<String>, bool)>>()
                 .len();
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
@@ -226,7 +230,7 @@ impl Board for BoardStruct {
 pub fn get_valid_cards(_p: &mut Player) -> Vec<Option<usize>> {
     let mut valid_card = vec![];
     for it in _p.arranged.iter() {
-        let &(_a, _, ref _w,ref _timeless) = it;
+        let &(_a, _, ref _w, ref _timeless) = it;
         if let &Some(_) = _w {
             valid_card.push(None);
         } else {
@@ -239,7 +243,8 @@ fn there_is_wild_beside(_p: &mut Player, position_card: Option<usize>) -> bool {
     let mut there_is_wild_beside = false;
     if let Some(_position_card) = position_card {
         if _position_card == 0 {
-            if let Some(&mut (_covered_card, _, ref mut _wild,ref _timeless)) = _p.arranged.get_mut(1) {
+            if let Some(&mut (_covered_card, _, ref mut _wild, ref _timeless)) =
+                _p.arranged.get_mut(1) {
                 //remove wild
                 if let &mut Some(_) = _wild {
                     *_wild = None;
@@ -247,7 +252,7 @@ fn there_is_wild_beside(_p: &mut Player, position_card: Option<usize>) -> bool {
                 }
             }
         } else if _position_card == _p.arranged.len() - 1 {
-            if let Some(&mut (_covered_card, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (_covered_card, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card - 1) {
                 //remove wild
                 if let &mut Some(_) = _wild {
@@ -256,7 +261,7 @@ fn there_is_wild_beside(_p: &mut Player, position_card: Option<usize>) -> bool {
                 }
             }
         } else {
-            if let Some(&mut (_covered_card, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (_covered_card, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card - 1) {
                 //remove wild
                 if let &mut Some(_) = _wild {
@@ -264,7 +269,7 @@ fn there_is_wild_beside(_p: &mut Player, position_card: Option<usize>) -> bool {
                     there_is_wild_beside = true;
                 }
             }
-            if let Some(&mut (_covered_card, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (_covered_card, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card + 1) {
                 //remove wild
                 if let &mut Some(_) = _wild {
@@ -281,14 +286,15 @@ fn there_is_valid_beside(_p: &mut Player, position_card: Option<usize>) -> (bool
     let mut cards_to_double = vec![];
     if let Some(_position_card) = position_card {
         if _position_card == 0 {
-            if let Some(&mut (card_index, _, ref mut _wild,ref _timeless)) = _p.arranged.get_mut(1) {
+            if let Some(&mut (card_index, _, ref mut _wild, ref _timeless)) =
+                _p.arranged.get_mut(1) {
                 if let &mut None = _wild {
                     cards_to_double.push(card_index);
                     there_is_valid_beside = true;
                 }
             }
         } else if _position_card == _p.arranged.len() - 1 {
-            if let Some(&mut (card_index, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (card_index, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card - 1) {
                 //remove wild
                 if let &mut None = _wild {
@@ -297,7 +303,7 @@ fn there_is_valid_beside(_p: &mut Player, position_card: Option<usize>) -> (bool
                 }
             }
         } else {
-            if let Some(&mut (card_index, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (card_index, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card - 1) {
                 //remove wild
                 if let &mut None = _wild {
@@ -305,7 +311,7 @@ fn there_is_valid_beside(_p: &mut Player, position_card: Option<usize>) -> (bool
                     there_is_valid_beside = true;
                 }
             }
-            if let Some(&mut (card_index, _, ref mut _wild,ref _timeless)) =
+            if let Some(&mut (card_index, _, ref mut _wild, ref _timeless)) =
                 _p.arranged.get_mut(_position_card + 1) {
                 //remove wild
                 if let &mut None = _wild {

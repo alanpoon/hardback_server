@@ -240,7 +240,7 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
         false
     }
 }
-pub struct TheUseInkDraftStruct{}
+pub struct TheUseInkDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheUseInkDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,

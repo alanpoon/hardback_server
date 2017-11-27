@@ -60,11 +60,11 @@ fn horror() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(41, false, Some("h".to_owned()),false),
-                                (48, false, Some("o".to_owned()),false),
-                                (54, false, Some("u".to_owned()),false),
-                                (52, false, None,false),
-                                (38, false, None,false)]);
+        k1.arranged = Some(vec![(41, false, Some("h".to_owned()), false),
+                                (48, false, Some("o".to_owned()), false),
+                                (54, false, Some("u".to_owned()), false),
+                                (52, false, None, false),
+                                (38, false, None, false)]);
         /*
                 purchase             giveable                genre giveable      trash
         (52,"s",2,GIVEABLE::NONE,GIVEABLE::VP(1),GIVEABLE::VP(1),GIVEABLE::NONE,Genre::HORROR,false,None,None),
@@ -117,11 +117,11 @@ fn horror() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;
-    p.arranged = vec![(41, false, Some("h".to_owned()),false), //minus_other_ink
-                      (48, false, Some("o".to_owned()),false),
-                      (54, false, Some("u".to_owned()),false),
-                      (52, false, None,false),
-                      (38, false, None,false)];
+    p.arranged = vec![(41, false, Some("h".to_owned()), false), //minus_other_ink
+                      (48, false, Some("o".to_owned()), false),
+                      (54, false, Some("u".to_owned()), false),
+                      (52, false, None, false),
+                      (38, false, None, false)];
     p.hand = vec![41, 48, 54, 52, 38];
     p.draft = vec![141, 148, 7, 177, 70];
     //assert 1

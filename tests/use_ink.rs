@@ -60,15 +60,15 @@ fn use_ink() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 1
         let mut k1 = GameCommand::new();
-        k1.arranged = Some(vec![(7, false, Some("h".to_owned()),false),
-                                (14, false, Some("o".to_owned()),false),
-                                (20, false, Some("u".to_owned()),false),
-                                (18, false, None,false),
-                                (4, false, None,false)]);
+        k1.arranged = Some(vec![(7, false, Some("h".to_owned()), false),
+                                (14, false, Some("o".to_owned()), false),
+                                (20, false, Some("u".to_owned()), false),
+                                (18, false, None, false),
+                                (4, false, None, false)]);
 
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
-        //assert 2 
+        //assert 2
         let mut k2 = GameCommand::new();
         k2.take_card_use_ink = Some(true);
         tx.send((0, k2)).unwrap();
@@ -76,7 +76,7 @@ fn use_ink() {
         //assert 3 confirm
         let mut k3 = GameCommand::new();
         k3.reply = Some(0);
-        tx.send((0,k3)).unwrap();
+        tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
     });
 
@@ -99,15 +99,15 @@ fn use_ink() {
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
-    p.arranged = vec![(7, false, Some("h".to_owned()),false),
-                      (14, false, Some("o".to_owned()),false), //two_cent_per_adv
-                      (20, false, Some("u".to_owned()),false),
-                      (18, false, None,false),
-                      (4, false, None,false)];
-    p.coin =10;
+    p.arranged = vec![(7, false, Some("h".to_owned()), false),
+                      (14, false, Some("o".to_owned()), false), //two_cent_per_adv
+                      (20, false, Some("u".to_owned()), false),
+                      (18, false, None, false),
+                      (4, false, None, false)];
+    p.coin = 10;
     p.hand = vec![105, 135, 108, 110, 111];
     p.draft = vec![141, 148, 7, 177, 70];
-    p.ink =3;
+    p.ink = 3;
     //assert 1
 
     assert_eq!(iter_o.next(),
@@ -120,21 +120,21 @@ fn use_ink() {
                                     })));
 
     //Test use_ink
-    //assert 2 
+    //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::Request((0,141,
                                        "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card."
                                            .to_owned(),
                                        vec!["Continue".to_owned()],None))));
-    p.arranged.push((p.draft.remove(0),true,None,false));
-    p.ink-=1;
+    p.arranged.push((p.draft.remove(0), true, None, false));
+    p.ink -= 1;
     //assert 3
     assert_eq!(iter_o.next(),
-            Some(ShortRec::Board(BoardCodec {
-                                    players: vec![p.clone()],
-                                    gamestates: vec![GameState::TurnToSubmit],
-                                    offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                    turn_index: 0,
-                                    ticks: None,
-                                })));
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
 }

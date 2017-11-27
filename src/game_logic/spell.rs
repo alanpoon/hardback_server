@@ -1,6 +1,6 @@
 use codec_lib::codec::*;
 use codec_lib::cards;
-use codec_lib::cards::{Board, WaitForInputType,WaitForSingleInput};
+use codec_lib::cards::{Board, WaitForInputType, WaitForSingleInput};
 use game_logic::game_engine::GameCon;
 use game_logic::wordapi;
 use game_logic::board::BoardStruct;
@@ -14,8 +14,8 @@ pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
         let mut arrange_c = _p.arranged.clone();
         let arrange_filter = _p.arranged.clone();
         let filter = arrange_filter.iter()
-            .filter(|&&(card_i, _, _,_timeless)| _r.contains(&card_i))
-            .collect::<Vec<&(usize, bool, Option<String>,bool)>>();
+            .filter(|&&(card_i, _, _, _timeless)| _r.contains(&card_i))
+            .collect::<Vec<&(usize, bool, Option<String>, bool)>>();
         if filter.is_empty() {
             let k: Result<BoardCodec, String> = Err("cannot remove a card that is not inked"
                                                         .to_owned());
@@ -23,7 +23,8 @@ pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
             h.set_boardstate(k);
             con.tx_send(h, log);
         } else {
-            for &mut (ref card_i, ref mut ink_bool, ref mut op_st,ref _timeless) in arrange_c.iter_mut() {
+            for &mut (ref card_i, ref mut ink_bool, ref mut op_st, ref _timeless) in
+                arrange_c.iter_mut() {
                 if _r.contains(&card_i) {
                     *ink_bool = false;
                     *op_st = None;
@@ -38,7 +39,7 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
                                      player_id: usize,
                                      con: &T,
                                      _take_card_use_ink: &Option<bool>,
-                                     wait_for_input:&mut [WaitForInputType; 4],
+                                     wait_for_input: &mut [WaitForInputType; 4],
                                      log: &mut Vec<ClientReceivedMsg>) {
     if let (Some(ref mut _p), &Some(true)) =
         (_board.players.get_mut(player_id), _take_card_use_ink) {
@@ -54,8 +55,8 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
                     _p.ink-=1;
                     _p.arranged.push((r,true,None,false));
                    }))]);
-        wait_for_input[player_id].push(Some(_g));
-        wait_for_input[player_id].push(None);
+            wait_for_input[player_id].push(Some(_g));
+            wait_for_input[player_id].push(None);
         } else {
             let k: Result<BoardCodec, String> = Err("Gamecommand Error:take_card_use_ink"
                                                         .to_owned());
@@ -67,7 +68,7 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
 }
 pub fn arrange(_board: &mut BoardStruct,
                player_id: usize,
-               arranged: &Option<Vec<(usize, bool, Option<String>,bool)>>,
+               arranged: &Option<Vec<(usize, bool, Option<String>, bool)>>,
                wait_for_input: &mut [WaitForInputType; 4]) {
     if let (Some(_p), mut _w) =
         (_board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
@@ -85,12 +86,13 @@ pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
                                 -> Option<bool> {
     if let (Some(_p), &Some(true)) = (_board.players.get_mut(player_id), submit_word) {
 
-        let letter_iter =
-            _p.arranged.iter().map(|&(x, _, ref some_wild,ref _timeless)| if let &Some(ref _wild) = some_wild {
-                                       _wild.to_owned()
-                                   } else {
-                                       cardmeta[x].letter.to_owned()
-                                   });
+        let letter_iter = _p.arranged.iter().map(|&(x, _, ref some_wild, ref _timeless)| {
+            if let &Some(ref _wild) = some_wild {
+                _wild.to_owned()
+            } else {
+                cardmeta[x].letter.to_owned()
+            }
+        });
         let k = letter_iter.collect::<String>();
         println!("k {:?}", k);
         Some(wordapi::there_such_word(&k))
