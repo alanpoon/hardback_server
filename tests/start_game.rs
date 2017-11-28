@@ -20,7 +20,7 @@ use tokio_core::reactor::Core;
 use futures::sync::mpsc;
 use futures::{Sink, Future, Stream};
 use std::error::Error;
-//use hardback_server::testdraft::{ShortRec};
+//use hardback_server::drafttest::{ShortRec};
 
 const CONNECTION_SERVER: &'static str = "127.0.0.1:8080";
 const CONNECTION_CLIENT: &'static str = "ws://127.0.0.1:8080";

@@ -13,7 +13,7 @@ use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::{ShortRec, TheMysteryUnCoverDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheMysteryUnCoverDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {

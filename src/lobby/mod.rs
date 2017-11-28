@@ -1,4 +1,4 @@
-#[allow(non_snake_case)]
+#[allow(non_snake_case,unused_imports)]
 pub mod table;
 pub mod game;
 pub mod handler;

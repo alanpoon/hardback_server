@@ -48,7 +48,7 @@ enum ShortRec {
     None,
 }
 #[test]
-fn notifydraft() {
+fn two_players() {
     let (_tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());

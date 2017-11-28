@@ -16,7 +16,7 @@ use hardback_server::game_logic::board::BoardStruct;
 //use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::TheNormalDraftStruct;
+use hardback_server::drafttest::TheNormalDraftStruct;
 
 #[derive(Clone)]
 pub struct Connection {

@@ -52,6 +52,7 @@ impl<T> GameEngine<T>
                                               &self.connections,
                                               &self.players,
                                               log);
+
         } else {
             for (index, game_state) in self.gamestates.iter_mut().enumerate() {
                 if index == 0 {

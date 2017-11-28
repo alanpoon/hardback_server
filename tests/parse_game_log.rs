@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::{Connection, ShortRec, TheRomanceDraftStruct};
+use hardback_server::drafttest::{Connection, ShortRec, TheRomanceDraftStruct};
 
 #[test]
 fn parse_game_log() {

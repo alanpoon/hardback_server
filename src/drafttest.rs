@@ -35,13 +35,14 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
         false
     }
 }
-pub struct TheStartingDraftStruct {}
-impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
+pub struct TheNotifyDraftStruct {}
+impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-        _p.draft = vec![147, 154, 160, 174, 161, 141, 148, 7, 177, 70];
+        _p.hand = vec![7, 14, 20, 18, 4];
+        _p.draft = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -49,7 +50,6 @@ impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      owned_deck: &Vec<usize>)
                      -> Vec<usize> {
-        //start 4coin,4ink
         let mut remaining_deck = vec![26, 23, 38, 80, 94, 98, 119, 1]; //a:26 use ink,x:23 can afford,d:38 cannot afford,l:80,94,98,119
         let mut owned_reserved_deck = owned_deck.clone();
         owned_reserved_deck.extend(remaining_deck.clone());

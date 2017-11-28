@@ -17,7 +17,7 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::testdraft::{ShortRec, TheRomanceDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {

@@ -12,6 +12,7 @@ extern crate serde_json;
 extern crate serde_derive;
 pub extern crate hardback_codec;
 pub mod game_logic;
-pub mod testdraft;
+pub mod drafttest;
+pub mod draft;
 pub use hardback_codec as codec_lib;
 pub mod lobby;
