@@ -32,8 +32,8 @@ impl Table {
         std::thread::spawn(|| {
                                let mut log: Vec<ClientReceivedMsg> = vec![];
                                GameEngine::new(player_vec, connections)
-                                 //  .run(rx, TheStartingDraftStruct {}, &mut log);
-                                   .run(rx, TheNotifyDraftStruct {}, &mut log);
+                                   .run(rx, TheStartingDraftStruct {}, &mut log);
+                               //  .run(rx, TheNotifyDraftStruct {}, &mut log);
                            });
     }
 }

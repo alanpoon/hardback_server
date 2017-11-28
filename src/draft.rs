@@ -9,27 +9,26 @@ pub struct TheStartingDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
-                       _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                       cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-
         let mut collected_letter = vec![];
         let mut collected_id = vec![];
         let mut rand_id = vec![];
         let mut two_cards_id = vec![];
         let mut remaining_deck = vec![];
-        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in _cardmeta.iter() {
+        for &cards::ListCard { letter, ref genre, id, .. } in cardmeta.iter() {
             if !owned_deck.contains(&id) {
                 //if it is not owned
                 remaining_deck.push(id);
             }
         }
         for r_id in remaining_deck {
-            match (&_cardmeta[r_id].genre, &_cardmeta[r_id].giveables) {
+            match (&cardmeta[r_id].genre, &cardmeta[r_id].giveables) {
                 (&cards::Genre::NONE, &cards::GIVEABLE::COIN(_)) => {
-                    let letc = _cardmeta[r_id].letter.to_owned();
+                    let letc = cardmeta[r_id].letter.to_owned();
                     if !collected_letter.contains(&letc) {
                         //has not collected letter
-                        collected_letter.push(_cardmeta[r_id].letter.to_owned());
+                        collected_letter.push(cardmeta[r_id].letter.to_owned());
                         collected_id.push(r_id);
                         owned_deck.push(r_id);
                     }
@@ -55,25 +54,25 @@ impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
         let vecdraft = collected_id.split_off(5);
         _p.hand = collected_id;
         _p.draft = vecdraft;
-        owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
     }
     fn deck_starting(&self,
-                     _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      owned_deck: &Vec<usize>)
                      -> Vec<usize> {
         let mut remaining_deck = vec![];
-        for &cards::ListCard { id, .. } in _cardmeta.iter().rev() {
+        for &cards::ListCard { ref genre, id, .. } in cardmeta.iter() {
             if !owned_deck.contains(&id) {
                 remaining_deck.push(id);
             }
         }
+        let mut rng = rand::thread_rng();
+        rng.shuffle(&mut remaining_deck);
         remaining_deck
     }
     fn ticks(&self) -> Option<u16> {
         Some(0)
     }
-    fn show_draft(&self) -> bool {
-        true
+    fn show_draft(&self) -> (bool, bool) {
+        (true, false)
     }
 }

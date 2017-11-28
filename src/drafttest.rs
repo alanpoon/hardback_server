@@ -31,8 +31,8 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheNotifyDraftStruct {}
@@ -41,8 +41,7 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
                        _p: &mut Player,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-        _p.hand = vec![7, 14, 20, 18, 4];
-        _p.draft = vec![141, 148, 7, 177, 70];
+        _p.draft = vec![141, 148, 7, 177, 70, 7, 14, 20, 18, 4];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
@@ -63,8 +62,8 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        true
+    fn show_draft(&self) -> (bool, bool) {
+        (true, true)
     }
 }
 pub struct TheAdventureDraftStruct {}
@@ -96,8 +95,8 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheHorrorDraftStruct {}
@@ -131,8 +130,8 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 
@@ -167,8 +166,8 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheMysteryUnCoverDraftStruct {}
@@ -201,8 +200,8 @@ impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheRomanceDraftStruct {}
@@ -236,8 +235,8 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheOverlayDraftStruct {}
@@ -273,8 +272,8 @@ impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        false
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 pub struct TheTwoPlayerDraftStruct {}
@@ -312,8 +311,8 @@ impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> bool {
-        true
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
     }
 }
 #[derive(Clone)]

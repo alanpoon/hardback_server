@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::drafttest::TheNotifyDraftStruct;
-
+use rand::{Rng, SeedableRng, StdRng};
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -49,7 +49,7 @@ enum ShortRec {
 }
 #[test]
 fn notifydraft() {
-    let (_tx, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
     let connections = vec![Connection {
@@ -63,7 +63,16 @@ fn notifydraft() {
                                                                      TheNotifyDraftStruct {},
                                                                      &mut log);
                        });
+    std::thread::spawn(move || {
+        let three_seconds = std::time::Duration::new(3, 0);
+        //assert 3
+        let mut k1 = GameCommand::new();
+        k1.reply = Some(0);
 
+        tx.send((0, k1)).unwrap();
+        std::thread::sleep(three_seconds);
+
+    });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
         let mut y = ShortRec::None;
@@ -85,13 +94,13 @@ fn notifydraft() {
         }
         y
     });
+    //assert 1
     assert_eq!(iter_o.next(), Some(ShortRec::PlayerIndex(0)));
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.arranged = vec![];
-    p.hand = vec![7, 14, 20, 18, 4];
-    p.draft = vec![141, 148, 7, 177, 70];
-    //assert 1
+    p.draft = vec![141, 148, 7, 177, 70, 7, 14, 20, 18, 4];
+    //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
@@ -100,6 +109,18 @@ fn notifydraft() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-
-
+    let seed: &[_] = &[1, 2, 3, 4];
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
+    rng.shuffle(&mut p.draft);
+    let vecdraft = p.draft.split_off(5);
+    p.hand = vecdraft;
+    //assert 3
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
 }
