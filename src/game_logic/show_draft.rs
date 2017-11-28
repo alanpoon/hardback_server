@@ -7,6 +7,7 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
                              gamestates: &mut Vec<GameState>,
                              cons: &Vec<T>,
                              players: &Vec<Player>,
+                             unknown:&mut [Vec<usize>;4],//player's draft
                              wait_for_input: &mut [WaitForInputType; 4],
                              log: &mut Vec<ClientReceivedMsg>) {
     for (_index, _con) in cons.iter().enumerate() {
@@ -38,12 +39,12 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
             if randseedbool.clone() {
                 let seed: &[_] = &[1, 2, 3, 4];
                 let mut rng: StdRng = SeedableRng::from_seed(seed);
-                rng.shuffle(&mut _p.draft);
+                rng.shuffle(&mut unknown[_index]);
             } else {
                 let mut rng = thread_rng();
-                rng.shuffle(&mut _p.draft);
+                rng.shuffle(&mut unknown[_index]);
             }
-            let vecdraft = _p.draft.split_off(5);
+            let vecdraft = unknown[_index].split_off(5);
             _p.hand = vecdraft;
         }))]);
         wait_for_input[_index].push(Some(_g));

@@ -9,6 +9,7 @@ pub struct TheNormalDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown:&mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.hand = vec![147, 154, 160, 174, 161];

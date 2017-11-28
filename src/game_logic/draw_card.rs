@@ -6,32 +6,34 @@ use game_logic;
 
 #[cfg(not(test))]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
+                                unknown:&mut [Vec<usize>;4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
     use rand::Rng;
     use rand;
     let player_num = players.len();
-    for mut it in players.iter_mut().zip(gamestates.iter_mut()) {
-        let (ref mut _p, ref mut game_state) = it;
+    for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
+        let (ref _index,ref mut _p, ref mut game_state) = it;
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
                 _p.discard = _p.hand.clone();
                 _p.hand = vec![];
                 for _ in 0usize..(5 - _p.hand.len()) {
-                    if let Some(n) = _p.draft.pop() {
+                    if let Some(n) = unknown[_index.clone()].pop() {
                         _p.hand.push(n);
                     } else {
                         let mut rng = rand::thread_rng();
-                        _p.draft = _p.discard.clone();
+                        unknown[_index.clone()] = _p.discard.clone();
                         _p.discard = vec![];
-                        rng.shuffle(&mut _p.draft);
-                        if let Some(n) = _p.draft.pop() {
+                        rng.shuffle(&mut unknown[_index.clone()]);
+                        if let Some(n) = unknown[_index.clone()].pop() {
                             _p.hand.push(n);
                         }
                     }
                 }
                 _p.arranged = vec![];
+                _p.draftlen = unknown[_index.clone()].len();
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {
@@ -44,30 +46,32 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
 }
 #[cfg(test)]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
+                                 unknown:&mut [Vec<usize>;4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
 
     let player_num = players.len();
-    for mut it in players.iter_mut().zip(gamestates.iter_mut()) {
-        let (ref mut _p, ref mut game_state) = it;
+    for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
+        let (ref _index,ref mut _p, ref mut game_state) = it;
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
                 _p.discard = _p.hand.clone();
                 _p.hand = vec![];
                 for _ in 0usize..(5 - _p.hand.len()) {
-                    if let Some(n) = _p.draft.pop() {
+                    if let Some(n) = unknown[_index.clone()].pop() {
                         _p.hand.push(n);
                     } else {
-                        _p.draft = _p.discard.clone();
+                        unknown[_index.clone()] = _p.discard.clone();
                         _p.discard = vec![];
-                        if let Some(n) = _p.draft.pop() {
+                        if let Some(n) = unknown[_index.clone()].pop() {
                             _p.hand.push(n);
                         }
                     }
                 }
                 _p.arranged = vec![];
                 _p.skip_cards = vec![];
+                _p.draftlen = unknown[_index.clone()].len();
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {
