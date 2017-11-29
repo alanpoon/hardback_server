@@ -68,10 +68,13 @@ fn notifydraft() {
         //assert 3
         let mut k1 = GameCommand::new();
         k1.reply = Some(0);
-
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
-
+        //assert 4
+        let mut k2 = GameCommand::new();
+        k2.reply = Some(0);
+        tx.send((0, k2)).unwrap();
+        std::thread::sleep(three_seconds);
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -99,7 +102,7 @@ fn notifydraft() {
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.arranged = vec![];
-    p.draft = vec![141, 148, 7, 177, 70, 7, 14, 20, 18, 4];
+    p.draft = vec![141, 148, 7, 177, 70, 90, 14, 20, 18, 4];
     //assert 2
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
@@ -117,11 +120,32 @@ fn notifydraft() {
     p.draft = vec![];
     //assert 3
     assert_eq!(iter_o.next(),
+        Some(ShortRec::Request((0,0,
+                                "Let's Start! You shuffle all 10 cards and draw 5 cards into your hand. It is your turn to submit word.".to_owned(),
+                                vec!["Continue".to_owned()],None))));
+
+    //assert 4
+    assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit],
+                                        gamestates: vec![GameState::Shuffle],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,
                                     })));
+                                       /*
+    //assert 4
+     assert_eq!(iter_o.next(),
+               Some(ShortRec::Request((0,0,
+                                       "It is your turn to submit word.".to_owned(),
+                                       vec!["Continue".to_owned()],None))));
+    assert_eq!(iter_o.next(),
+            Some(ShortRec::Board(BoardCodec {
+                                    players: vec![p.clone()],
+                                    gamestates: vec![GameState::TurnToSubmit],
+                                    offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                    turn_index: 0,
+                                    ticks: None,
+                                })));
+                                */
 }

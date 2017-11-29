@@ -44,7 +44,7 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
                        _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-        _p.draft = vec![141, 148, 7, 177, 70, 7, 14, 20, 18, 4];
+        _p.draft = vec![141, 148, 7, 177, 70, 90, 14, 20, 18, 4];
         owned_deck.extend(_p.draft.clone());
     }
     fn deck_starting(&self,

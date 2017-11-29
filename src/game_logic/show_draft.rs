@@ -23,18 +23,16 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
         let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
         h.set_boardstate(k);
         _con.tx_send(h, log);
-        let (state, word) =
-            if _index == 0 {
-                (GameState::TurnToSubmit,
-                 "Let's Start! You drew 5 cards into your hand. It is your turn to submit word."
-                     .to_owned())
+        let  word =
+            if _index == 0 {                
+                 "Let's Start! You shuffle all 10 cards and draw 5 cards into your hand. It is your turn to submit word.".to_owned()
             } else {
-                (GameState::Spell,"Let's Start! You drew 5 cards into your hand. It is player 1's turn to submit word.".to_owned())
+                "Let's Start! You shuffle all 10 cards and draw 5 cards into your hand. It is player 1's turn to submit word.".to_owned()
             };
         let _g: WaitForSingleInput =
             (0,
              word,
-             vec![(state,
+             vec![(GameState::Shuffle,
                    "Continue".to_owned(),
                    Box::new(move |ref mut _p, ref mut _rmcards, mut _unknown| {
                 *_unknown = _p.draft.clone();

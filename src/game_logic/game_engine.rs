@@ -145,6 +145,7 @@ impl<T> GameEngine<T>
                      &mut wait_for_input,
                      type_is_reply.clone()) {
                     match _gamestate {
+                        
                         &mut &mut GameState::Spell => {
                             println!("spell");
                             game_logic::spell::take_card_use_ink::<T>(_board,
