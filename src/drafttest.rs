@@ -9,13 +9,14 @@ pub struct TheNormalDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
-                       _unknown:&mut Vec<usize>,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.hand = vec![147, 154, 160, 174, 161];
-        _p.draft = vec![141, 148, 7, 177, 70];
+        _p.draft = vec![];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -40,10 +41,10 @@ pub struct TheNotifyDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.draft = vec![141, 148, 7, 177, 70, 7, 14, 20, 18, 4];
-        owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_p.draft.clone());
     }
     fn deck_starting(&self,
@@ -71,12 +72,14 @@ pub struct TheAdventureDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.hand = vec![7, 14, 20, 18, 4];
-        _p.draft = vec![141, 148, 7, 177, 70];
+        _p.draft = vec![];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -104,13 +107,15 @@ pub struct TheHorrorDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
+        _p.draft = vec![];
         _p.hand = vec![41, 48, 54, 52, 38];
-        _p.draft = vec![141, 148, 7, 177, 70];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -140,13 +145,15 @@ pub struct TheMysteryDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
+        _p.draft = vec![];
         _p.hand = vec![76, 83, 89, 87, 73];
-        _p.draft = vec![141, 148, 7, 177, 70];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -175,13 +182,15 @@ pub struct TheMysteryUnCoverDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
+        _p.draft = vec![];
         _p.hand = vec![42, 72, 178, 82, 73];
-        _p.draft = vec![141, 148, 7, 177, 70]; //82 is one vp per wild
+        *_unknown = vec![141, 148, 7, 177, 70]; //82 is one vp per wild
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -209,13 +218,15 @@ pub struct TheRomanceDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
+        _p.draft = vec![];
         _p.hand = vec![105, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
-        _p.draft = vec![141, 148, 7, 177, 70];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -244,15 +255,17 @@ pub struct TheOverlayDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         _p.coin = 10;
+        _p.draft = vec![];
         _p.ink = 3;
         _p.remover = 2;
         _p.hand = vec![105, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
-        _p.draft = vec![141, 148, 7, 177, 70];
+        *_unknown = vec![141, 148, 7, 177, 70];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],
@@ -281,18 +294,20 @@ pub struct TheTwoPlayerDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         let player_index = (owned_deck.len() as f64 / 10.0).floor() as usize;
         if player_index == 0 {
             _p.hand = vec![105, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
-            _p.draft = vec![141, 148, 7, 177, 70];
+            *_unknown = vec![141, 148, 7, 177, 70];
         } else {
             _p.hand = vec![90, 49, 2, 75, 77]; //v,p,c,g,i
-            _p.draft = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
+            *_unknown = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
         }
+        _p.draft = vec![];
         owned_deck.extend(_p.hand.clone());
-        owned_deck.extend(_p.draft.clone());
+        owned_deck.extend(_unknown.clone());
     }
     fn deck_starting(&self,
                      _cardmeta: &[cards::ListCard<BoardStruct>; 180],

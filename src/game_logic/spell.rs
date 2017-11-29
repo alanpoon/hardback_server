@@ -36,7 +36,7 @@ pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
              "You may convert this inked card back to a normal card using a remover token. You may add it back to your hand or use it to form word or a wild card.".to_owned(),
              vec![(GameState::TurnToSubmit,
                    "Continue".to_owned(),
-                   Box::new(move |ref mut _p, ref mut _rmcards| {
+                   Box::new(move |ref mut _p, ref mut _rmcards,ref mut _unknown| {
                     _p.remover-=1;
                     for &mut (ref _card,ref mut _ink_bool,_,_) in _p.arranged.iter_mut(){
                         if *_card==_r.clone(){
@@ -59,20 +59,21 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
                                      player_id: usize,
                                      con: &T,
                                      _take_card_use_ink: &Option<bool>,
+                                     unknown: &mut Vec<usize>,
                                      wait_for_input: &mut [WaitForInputType; 4],
                                      log: &mut Vec<ClientReceivedMsg>) {
     if let (Some(ref mut _p), &Some(true)) =
         (_board.players.get_mut(player_id), _take_card_use_ink) {
-        let p_c = _p.clone();
-        if (p_c.ink > 0) & (!p_c.draft.is_empty()) {
+        if (_p.ink > 0) & (!unknown.is_empty()) {
             let _g: WaitForSingleInput =
-            (p_c.draft.get(0).unwrap().clone(),
+            (unknown.get(0).unwrap().clone(),
              "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card.".to_owned(),
              vec![(GameState::TurnToSubmit,
                    "Continue".to_owned(),
-                   Box::new(move |ref mut _p, ref mut _rmcards| {
-                    let r = _p.draft.remove(0).clone();
+                   Box::new(move |ref mut _p, ref mut _rmcards,mut _unknown| {
+                    let r = _unknown.remove(0).clone();
                     _p.ink-=1;
+                    _p.draftlen=_unknown.len();
                     _p.arranged.push((r,true,None,false));
                    }))]);
             wait_for_input[player_id].push(Some(_g));

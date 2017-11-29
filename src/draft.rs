@@ -9,6 +9,7 @@ pub struct TheStartingDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
     fn player_starting(&self,
                        _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
                        cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
         let mut collected_letter = vec![];
@@ -51,9 +52,7 @@ impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
         }
         collected_id.extend(two_cards_id.clone());
         rng.shuffle(&mut collected_id);
-        let vecdraft = collected_id.split_off(5);
-        _p.hand = collected_id;
-        _p.draft = vecdraft;
+        _p.draft = collected_id;
     }
     fn deck_starting(&self,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],

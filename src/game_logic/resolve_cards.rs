@@ -210,12 +210,14 @@ pub fn resolve_trash_giveable(player_id: usize,
                     let header = "Do you want to trash this card for the benefit?".to_owned();
                     let vec_option: Option<Vec<(GameState,
                                                 String,
-                                                Box<Fn(&mut Player, &mut Vec<usize>)>)>> =
+                                                Box<Fn(&mut Player,
+                                                       &mut Vec<usize>,
+                                                       &mut Vec<usize>)>)>> =
                         match cardmeta[_c.clone()].trash {
                             GIVEABLE::VP(_x) => {
                                 Some(vec![(GameState::Buy,
                                            "Yes".to_owned(),
-                                           Box::new(move |ref mut _p, _| {
+                                           Box::new(move |ref mut _p, _,_| {
                                     _p.vp += _x;
                                     let index = _p.hand
                                         .iter()
@@ -225,12 +227,12 @@ pub fn resolve_trash_giveable(player_id: usize,
                                 })),
                                           (GameState::Buy,
                                            "No".to_owned(),
-                                           Box::new(|ref mut _p, _| {}))])
+                                           Box::new(|ref mut _p, _,_| {}))])
                             }
                             GIVEABLE::COIN(_x) => {
                                 Some(vec![(GameState::Buy,
                                            "Yes".to_owned(),
-                                           Box::new(move |ref mut _p, _| {
+                                           Box::new(move |ref mut _p, _,_| {
                                     _p.coin += _x;
                                     let index = _p.hand
                                         .iter()
@@ -240,7 +242,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                                 })),
                                           (GameState::Buy,
                                            "No".to_owned(),
-                                           Box::new(|ref mut _p, _| {}))])
+                                           Box::new(|ref mut _p, _,_| {}))])
                             }
                             _ => None,
                         };
@@ -277,12 +279,12 @@ pub fn giveable_match(z: &mut Player,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.ink += 1;
                                                                 })),
                                                       (GameState::DrawCard,
                                                        "Ink Remover".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.remover += 1;
                                                                 }))])));
             wait_for_input[player_id].push(None);
@@ -293,12 +295,12 @@ pub fn giveable_match(z: &mut Player,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.ink += 1;
                                                                 })),
                                                       (GameState::DrawCard,
                                                        "Ink Remover".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.remover += 1;
                                                                 }))])));
             wait_for_input[player_id].push(None);
@@ -309,12 +311,12 @@ pub fn giveable_match(z: &mut Player,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.ink += 1;
                                                                 })),
                                                       (GameState::DrawCard,
                                                        "Ink Remover".to_owned(),
-                                                       Box::new(|ref mut _p, _| {
+                                                       Box::new(|ref mut _p, _,_| {
                                                                     _p.remover += 1;
                                                                 }))])));
             wait_for_input[player_id].push(None);
@@ -328,12 +330,12 @@ pub fn giveable_match(z: &mut Player,
                                                  choose_bet,
                                                  vec![(GameState::Buy,
                                                        j1,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.vp += _x;
                                                                 })),
                                                       (GameState::Buy,
                                                        j2,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.coin += _x;
                                                                 }))])));
             wait_for_input[player_id].push(None);
@@ -347,25 +349,25 @@ pub fn giveable_match(z: &mut Player,
                                                  choose_bet,
                                                  vec![(GameState::Buy,
                                                        j1,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.vp += _x;
                                                                     _p.ink += 1;
                                                                 })),
                                                       (GameState::Buy,
                                                        j2,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.coin += _x;
                                                                     _p.ink += 1;
                                                                 })),
                                                       (GameState::Buy,
                                                        j3,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.vp += _x;
                                                                     _p.remover += 1;
                                                                 })),
                                                       (GameState::Buy,
                                                        j4,
-                                                       Box::new(move |ref mut _p, _| {
+                                                       Box::new(move |ref mut _p, _,_| {
                                                                     _p.coin += _x;
                                                                     _p.remover += 1;
                                                                 }))])));

@@ -114,6 +114,7 @@ fn notifydraft() {
     rng.shuffle(&mut p.draft);
     let vecdraft = p.draft.split_off(5);
     p.hand = vecdraft;
+    p.draft = vec![];
     //assert 3
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {

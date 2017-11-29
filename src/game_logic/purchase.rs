@@ -40,15 +40,17 @@ pub fn buy_card_from(position_index: usize,
                                          vec![(GameState::Buy,
                                                "Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
-                                               Box::new(move |ref mut p, ref mut rmcards| {
+                                               Box::new(move |ref mut p,
+                                                              ref mut rmcards,
+                                                              ref mut _unknown| {
                                                             p.discard.push(rmcards.remove(_c));
                                                         })),
                                               (GameState::Buy,
                                                "No, I want to another card".to_owned(),
-                                               Box::new(|_, ref mut rmcards| {})),
+                                               Box::new(|_, ref mut rmcards, _| {})),
                                               (GameState::DrawCard,
                                                "No, I want to end my buy phase.".to_owned(),
-                                               Box::new(|_, _| {}))])))
+                                               Box::new(|_, _, _| {}))])))
 
                             }
                         }
@@ -59,10 +61,10 @@ pub fn buy_card_from(position_index: usize,
                             .to_owned();
                         Some(Ok((_c,
                                  j,
-                                 vec![(GameState::Buy, "Yes".to_owned(), Box::new(|_, _| {})),
+                                 vec![(GameState::Buy, "Yes".to_owned(), Box::new(|_, _, _| {})),
                                       (GameState::DrawCard,
                                        "No, I want to end my buy phase".to_owned(),
-                                       Box::new(|_, _| {}))])))
+                                       Box::new(|_, _, _| {}))])))
                     }
                 }
             }
@@ -108,7 +110,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                                  j,
                                  vec![(GameState::DrawCard,
                                        "Trade in 3 ink for one coin to buy this.".to_owned(),
-                                       Box::new(move |ref mut p, _| {
+                                       Box::new(move |ref mut p, _, _| {
                             let coin_left = p.coin;
                             let remainder = cost - coin_left;
                             p.coin = 0;
@@ -119,10 +121,10 @@ pub fn buy_card_from_lockup(position_index: usize,
                         })),
                                       (GameState::Buy,
                                        "No, I want to buy another card.".to_owned(),
-                                       Box::new(|_, _| {})),
+                                       Box::new(|_, _, _| {})),
                                       (GameState::DrawCard,
                                        "No, I want to end buy phase.".to_owned(),
-                                       Box::new(|_, _| {}))])))
+                                       Box::new(|_, _, _| {}))])))
 
                     }
                 }
@@ -132,10 +134,10 @@ pub fn buy_card_from_lockup(position_index: usize,
                     .to_owned();
                 Some(Ok((card_index,
                          j,
-                         vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _| {})),
+                         vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _, _| {})),
                               (GameState::DrawCard,
                                "No, I want to end my buy phase".to_owned(),
-                               Box::new(|ref mut p, _| {}))])))
+                               Box::new(|ref mut p, _, _| {}))])))
             }
 
         };
@@ -237,10 +239,10 @@ pub fn putback_discard(countdown: usize,
              "Do you want to put back the card or add to your own discard pile?".to_owned(),
              vec![(GameState::PutBackDiscard(countdown - 1, responsible),
                    "Put back the card".to_owned(),
-                   Box::new(move |ref mut _p, ref mut _rmcards| {})),
+                   Box::new(move |ref mut _p, ref mut _rmcards, _| {})),
                   (GameState::PutBackDiscard(countdown - 1, responsible),
                    "Add to own discard pile.".to_owned(),
-                   Box::new(move |_, _| {}))]);
+                   Box::new(move |_, _, _| {}))]);
         wait_for_input[player_id].push(Some(_g));
         wait_for_input[player_id].push(None);
     }

@@ -110,7 +110,7 @@ fn overlay() {
         if let OwnedMessage::Text(z) = x {
             if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate:{:?}", index);
+                println!("iterenumerate:{:?} ", index);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
                     y = ShortRec::Board(_boardstate);
                 } else if let Some(Some(_request)) = request {
@@ -131,8 +131,7 @@ fn overlay() {
                       (4, false, None, false)];
     p.coin = 10;
     p.remover = 2;
-    p.hand = vec![105, 135, 108, 110, 111];
-    p.draft = vec![141, 148, 7, 177, 70];
+    p.hand = vec![105, 135, 108, 110, 111]; //next is 141
     p.ink = 3;
     //assert 1
     assert_eq!(iter_o.next(),
@@ -150,8 +149,9 @@ fn overlay() {
                                        "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card."
                                            .to_owned(),
                                        vec!["Continue".to_owned()],None))));
-    p.arranged.push((p.draft.remove(0), true, None, false));
+    p.arranged.push((141, true, None, false));
     p.ink -= 1;
+    p.draftlen -= 1;
     //assert 3
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
@@ -168,8 +168,9 @@ fn overlay() {
                                        "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card."
                                            .to_owned(),
                                        vec!["Continue".to_owned()],None))));
-    p.arranged.push((p.draft.remove(0), true, None, false));
+    p.arranged.push((148, true, None, false));
     p.ink -= 1;
+    p.draftlen -= 1;
     //assert 3b
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {

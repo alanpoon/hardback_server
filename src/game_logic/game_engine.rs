@@ -10,7 +10,11 @@ pub trait GameCon {
     fn tx_send(&self, ClientReceivedMsg, &mut Vec<ClientReceivedMsg>);
 }
 pub trait TheDraft {
-    fn player_starting(&self, &mut Player, &[cards::ListCard<BoardStruct>; 180], &mut Vec<usize>);
+    fn player_starting(&self,
+                       &mut Player,
+                       &mut Vec<usize>,
+                       &[cards::ListCard<BoardStruct>; 180],
+                       &mut Vec<usize>);
     fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
     fn ticks(&self) -> Option<u16>;
     fn show_draft(&self) -> (bool, bool); //show_draft,withrandseed
@@ -19,7 +23,7 @@ pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
     connections: Vec<T>,
     gamestates: Vec<GameState>,
-    unknown:[Vec<usize>;4],
+    unknown: [Vec<usize>; 4],
 }
 impl<T> GameEngine<T>
     where T: GameCon
@@ -33,7 +37,7 @@ impl<T> GameEngine<T>
             players: players,
             connections: connections,
             gamestates: gamestates_v,
-            unknown:[vec![];4]
+            unknown: [vec![], vec![], vec![], vec![]],
         }
     }
     pub fn run<D: TheDraft>(&mut self,
@@ -43,7 +47,10 @@ impl<T> GameEngine<T>
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         let mut turn_index = 0;
-        let owned_deck = give_outstarting(&mut self.players, &cardmeta, &debug_struct);
+        let owned_deck = give_outstarting(&mut self.players,
+                                          &mut self.unknown,
+                                          &cardmeta,
+                                          &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
         let mut wait_for_break = false;
@@ -127,12 +134,14 @@ impl<T> GameEngine<T>
                         ref mut _board,
                         Some(ref con),
                         Some(ref mut _gamestate),
+                        ref mut unknown,
                         ref mut wait_vec,
                         false) =
                     (&game_command,
                      &mut temp_board,
                      self.connections.get(player_id),
                      self.gamestates.get_mut(player_id),
+                     &mut self.unknown[player_id],
                      &mut wait_for_input,
                      type_is_reply.clone()) {
                     match _gamestate {
@@ -142,6 +151,7 @@ impl<T> GameEngine<T>
                                                                       player_id,
                                                                       con,
                                                                       take_card_use_ink,
+                                                                      unknown,
                                                                       wait_vec,
                                                                       log);
                             game_logic::spell::use_remover::<T>(_board,
@@ -158,6 +168,7 @@ impl<T> GameEngine<T>
                                                                       player_id,
                                                                       con,
                                                                       take_card_use_ink,
+                                                                      unknown,
                                                                       wait_vec,
                                                                       log);
                             game_logic::spell::use_remover::<T>(_board,
@@ -292,7 +303,9 @@ impl<T> GameEngine<T>
                             if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
                                 if let Some(&(ref next_gstate, _, ref _closure)) =
                                     _wait_vec.2.get(_reply) {
-                                    (*_closure)(_p, &mut remaining_cards);
+                                    (*_closure)(_p,
+                                                &mut remaining_cards,
+                                                &mut self.unknown[player_id]);
                                     next_gamestate = next_gstate.clone();
                                 }
                             }
@@ -347,12 +360,13 @@ impl<T> GameEngine<T>
     }
 }
 pub fn give_outstarting<D: TheDraft>(players: &mut Vec<Player>,
+                                     unknown: &mut [Vec<usize>; 4],
                                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                                      debug_struct: &D)
                                      -> Vec<usize> {
     let mut owned_deck = vec![];
-    for mut _p in players {
-        debug_struct.player_starting(_p, cardmeta, &mut owned_deck);
+    for (_index, mut _p) in players.iter_mut().enumerate() {
+        debug_struct.player_starting(_p, &mut unknown[_index], cardmeta, &mut owned_deck);
     }
     owned_deck
 }

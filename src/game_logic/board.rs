@@ -58,9 +58,9 @@ impl Board for BoardStruct {
                 (card_id,
                  j,
                  vec![(GameState::Spell,"lose a ink".to_owned(),
-                       Box::new(|ref mut p, ref mut _rmcards| { p.ink -= 1; })),
+                       Box::new(|ref mut p, ref mut _rmcards,ref mut _unknown| { p.ink -= 1; })),
                       (GameState::Spell,"lose a ink remover".to_owned(),
-                       Box::new(|ref mut p, _| { p.remover -= 1; }))]);
+                       Box::new(|ref mut p, _,_| { p.remover -= 1; }))]);
             x.push(Some(_g));
             x.push(None);
         }).collect::<Vec<()>>();
@@ -72,12 +72,13 @@ impl Board for BoardStruct {
                     wait_for_input: &mut [WaitForInputType; 4]) {
         if let Some(_w) = wait_for_input.get_mut(player_id) {
 
-            let _g: WaitForSingleInput = (card_id,
-                                          "Do you want to lock up any offer row card?".to_owned(),
-                                          vec![(GameState::LockUp,
+            let _g: WaitForSingleInput =
+                (card_id,
+                 "Do you want to lock up any offer row card?".to_owned(),
+                 vec![(GameState::LockUp,
                        "Yes".to_owned(),
-                       Box::new(|ref mut _p, ref mut _rmcards| {})),
-                      (GameState::Buy, "No".to_owned(), Box::new(|_, _| {}))]);
+                       Box::new(|ref mut _p, ref mut _rmcards, _| {})),
+                      (GameState::Buy, "No".to_owned(), Box::new(|_, _, _| {}))]);
             _w.push(Some(_g));
             _w.push(None);
         }
@@ -95,7 +96,7 @@ impl Board for BoardStruct {
                 let _g: WaitForSingleInput =
                     (card_id,
                      "There are no adjacent wild cards that can be flipped over.".to_owned(),
-                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _| {}))]);
+                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
                 _w.push(None);
             } else {
@@ -104,7 +105,7 @@ impl Board for BoardStruct {
                      "There are a few wild cards adjacent to this card, can be opened".to_owned(),
                      vec![(GameState::ResolveAgain(index, card_id),
                            "Continue".to_owned(),
-                           Box::new(move |_, _| {}))]);
+                           Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
                 _w.push(None);
 
@@ -126,7 +127,7 @@ impl Board for BoardStruct {
                     (card_id,
                      "There are no adjacent valid cards that you double their benefits."
                          .to_owned(),
-                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _| {}))]);
+                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
                 _w.push(None);
             } else {
@@ -136,7 +137,7 @@ impl Board for BoardStruct {
                          .to_owned(),
                      vec![(GameState::Buy,
                            "Continue".to_owned(),
-                           Box::new(move |ref mut p, ref mut rmcards| {
+                           Box::new(move |ref mut p, ref mut rmcards, _| {
                         let cardmeta: [cards::ListCard<BoardStruct>; 180] =
                             cards::populate::<BoardStruct>();
                         for card in cards_to_double.clone() {
@@ -173,8 +174,8 @@ impl Board for BoardStruct {
             let _g: WaitForSingleInput =
                 (card_id,
                  "Do you want to trash another card for one cent?".to_owned(),
-                 vec![(GameState::TrashOther, "Yes".to_owned(), Box::new(move |_, _| {})),
-                      (GameState::Buy, "No".to_owned(), Box::new(move |_, _| {}))]);
+                 vec![(GameState::TrashOther, "Yes".to_owned(), Box::new(move |_, _, _| {})),
+                      (GameState::Buy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
             _w.push(Some(_g));
             _w.push(None);
         }
@@ -196,11 +197,12 @@ impl Board for BoardStruct {
                 .len();
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
-            let _g: WaitForSingleInput = (card_id,
-                                          j,
-                                          vec![(GameState::Buy,
+            let _g: WaitForSingleInput =
+                (card_id,
+                 j,
+                 vec![(GameState::Buy,
                        "Continue".to_owned(),
-                       Box::new(move |ref mut p, ref mut rmcards| { p.vp += _num_wild; }))]);
+                       Box::new(move |ref mut p, ref mut rmcards, _| { p.vp += _num_wild; }))]);
             _w.push(Some(_g));
             _w.push(None);
         }
@@ -216,7 +218,7 @@ impl Board for BoardStruct {
                  "You may draw three cards from the top of deck and choose to keep or discard each of them.".to_owned(),
                  vec![(GameState::PutBackDiscard(2,card_id),
                        "Continue".to_owned(),
-                       Box::new(move |_,_| {
+                       Box::new(move |_,_,_| {
                         }))]);
             _w.push(Some(_g));
             _w.push(None);

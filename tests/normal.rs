@@ -54,7 +54,8 @@ fn player_starting() {
     let mut remaining_deck = vec![];
     let mut _p = Player::new("defaultname".to_owned());
     let _normal_draft = TheNormalDraftStruct {};
-    _normal_draft.player_starting(&mut _p, &cardmeta, &mut remaining_deck);
+    let mut unknown = vec![];
+    _normal_draft.player_starting(&mut _p, &mut unknown, &cardmeta, &mut remaining_deck);
     assert_eq!(_p.draft.len(), 5);
     assert_eq!(_p.hand.len(), 5);
 }

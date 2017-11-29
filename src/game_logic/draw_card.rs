@@ -6,14 +6,14 @@ use game_logic;
 
 #[cfg(not(test))]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
-                                unknown:&mut [Vec<usize>;4],
+                                 unknown: &mut [Vec<usize>; 4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
     use rand::Rng;
     use rand;
     let player_num = players.len();
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
-        let (ref _index,ref mut _p, ref mut game_state) = it;
+        let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
@@ -46,13 +46,13 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
 }
 #[cfg(test)]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
-                                 unknown:&mut [Vec<usize>;4],
+                                 unknown: &mut [Vec<usize>; 4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
 
     let player_num = players.len();
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
-        let (ref _index,ref mut _p, ref mut game_state) = it;
+        let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {

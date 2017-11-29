@@ -7,7 +7,7 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
                              gamestates: &mut Vec<GameState>,
                              cons: &Vec<T>,
                              players: &Vec<Player>,
-                             unknown:&mut [Vec<usize>;4],//player's draft
+                             unknown: &mut [Vec<usize>; 4], //player's draft
                              wait_for_input: &mut [WaitForInputType; 4],
                              log: &mut Vec<ClientReceivedMsg>) {
     for (_index, _con) in cons.iter().enumerate() {
@@ -31,22 +31,24 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
             } else {
                 (GameState::Spell,"Let's Start! You drew 5 cards into your hand. It is player 1's turn to submit word.".to_owned())
             };
-        let _g: WaitForSingleInput = (0,
-                                      word,
-                                      vec![(state,
-                                            "Continue".to_owned(),
-                                            Box::new(move |ref mut _p, ref mut _rmcards| {
-            if randseedbool.clone() {
-                let seed: &[_] = &[1, 2, 3, 4];
-                let mut rng: StdRng = SeedableRng::from_seed(seed);
-                rng.shuffle(&mut unknown[_index]);
-            } else {
-                let mut rng = thread_rng();
-                rng.shuffle(&mut unknown[_index]);
-            }
-            let vecdraft = unknown[_index].split_off(5);
-            _p.hand = vecdraft;
-        }))]);
+        let _g: WaitForSingleInput =
+            (0,
+             word,
+             vec![(state,
+                   "Continue".to_owned(),
+                   Box::new(move |ref mut _p, ref mut _rmcards, mut _unknown| {
+                *_unknown = _p.draft.clone();
+                if randseedbool.clone() {
+                    let seed: &[_] = &[1, 2, 3, 4];
+                    let mut rng: StdRng = SeedableRng::from_seed(seed);
+                    rng.shuffle(&mut _unknown);
+                } else {
+                    let mut rng = thread_rng();
+                    rng.shuffle(&mut _unknown);
+                }
+                _p.hand = _unknown.split_off(5);
+                _p.draft = vec![];
+            }))]);
         wait_for_input[_index].push(Some(_g));
         wait_for_input[_index].push(None);
     }
