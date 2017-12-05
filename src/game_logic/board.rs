@@ -72,10 +72,9 @@ impl Board for BoardStruct {
                     wait_for_input: &mut [WaitForInputType; 4]) {
         if let Some(_w) = wait_for_input.get_mut(player_id) {
 
-            let _g: WaitForSingleInput =
-                (card_id,
-                 "Do you want to lock up any offer row card?".to_owned(),
-                 vec![(GameState::LockUp,
+            let _g: WaitForSingleInput = (card_id,
+                                          "Do you want to lock up any offer row card?".to_owned(),
+                                          vec![(GameState::LockUp,
                        "Yes".to_owned(),
                        Box::new(|ref mut _p, ref mut _rmcards, _| {})),
                       (GameState::Buy, "No".to_owned(), Box::new(|_, _, _| {}))]);
@@ -197,10 +196,9 @@ impl Board for BoardStruct {
                 .len();
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
-            let _g: WaitForSingleInput =
-                (card_id,
-                 j,
-                 vec![(GameState::Buy,
+            let _g: WaitForSingleInput = (card_id,
+                                          j,
+                                          vec![(GameState::Buy,
                        "Continue".to_owned(),
                        Box::new(move |ref mut p, ref mut rmcards, _| { p.vp += _num_wild; }))]);
             _w.push(Some(_g));

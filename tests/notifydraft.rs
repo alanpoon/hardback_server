@@ -67,14 +67,10 @@ fn notifydraft() {
         let three_seconds = std::time::Duration::new(3, 0);
         //assert 3
         let mut k1 = GameCommand::new();
-        k1.reply = Some(0);
+        k1.go_to_shuffle = Some(true);
         tx.send((0, k1)).unwrap();
         std::thread::sleep(three_seconds);
-        //assert 4
-        let mut k2 = GameCommand::new();
-        k2.reply = Some(0);
-        tx.send((0, k2)).unwrap();
-        std::thread::sleep(three_seconds);
+
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -118,12 +114,6 @@ fn notifydraft() {
     let vecdraft = p.draft.split_off(5);
     p.hand = vecdraft;
     p.draft = vec![];
-    //assert 3
-    assert_eq!(iter_o.next(),
-        Some(ShortRec::Request((0,0,
-                                "Let's Start! You shuffle all 10 cards and draw 5 cards into your hand. It is your turn to submit word.".to_owned(),
-                                vec!["Continue".to_owned()],None))));
-
     //assert 4
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
@@ -133,7 +123,7 @@ fn notifydraft() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-                                       /*
+    /*
     //assert 4
      assert_eq!(iter_o.next(),
                Some(ShortRec::Request((0,0,

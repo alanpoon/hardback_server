@@ -62,7 +62,6 @@ impl<T> GameEngine<T>
                                               &self.connections,
                                               &self.players,
                                               &mut self.unknown,
-                                              &mut wait_for_input,
                                               log);
 
         } else {
@@ -120,7 +119,8 @@ impl<T> GameEngine<T>
                     type_is_reply = true;
                 }
 
-                if let (&GameCommand { ref take_card_use_ink,
+                if let (&GameCommand { ref go_to_shuffle,
+                                       ref take_card_use_ink,
                                        ref use_ink,
                                        ref use_remover,
                                        ref arranged,
@@ -145,7 +145,17 @@ impl<T> GameEngine<T>
                      &mut wait_for_input,
                      type_is_reply.clone()) {
                     match _gamestate {
-                        
+                        &mut &mut GameState::ShowDraft => {
+                            game_logic::show_draft::go_to_shuffle::<T>(debug_struct.show_draft().1,
+                                                                       _board,
+                                                                       player_id,
+                                                                       con,
+                                                                       _gamestate,
+                                                                       go_to_shuffle,
+                                                                       unknown,
+                                                                       ticks,
+                                                                       log);
+                        }
                         &mut &mut GameState::Spell => {
                             println!("spell");
                             game_logic::spell::take_card_use_ink::<T>(_board,
