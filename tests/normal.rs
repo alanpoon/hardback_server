@@ -16,7 +16,7 @@ use hardback_server::game_logic::board::BoardStruct;
 //use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::TheNormalDraftStruct;
+use hardback_server::drafttest::{ShortRec,TheNormalDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -61,7 +61,7 @@ fn player_starting() {
 }
 
 #[test]
-fn arrange_normal_card() {
+fn normal() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
@@ -105,12 +105,19 @@ fn arrange_normal_card() {
         std::thread::sleep(three_seconds);
     });
 
-    let mut iter_o = con_rx.iter().map(|x| {
-        let mut y = None;
+    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
+        let mut y = ShortRec::None;
         if let OwnedMessage::Text(z) = x {
-            if let Ok(ClientReceivedMsg { boardstate, .. }) =
+            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
-                y = Some(boardstate.unwrap().unwrap().unwrap());
+                println!("iterenumerate:{:?}", index);
+                if let Some(Some(Ok(_boardstate))) = boardstate {
+                    y = ShortRec::Board(_boardstate);
+                } else if let Some(Some(_request)) = request {
+                    y = ShortRec::Request(_request);
+                } else if let Some(Some(_turn_index)) = turn_index {
+                    y = ShortRec::TurnIndex(_turn_index);
+                }
             }
         }
         y
@@ -124,10 +131,10 @@ fn arrange_normal_card() {
                       (174, false, None, false),
                       (161, false, None, false)];
     p.hand = vec![147, 154, 160, 174, 161];
-    p.draft = vec![141, 148, 150, 177, 70];
-
+    p.draft = vec![];
+   
     assert_eq!(iter_o.next(),
-               Some(Some(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::TurnToSubmit],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
@@ -137,8 +144,9 @@ fn arrange_normal_card() {
     //Test submit word
     p.vp = 3;
     p.coin = 2;
+    p.skip_cards =vec![147, 154, 160, 174, 161];
     assert_eq!(iter_o.next(),
-               Some(Some(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::Buy],
                              offer_row: vec![179, 178, 176, 175, 173, 172, 171],
@@ -148,7 +156,7 @@ fn arrange_normal_card() {
     p.discard = vec![179];
     //Test buy card
     assert_eq!(iter_o.next(),
-               Some(Some(BoardCodec {
+               Some(ShortRec::Board(BoardCodec {
                              players: vec![p.clone()],
                              gamestates: vec![GameState::DrawCard],
                              offer_row: vec![178, 176, 175, 173, 172, 171, 170],

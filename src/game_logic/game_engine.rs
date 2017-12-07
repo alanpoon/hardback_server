@@ -124,6 +124,7 @@ impl<T> GameEngine<T>
                                        ref use_ink,
                                        ref use_remover,
                                        ref arranged,
+                                       ref personal,
                                        ref submit_word,
                                        ref lockup,
                                        ref buy_offer,
@@ -172,6 +173,7 @@ impl<T> GameEngine<T>
                                                                 wait_vec,
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
+                            game_logic::spell::personal(_board, player_id, personal, wait_vec);
                         }
                         &mut &mut GameState::TurnToSubmit => {
                             println!("TurnToSubmit");
@@ -189,6 +191,8 @@ impl<T> GameEngine<T>
                                                                 wait_vec,
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
+                            game_logic::spell::personal(_board, player_id, personal, wait_vec);
+
                             if let Some(true) = game_logic::spell::turn_to_submit(_board,
                                                                                   player_id,
                                                                                   &cardmeta,
@@ -197,6 +201,16 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_vec);
+                               
+                                    //broadcast those benefits that don't need to wait for user reply
+                                    if let Some(ref mut it) = wait_vec.get_mut(player_id) {
+                                        if it.len()==0{
+                                            **_gamestate = GameState::Buy;
+                                            it.push(None);
+                                        }
+                                     
+                                    }
+                                
                             }
                         }
 

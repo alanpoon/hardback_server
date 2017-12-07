@@ -12,11 +12,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-    //broadcast those benefits that don't need to wait for user reply
-    if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
-        println!("did push none");
-        it.push(None);
-    }
+    
     let mut valid_card = vec![];
     let mut own_timeless_class_card = vec![];
     let mut skip_cards = vec![];
