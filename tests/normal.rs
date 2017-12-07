@@ -16,7 +16,7 @@ use hardback_server::game_logic::board::BoardStruct;
 //use hardback_server::game_logic;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec,TheNormalDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -131,37 +131,53 @@ fn normal() {
                       (174, false, None, false),
                       (161, false, None, false)];
     p.hand = vec![147, 154, 160, 174, 161];
-    p.draft = vec![];
-   
+    p.draft = vec![]; //[141, 148, 7, 177, 70]
+    //Test submit word
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
-                             players: vec![p.clone()],
-                             gamestates: vec![GameState::TurnToSubmit],
-                             offer_row: vec![179, 178, 176, 175, 173, 172, 171],
-                             turn_index: 0,
-                             ticks: None,
-                         })));
-    //Test submit word
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+
+    //Test buy card
     p.vp = 3;
     p.coin = 2;
-    p.skip_cards =vec![147, 154, 160, 174, 161];
+    p.skip_cards = vec![147, 154, 160, 174, 161];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
-                             players: vec![p.clone()],
-                             gamestates: vec![GameState::Buy],
-                             offer_row: vec![179, 178, 176, 175, 173, 172, 171],
-                             turn_index: 0,
-                             ticks: None,
-                         })));
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::Buy],
+                                        offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
     p.discard = vec![179];
-    //Test buy card
+
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
-                             players: vec![p.clone()],
-                             gamestates: vec![GameState::DrawCard],
-                             offer_row: vec![178, 176, 175, 173, 172, 171, 170],
-                             turn_index: 0,
-                             ticks: None,
-                         })));
-
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::DrawCard],
+                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+    assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
+    //test give out
+    p.hand = vec![70, 177, 7, 148, 141];
+    p.arranged = vec![];
+    //p.discard.extend(vec![147, 154, 160, 174, 161]);
+    p.discard = vec![];
+    p.skip_cards = vec![];
+    p.draftlen = 6;
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
 }

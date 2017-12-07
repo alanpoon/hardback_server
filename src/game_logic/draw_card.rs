@@ -17,9 +17,9 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
-                _p.discard = _p.hand.clone();
+                _p.discard.extend(_p.hand.clone());
                 _p.hand = vec![];
-                for _ in 0usize..(5 - _p.hand.len()) {
+                for _ in 0usize..5usize {
                     if let Some(n) = unknown[_index.clone()].pop() {
                         _p.hand.push(n);
                     } else {
@@ -32,8 +32,16 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                         }
                     }
                 }
+                _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
+                if _p.draftlen == 0 {
+                    let mut rng = rand::thread_rng();
+                    unknown[_index.clone()] = _p.discard.clone();
+                    rng.shuffle(&mut unknown[_index.clone()]);
+                    _p.discard = vec![];
+                    _p.draftlen = unknown[_index.clone()].len();
+                }
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {
@@ -56,9 +64,9 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         //((x,y), z)
         match game_state {
             &mut &mut GameState::DrawCard => {
-                _p.discard = _p.hand.clone();
+                _p.discard.extend(_p.hand.clone());
                 _p.hand = vec![];
-                for _ in 0usize..(5 - _p.hand.len()) {
+                for _ in 0usize..5usize {
                     if let Some(n) = unknown[_index.clone()].pop() {
                         _p.hand.push(n);
                     } else {
@@ -69,9 +77,15 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                         }
                     }
                 }
+
                 _p.arranged = vec![];
                 _p.skip_cards = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
+                if _p.draftlen == 0 {
+                    unknown[_index.clone()] = _p.discard.clone();
+                    _p.discard = vec![];
+                    _p.draftlen = unknown[_index.clone()].len();
+                }
                 if *turn_index < player_num - 1 {
                     *turn_index += 1;
                 } else {

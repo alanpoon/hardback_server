@@ -134,7 +134,7 @@ fn adventure() {
                       (18, false, None, false),
                       (4, false, None, false)];
     p.hand = vec![7, 14, 20, 18, 4];
-    p.draft = vec![];//141, 148, 7, 177, 70
+    p.draft = vec![]; //141, 148, 7, 177, 70
     //assert 1
 
     assert_eq!(iter_o.next(),

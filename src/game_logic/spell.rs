@@ -101,9 +101,9 @@ pub fn arrange(_board: &mut BoardStruct,
     }
 }
 pub fn personal(_board: &mut BoardStruct,
-               player_id: usize,
-               personal: &Option<Personal>,
-               wait_for_input: &mut [WaitForInputType; 4]) {
+                player_id: usize,
+                personal: &Option<Personal>,
+                wait_for_input: &mut [WaitForInputType; 4]) {
     if let (Some(_p), mut _w) =
         (_board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
         if let &Some(ref z) = personal {

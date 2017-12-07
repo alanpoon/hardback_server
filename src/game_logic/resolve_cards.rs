@@ -12,7 +12,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-    
+
     let mut valid_card = vec![];
     let mut own_timeless_class_card = vec![];
     let mut skip_cards = vec![];

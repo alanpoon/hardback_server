@@ -201,16 +201,16 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_vec);
-                               
-                                    //broadcast those benefits that don't need to wait for user reply
-                                    if let Some(ref mut it) = wait_vec.get_mut(player_id) {
-                                        if it.len()==0{
-                                            **_gamestate = GameState::Buy;
-                                            it.push(None);
-                                        }
-                                     
+
+                                //broadcast those benefits that don't need to wait for user reply
+                                if let Some(ref mut it) = wait_vec.get_mut(player_id) {
+                                    if it.len() == 0 {
+                                        **_gamestate = GameState::Buy;
+                                        it.push(None);
                                     }
-                                
+
+                                }
+
                             }
                         }
 
