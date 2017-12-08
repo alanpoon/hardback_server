@@ -215,10 +215,12 @@ fn adventure() {
                                     })));
     //assert 9
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
-    p.discard.extend(p.hand.clone());
+    p.discard = vec![];
     p.arranged = vec![];
     p.hand = vec![70, 177, 7, 148, 141];
     p.draft = vec![];
+    p.draftlen-=1;
+      p.skip_cards =vec![];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
