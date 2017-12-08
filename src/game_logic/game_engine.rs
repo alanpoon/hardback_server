@@ -18,6 +18,7 @@ pub trait TheDraft {
     fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
     fn ticks(&self) -> Option<u16>;
     fn show_draft(&self) -> (bool, bool); //show_draft,withrandseed
+    fn push_notification(&self) -> bool;
 }
 pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
@@ -114,6 +115,7 @@ impl<T> GameEngine<T>
 
                 let mut temp_board = BoardStruct::new(self.players.clone(), &remaining_cards);
                 let mut type_is_reply = false;
+                let mut is_notification: Option<String> = None;
                 let &GameCommand { reply, killserver, .. } = &game_command;
                 if let Some(_) = reply {
                     type_is_reply = true;
@@ -193,10 +195,11 @@ impl<T> GameEngine<T>
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             game_logic::spell::personal(_board, player_id, personal, wait_vec);
 
-                            if let Some(true) = game_logic::spell::turn_to_submit(_board,
-                                                                                  player_id,
-                                                                                  &cardmeta,
-                                                                                  submit_word) {
+                            if let Some((true, _kstring)) =
+                                game_logic::spell::turn_to_submit(_board,
+                                                                  player_id,
+                                                                  &cardmeta,
+                                                                  submit_word) {
                                 game_logic::resolve_cards::resolve_cards(_board,
                                                                          player_id,
                                                                          &cardmeta,
@@ -206,6 +209,14 @@ impl<T> GameEngine<T>
                                 if let Some(ref mut it) = wait_vec.get_mut(player_id) {
                                     if it.len() == 0 {
                                         **_gamestate = GameState::Buy;
+                                        if debug_struct.push_notification() {
+                                            let mut _st = "Player ".to_owned();
+                                            _st.push_str(&(player_id + 1).to_string());
+                                            _st.push_str(" has formed a word [");
+                                            _st.push_str(&_kstring);
+                                            _st.push_str("]");
+                                            is_notification = Some(_st);
+                                        }
                                         it.push(None);
                                     }
 
@@ -317,7 +328,14 @@ impl<T> GameEngine<T>
                     }
 
                 }
-
+                if let Some(ref _s) = is_notification {
+                    println!("there is notification");
+                    for _con in &self.connections {
+                        let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                        h.set_notification(_s.clone());
+                        _con.tx_send(h, log);
+                    }
+                }
                 let mut next_gamestate = GameState::DrawCard;
                 if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
                     if let Some(_reply) = reply {

@@ -74,4 +74,7 @@ impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
     fn show_draft(&self) -> (bool, bool) {
         (true, false)
     }
+    fn push_notification(&self) -> bool {
+        true
+    }
 }

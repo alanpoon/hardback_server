@@ -117,7 +117,7 @@ pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
                                 player_id: usize,
                                 cardmeta: &[cards::ListCard<T>; 180],
                                 submit_word: &Option<bool>)
-                                -> Option<bool> {
+                                -> Option<(bool, String)> {
     if let (Some(_p), &Some(true)) = (_board.players.get_mut(player_id), submit_word) {
         let letter_iter = _p.arranged.iter().map(|&(x, _, ref some_wild, ref _timeless)| {
             if let &Some(ref _wild) = some_wild {
@@ -128,7 +128,7 @@ pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
         });
         let k = letter_iter.collect::<String>();
         println!("k {:?}", k);
-        Some(wordapi::there_such_word(&k))
+        Some((wordapi::there_such_word(&k), k))
     } else {
         None
     }

@@ -36,6 +36,9 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
     }
+    fn push_notification(&self) -> bool {
+        true
+    }
 }
 pub struct TheNotifyDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
@@ -65,7 +68,11 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
         None
     }
     fn show_draft(&self) -> (bool, bool) {
+        //(notify player_turn,random shuffle or not)
         (true, true)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 pub struct TheAdventureDraftStruct {}
@@ -101,6 +108,9 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
     }
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 pub struct TheHorrorDraftStruct {}
@@ -138,6 +148,9 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
     }
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 
@@ -177,6 +190,9 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
     }
+    fn push_notification(&self) -> bool {
+        false
+    }
 }
 pub struct TheMysteryUnCoverDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
@@ -212,6 +228,9 @@ impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
     }
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 pub struct TheRomanceDraftStruct {}
@@ -249,6 +268,9 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     }
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 pub struct TheOverlayDraftStruct {}
@@ -288,6 +310,9 @@ impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     }
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
     }
 }
 pub struct TheTwoPlayerDraftStruct {}
@@ -330,6 +355,9 @@ impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
     fn show_draft(&self) -> (bool, bool) {
         (false, false)
     }
+    fn push_notification(&self) -> bool {
+        false
+    }
 }
 #[derive(Clone)]
 pub struct Connection {
@@ -361,5 +389,6 @@ pub enum ShortRec {
     Request((usize, usize, String, Vec<String>, Option<u16>)), //player_index,card_index,Vec of option,
     TurnIndex(usize),
     PlayerIndex(usize),
+    PushNotification(String),
     None,
 }

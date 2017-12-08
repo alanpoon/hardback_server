@@ -108,7 +108,7 @@ fn normal() {
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
         let mut y = ShortRec::None;
         if let OwnedMessage::Text(z) = x {
-            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
+            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, notification, .. }) =
                 ClientReceivedMsg::deserialize_receive(&z) {
                 println!("iterenumerate:{:?}", index);
                 if let Some(Some(Ok(_boardstate))) = boardstate {
@@ -117,6 +117,8 @@ fn normal() {
                     y = ShortRec::Request(_request);
                 } else if let Some(Some(_turn_index)) = turn_index {
                     y = ShortRec::TurnIndex(_turn_index);
+                } else if let Some(Some(_pn)) = notification {
+                    y = ShortRec::PushNotification(_pn);
                 }
             }
         }
@@ -154,6 +156,10 @@ fn normal() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
+    // test notification
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::PushNotification("Player 1 has formed a word [house]".to_owned())));
+
     p.discard = vec![179];
 
     assert_eq!(iter_o.next(),
@@ -180,4 +186,5 @@ fn normal() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
+
 }
