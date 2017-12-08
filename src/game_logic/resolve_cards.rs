@@ -12,9 +12,9 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-        if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
-            it.push(None);
-            }
+    if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
+        it.push(None);
+    }
     let mut valid_card = vec![];
     let mut skip_cards = vec![];
     if let Some(ref _p) = _board.players.get(player_id) {
@@ -23,9 +23,9 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
             .map(|ref x| if x.3 {
                      if _p.timeless_classic.contains(&x.0) {
                          // do not remove from timeless_class
-                         if x.2.is_some(){
+                         if x.2.is_some() {
                              CardType::Inked
-                         } else{
+                         } else {
                              CardType::Normal(x.0)
                          }
                      } else {
@@ -240,7 +240,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                             _ => None,
                         };
                     if let Some(_opts) = vec_option {
-                        _wait_vec.push(Some((_c, header, _opts)));
+                        _wait_vec.push(Some((_c, GameState::WaitForReply, header, _opts)));
                         _wait_vec.push(None);
                     }
 
@@ -269,6 +269,7 @@ pub fn giveable_match(z: &mut Player,
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
             wait_for_input[player_id].push(Some((card_index,
+                                                 GameState::WaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
@@ -285,6 +286,7 @@ pub fn giveable_match(z: &mut Player,
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
             wait_for_input[player_id].push(Some((card_index,
+                                                 GameState::WaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
@@ -301,6 +303,7 @@ pub fn giveable_match(z: &mut Player,
         &cards::GIVEABLE::NONE => {}
         &cards::GIVEABLE::INK => {
             wait_for_input[player_id].push(Some((card_index,
+                                                 GameState::WaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::DrawCard,
                                                        "Ink".to_owned(),
@@ -320,6 +323,7 @@ pub fn giveable_match(z: &mut Player,
             let header = "You have the options to choose between vps and coins. Which one do you want?"
                 .to_owned();
             wait_for_input[player_id].push(Some((card_index,
+                                                 GameState::WaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::Buy,
                                                        j1,
@@ -339,6 +343,7 @@ pub fn giveable_match(z: &mut Player,
             let j3 = format!("{} VP and 1 ink remover", _x);
             let j4 = format!("{} Coin and 1 ink remover", _x);
             wait_for_input[player_id].push(Some((card_index,
+                                                 GameState::WaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::Buy,
                                                        j1,

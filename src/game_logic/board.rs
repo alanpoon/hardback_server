@@ -56,6 +56,7 @@ impl Board for BoardStruct {
                             player_id);
             let _g: WaitForSingleInput=
                 (card_id,
+                GameState::WaitForReply,
                  j,
                  vec![(GameState::Spell,"lose a ink".to_owned(),
                        Box::new(|ref mut p, ref mut _rmcards,ref mut _unknown| { p.ink -= 1; })),
@@ -73,6 +74,7 @@ impl Board for BoardStruct {
         if let Some(_w) = wait_for_input.get_mut(player_id) {
 
             let _g: WaitForSingleInput = (card_id,
+                                          GameState::WaitForReply,
                                           "Do you want to lock up any offer row card?".to_owned(),
                                           vec![(GameState::LockUp,
                        "Yes".to_owned(),
@@ -94,6 +96,7 @@ impl Board for BoardStruct {
             if !there_is_wild_beside(_p, index) {
                 let _g: WaitForSingleInput =
                     (card_id,
+                     GameState::WaitForReply,
                      "There are no adjacent wild cards that can be flipped over.".to_owned(),
                      vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
@@ -101,6 +104,7 @@ impl Board for BoardStruct {
             } else {
                 let _g: WaitForSingleInput =
                     (card_id,
+                     GameState::WaitForReply,
                      "There are a few wild cards adjacent to this card, can be opened".to_owned(),
                      vec![(GameState::ResolveAgain(index, card_id),
                            "Continue".to_owned(),
@@ -124,6 +128,7 @@ impl Board for BoardStruct {
             if !there_is {
                 let _g: WaitForSingleInput =
                     (card_id,
+                     GameState::WaitForReply,
                      "There are no adjacent valid cards that you double their benefits."
                          .to_owned(),
                      vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
@@ -132,6 +137,7 @@ impl Board for BoardStruct {
             } else {
                 let _g: WaitForSingleInput =
                     (card_id,
+                     GameState::WaitForReply,
                      "There are a few valid cards adjacent to this card, can be doubled."
                          .to_owned(),
                      vec![(GameState::Buy,
@@ -170,9 +176,10 @@ impl Board for BoardStruct {
                    wait_for_input: &mut [WaitForInputType; 4]) {
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
-                println!("trash by {:?}",card_id.clone());
+            println!("trash by {:?}", card_id.clone());
             let _g: WaitForSingleInput =
                 (card_id,
+                 GameState::TrashOther,
                  "Do you want to trash another card for one cent?".to_owned(),
                  vec![(GameState::TrashOther, "Yes".to_owned(), Box::new(move |_, _, _| {})),
                       (GameState::Buy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
@@ -198,6 +205,7 @@ impl Board for BoardStruct {
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
             let _g: WaitForSingleInput = (card_id,
+                                          GameState::WaitForReply,
                                           j,
                                           vec![(GameState::Buy,
                        "Continue".to_owned(),
@@ -214,6 +222,7 @@ impl Board for BoardStruct {
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let _g: WaitForSingleInput =
                 (card_id,
+                GameState::WaitForReply,
                  "You may draw three cards from the top of deck and choose to keep or discard each of them.".to_owned(),
                  vec![(GameState::PutBackDiscard(2,card_id),
                        "Continue".to_owned(),

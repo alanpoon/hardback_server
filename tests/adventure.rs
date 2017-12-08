@@ -219,8 +219,8 @@ fn adventure() {
     p.arranged = vec![];
     p.hand = vec![70, 177, 7, 148, 141];
     p.draft = vec![];
-    p.draftlen-=1;
-      p.skip_cards =vec![];
+    p.draftlen -= 1;
+    p.skip_cards = vec![];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],

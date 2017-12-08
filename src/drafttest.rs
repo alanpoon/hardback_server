@@ -280,20 +280,20 @@ impl game_logic::game_engine::TheDraft for TheTimelessDraftStruct {
                        _unknown: &mut Vec<usize>,
                        _cardmeta: &[cards::ListCard<BoardStruct>; 180],
                        owned_deck: &mut Vec<usize>) {
-     let player_index = (owned_deck.len() as f64 / 10.0).floor() as usize;
-    if player_index == 0 {
-         _p.timeless_classic =vec![136,96,135]; //:r ,gain 2vp, ++trash another card, :a, gain 2coin,++gain 1 coin
-            _p.hand = vec![105, 108, 110, 124]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
+        let player_index = (owned_deck.len() as f64 / 10.0).floor() as usize;
+        if player_index == 0 {
+            _p.timeless_classic = vec![136, 96, 135]; //:r ,gain 2vp, ++trash another card, :a, gain 2coin,++gain 1 coin
+            _p.hand = vec![105,99, 108, 110, 124]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
             //z,o,u,s,e
             *_unknown = vec![141, 148, 7, 177, 70];
             //forms 136,135,110,124->rose
-    } else{
-        _p.timeless_classic = vec![101]; //:t ,gain 2vp,++gain 2vp, lockup card
-         _p.hand = vec![90, 49, 2, 75, 77]; //v,p,c,g,i 
-        *_unknown = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
+        } else {
+            _p.timeless_classic = vec![101]; //:t ,gain 2vp,++gain 2vp, lockup card
+            _p.hand = vec![90, 49, 2, 75, 77]; //v,p,c,g,i
+            *_unknown = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
             //forms 2,96,49->cap
-    }
-       
+        }
+
         _p.coin = 10;
         _p.draft = vec![];
         owned_deck.extend(_p.hand.clone());

@@ -33,6 +33,7 @@ pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
                 for _r in vec_r {
                     let _g: WaitForSingleInput =
             (_r.clone(),
+            GameState::WaitForReply,
              "You may convert this inked card back to a normal card using a remover token. You may add it back to your hand or use it to form word or a wild card.".to_owned(),
              vec![(GameState::TurnToSubmit,
                    "Continue".to_owned(),
@@ -67,6 +68,7 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
         if (_p.ink > 0) & (!unknown.is_empty()) {
             let _g: WaitForSingleInput =
             (unknown.get(0).unwrap().clone(),
+            GameState::WaitForReply,
              "You need to use this card to form the word. You may not convert this card to wild. If you can't use this card, you may use ink remover to convert this to a wild card.".to_owned(),
              vec![(GameState::TurnToSubmit,
                    "Continue".to_owned(),

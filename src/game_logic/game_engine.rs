@@ -217,7 +217,7 @@ impl<T> GameEngine<T>
                                             _st.push_str("]");
                                             is_notification = Some(_st);
                                         }
-                                       // it.push(None);
+                                        // it.push(None);
                                     }
 
                                 }
@@ -272,11 +272,12 @@ impl<T> GameEngine<T>
                                                                          &mut type_is_reply);
                                 **_gamestate = GameState::Buy;
                                 //broadcast for every TrashOther
-                                if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
+                              /*  if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
                                     if _w.len() == 0 {
                                         _w.push(None);
                                     }
                                 }
+                                */
                             }
                         }
                         &mut &mut GameState::PutBackDiscard(ind, responsible) => {
@@ -345,7 +346,7 @@ impl<T> GameEngine<T>
                              &mut wait_for_input[player_id]) {
                             if let Some(_wait_vec) = _wait_vec_vec.remove(0) {
                                 if let Some(&(ref next_gstate, _, ref _closure)) =
-                                    _wait_vec.2.get(_reply) {
+                                    _wait_vec.3.get(_reply) {
                                     (*_closure)(_p,
                                                 &mut remaining_cards,
                                                 &mut self.unknown[player_id]);
@@ -421,10 +422,9 @@ pub fn continue_to_prob<T: GameCon>(player_num: usize,
                                     log: &mut Vec<ClientReceivedMsg>)
                                     -> bool {
     if let Some(&Some(ref __w)) = wait_for_input_p.first() {
-        println!("solo");
-        *_g = GameState::WaitForReply;
         let mut temp_vec: Vec<String> = vec![];
-        let &(card_index, ref header, ref option_vec) = __w;
+        let &(card_index, ref wait_state, ref header, ref option_vec) = __w;
+        *_g = wait_state.clone();
         for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());
         }
