@@ -217,7 +217,7 @@ impl<T> GameEngine<T>
                                             _st.push_str("]");
                                             is_notification = Some(_st);
                                         }
-                                        it.push(None);
+                                       // it.push(None);
                                     }
 
                                 }

@@ -12,18 +12,22 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-
+        if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
+            it.push(None);
+            }
     let mut valid_card = vec![];
-    let mut own_timeless_class_card = vec![];
     let mut skip_cards = vec![];
     if let Some(ref _p) = _board.players.get(player_id) {
         valid_card = _p.arranged
             .iter()
             .map(|ref x| if x.3 {
                      if _p.timeless_classic.contains(&x.0) {
-                         //remove from timeless_class
-                         own_timeless_class_card.push(x.0);
-                         CardType::Normal(x.0)
+                         // do not remove from timeless_class
+                         if x.2.is_some(){
+                             CardType::Inked
+                         } else{
+                             CardType::Normal(x.0)
+                         }
                      } else {
                          CardType::OthersTimeless(x.0)
                      }
@@ -37,13 +41,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
             .collect::<Vec<CardType>>();
         skip_cards = _p.skip_cards.clone();
     }
-    if let Some(ref mut _p) = _board.players.get_mut(player_id) {
-        for _time in own_timeless_class_card {
-            if let Some(_card_position) = _p.timeless_classic.iter().position(|&x| x == _time) {
-                _p.timeless_classic.remove(_card_position);
-            }
-        }
-    }
+
     println!("wad are the cards skipped{:?}", skip_cards.clone());
 
     let mut adv_vec = vec![];
@@ -74,7 +72,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                 for ref mut _p in _board.players.iter_mut() {
                     if let Some(_card_position) =
                         _p.timeless_classic.iter().position(|&x| x == _c) {
-                        _p.timeless_classic.remove(_card_position);
+                        _p.discard.push(_p.timeless_classic.remove(_card_position));
                     }
                 }
             }
@@ -201,7 +199,6 @@ pub fn resolve_trash_giveable(player_id: usize,
         for _oc in valid_card {
             if let CardType::Normal(_c) = _oc {
                 let y = z.skip_cards.iter().position(|&x| x == _c);
-                println!("yyyy{:?}", y);
                 if let None = z.skip_cards.iter().position(|&x| x == _c) {
                     let header = "Do you want to trash this card for the benefit?".to_owned();
                     let vec_option: Option<Vec<(GameState,

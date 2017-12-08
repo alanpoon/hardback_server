@@ -235,7 +235,7 @@ fn trash_other() {
                       (110, false, None, false),
                       (111, false, Some("t".to_owned()), false)];
     p.hand = vec![105, 135, 108, 110, 111];
-    p.draft = vec![141, 148, 7, 177, 70];
+    p.draft = vec![];
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
