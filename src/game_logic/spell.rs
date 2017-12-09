@@ -4,6 +4,7 @@ use codec_lib::cards::{Board, WaitForInputType, WaitForSingleInput};
 use game_logic::game_engine::GameCon;
 use game_logic::wordapi;
 use game_logic::board::BoardStruct;
+use std::cmp;
 
 pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
                                player_id: usize,
@@ -120,7 +121,15 @@ pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
                                 cardmeta: &[cards::ListCard<T>; 180],
                                 submit_word: &Option<bool>)
                                 -> Option<(bool, String)> {
-    if let (Some(_p), &Some(true)) = (_board.players.get_mut(player_id), submit_word) {
+    let mut max_literacy = 0;
+    let mut need_update = false;
+    for _p in _board.players.iter() {
+        if _p.literacy_award > max_literacy {
+            max_literacy = _p.literacy_award;
+        }
+    }
+    let result = if let (Some(_p), &Some(true)) =
+        (_board.players.get_mut(player_id), submit_word) {
         let letter_iter = _p.arranged.iter().map(|&(x, _, ref some_wild, ref _timeless)| {
             if let &Some(ref _wild) = some_wild {
                 _wild.to_owned()
@@ -129,11 +138,22 @@ pub fn turn_to_submit<T: Board>(_board: &mut BoardStruct,
             }
         });
         let k = letter_iter.collect::<String>();
+        let word_len = k.chars().count();
+        if (word_len >= 7) & (max_literacy < word_len) {
+            _p.literacy_award = cmp::min(word_len, 12);
+            need_update = true;
+        }
         println!("k {:?}", k);
         Some((wordapi::there_such_word(&k), k))
     } else {
         None
+    };
+    if need_update {
+        for (_i, _p) in _board.players.iter_mut().enumerate() {
+            if _i != player_id {
+                _p.literacy_award = 0;
+            }
+        }
     }
-
-
+    result
 }

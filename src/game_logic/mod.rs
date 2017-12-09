@@ -8,3 +8,4 @@ pub mod resolve_cards;
 pub mod draw_card;
 pub mod replay_engine;
 pub mod show_draft;
+pub mod end_game;

@@ -76,6 +76,7 @@ impl<T> GameEngine<T>
             }
         }
         let mut count_rec = 0;
+        let mut player_60 = None;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);
             let now = std::time::Instant::now();
@@ -89,6 +90,14 @@ impl<T> GameEngine<T>
                                                              &mut self.unknown,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
+            game_logic::end_game::first_to_60(&self.players,
+                                              &self.connections,
+                                              &mut player_60,
+                                              log);
+            game_logic::end_game::show_result(&self.players,
+                                              &mut self.gamestates,
+                                              &player_60,
+                                              turn_index);
             game_logic::draw_card::uncover_cards::<T>(&mut self.players,
                                                       &mut self.gamestates,
                                                       &self.connections,
@@ -106,7 +115,6 @@ impl<T> GameEngine<T>
                                                      turn_index,
                                                      ticks,
                                                      log);
-
 
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 count_rec = 0;
@@ -273,13 +281,6 @@ impl<T> GameEngine<T>
                                                                          wait_vec,
                                                                          &mut type_is_reply);
                                 **_gamestate = GameState::Buy;
-                                //broadcast for every TrashOther
-                              /*  if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
-                                    if _w.len() == 0 {
-                                        _w.push(None);
-                                    }
-                                }
-                                */
                             }
                         }
                         &mut &mut GameState::PutBackDiscard(ind, responsible) => {
