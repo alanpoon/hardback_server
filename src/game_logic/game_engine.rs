@@ -264,7 +264,7 @@ impl<T> GameEngine<T>
                                 **_gamestate = GameState::Buy;
                             }
                         }
-                        &mut &mut GameState::TrashOther => {
+                        &mut &mut GameState::TrashOther(_) => {
                             if let &Some((true, z)) = trash_other {
                                 game_logic::purchase::trash_another_card(z,
                                                                          _board,

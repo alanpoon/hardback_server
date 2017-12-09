@@ -178,10 +178,10 @@ impl Board for BoardStruct {
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             println!("trash by {:?}", card_id.clone());
             let _g: WaitForSingleInput =
-                (card_id,
-                 GameState::TrashOther,
+                (card_id.clone(),
+                 GameState::TrashOther(card_id),
                  "Do you want to trash another card for one cent?".to_owned(),
-                 vec![(GameState::TrashOther, "Yes".to_owned(), Box::new(move |_, _, _| {})),
+                 vec![(GameState::TrashOther(card_id), "Yes".to_owned(), Box::new(move |_, _, _| {})),
                       (GameState::Buy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
             _w.push(Some(_g));
             _w.push(None);

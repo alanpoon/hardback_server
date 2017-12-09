@@ -268,7 +268,7 @@ fn trash_other() {
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::TrashOther],
+                                        gamestates: vec![GameState::TrashOther(110)],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,
