@@ -150,7 +150,7 @@ fn timeless2player() {
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone(),p2.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit,GameState::Spell],
+                                        gamestates: vec![GameState::Buy,GameState::Spell],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,

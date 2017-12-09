@@ -207,9 +207,10 @@ impl<T> GameEngine<T>
 
                                 //broadcast those benefits that don't need to wait for user reply
                                 if let Some(ref mut it) = wait_vec.get_mut(player_id) {
-                                    if it.len() == 0 {
-                                        **_gamestate = GameState::Buy;
-                                        if debug_struct.push_notification() {
+                                    if it.len()==1{ //to pass normal
+                                        if let Some(&None)=it.first(){
+                                            **_gamestate = GameState::Buy;
+                                               if debug_struct.push_notification() {
                                             let mut _st = "Player ".to_owned();
                                             _st.push_str(&(player_id + 1).to_string());
                                             _st.push_str(" has formed a word [");
@@ -217,7 +218,7 @@ impl<T> GameEngine<T>
                                             _st.push_str("]");
                                             is_notification = Some(_st);
                                         }
-                                        // it.push(None);
+                                        }
                                     }
 
                                 }
