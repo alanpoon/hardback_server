@@ -178,6 +178,8 @@ fn normal() {
     p.discard = vec![];
     p.skip_cards = vec![];
     p.draftlen = 6;
+    p.ink += p.coin;
+    p.coin = 0;
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],

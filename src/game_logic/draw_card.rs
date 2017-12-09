@@ -47,6 +47,9 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                 } else {
                     *turn_index = 0;
                 }
+                //unused coins will be converted into ink
+                _p.ink += _p.coin;
+                _p.coin = 0;
             }
             _ => {}
         }
@@ -91,6 +94,9 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                 } else {
                     *turn_index = 0;
                 }
+                //unused coins will be converted into ink
+                _p.ink += _p.coin;
+                _p.coin = 0;
             }
             _ => {}
         }

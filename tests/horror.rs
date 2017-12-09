@@ -122,7 +122,7 @@ fn horror() {
                       (52, false, None, false),
                       (38, false, None, false)];
     p.hand = vec![41, 48, 54, 52, 38];
-    p.draft = vec![141, 148, 7, 177, 70];
+    p.draft = vec![];
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {

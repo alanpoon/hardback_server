@@ -66,9 +66,9 @@ fn timeless2player() {
                            }];
     std::thread::spawn(|| {
                            let mut log: Vec<ClientReceivedMsg> = vec![];
-                           GameEngine::new(vec![p,p2], connections).run(rx,
-                                                                     TheTimelessDraftStruct {},
-                                                                     &mut log);
+                           GameEngine::new(vec![p, p2], connections).run(rx,
+                                                                         TheTimelessDraftStruct {},
+                                                                         &mut log);
                        });
     std::thread::spawn(move || {
         let three_seconds = std::time::Duration::new(3, 0);
@@ -90,10 +90,10 @@ fn timeless2player() {
         //assert 2(board update) + assert 3, receive the request whether to lockupcar
         let mut k2 = GameCommand::new();
         k2.submit_word = Some(true);
-         k2.killserver = Some(true);
+        k2.killserver = Some(true);
         tx.send((0, k2)).unwrap();
         std::thread::sleep(three_seconds);
-       
+
     });
 
     let mut iter_o = con_rx1.iter().enumerate().map(|(index, x)| {
@@ -128,29 +128,29 @@ fn timeless2player() {
     p.timeless_classic = vec![136, 96, 135];
     p.draft = vec![];
     p.skip_cards = vec![];
-     let mut p2 = Player::new("Player 2".to_owned());                                    
-     p2.hand = vec![90,49,2,75,77];
+    let mut p2 = Player::new("Player 2".to_owned());
+    p2.hand = vec![90, 49, 2, 75, 77];
     p2.draft = vec![];
-    p2.timeless_classic =vec![101];    
-    p2.coin =10;
+    p2.timeless_classic = vec![101];
+    p2.coin = 10;
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone(),p2.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit,GameState::Spell],
+                                        players: vec![p.clone(), p2.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit, GameState::Spell],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,
                                     })));
     //assert 2
-     //101,other timeless not added to benefit
+    //101,other timeless not added to benefit
     p.skip_cards = vec![];
     p2.discard.push(101);
-    p2.timeless_classic =vec![];
+    p2.timeless_classic = vec![];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone(),p2.clone()],
-                                        gamestates: vec![GameState::Buy,GameState::Spell],
+                                        players: vec![p.clone(), p2.clone()],
+                                        gamestates: vec![GameState::Buy, GameState::Spell],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,

@@ -283,7 +283,7 @@ impl game_logic::game_engine::TheDraft for TheTimelessDraftStruct {
         let player_index = (owned_deck.len() as f64 / 10.0).floor() as usize;
         if player_index == 0 {
             _p.timeless_classic = vec![136, 96, 135]; //:r ,gain 2vp, ++trash another card, :a, gain 2coin,++gain 1 coin
-            _p.hand = vec![105,99, 108, 110, 124]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
+            _p.hand = vec![105, 99, 108, 110, 124]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
             //z,o,u,s,e
             *_unknown = vec![141, 148, 7, 177, 70];
             //forms 136,135,110,124->rose

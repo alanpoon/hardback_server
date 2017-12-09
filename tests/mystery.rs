@@ -130,7 +130,7 @@ fn arrange_mystery_card() {
                       (87, false, None, false),
                       (73, false, Some("e".to_owned()), false)];
     p.hand = vec![76, 83, 89, 87, 73];
-    p.draft = vec![141, 148, 7, 177, 70];
+    p.draft = vec![];
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
