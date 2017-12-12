@@ -12,11 +12,12 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
     use rand::Rng;
     use rand;
     let player_num = players.len();
+    println!("gahh {:?}",gamestates.clone());
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
         let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
         match game_state {
-            &mut &mut GameState::DrawCard => {
+            &mut &mut GameState::PreDrawCard => {
                 _p.discard.extend(_p.hand.clone());
                 _p.hand = vec![];
                 for _ in 0usize..5usize {
@@ -42,11 +43,6 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                     _p.discard = vec![];
                     _p.draftlen = unknown[_index.clone()].len();
                 }
-                if *turn_index < player_num - 1 {
-                    *turn_index += 1;
-                } else {
-                    *turn_index = 0;
-                }
                 //unused coins will be converted into ink
                 _p.ink += _p.coin;
                 _p.coin = 0;
@@ -66,7 +62,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
         match game_state {
-            &mut &mut GameState::DrawCard => {
+            &mut &mut GameState::PreDrawCard => {
                 _p.discard.extend(_p.hand.clone());
                 _p.hand = vec![];
                 for _ in 0usize..5usize {
@@ -97,6 +93,8 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                 //unused coins will be converted into ink
                 _p.ink += _p.coin;
                 _p.coin = 0;
+              //  **game_state=GameState::DrawCard;
+                println!("change");
             }
             _ => {}
         }
@@ -106,32 +104,58 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      cons: &HashMap<usize, T>,
                                      players: &Vec<Player>,
                                      remaining_cards: &Vec<usize>,
-                                     turn_index: usize,
+                                     turn_index: &mut usize,
                                      ticks: Option<u16>,
                                      log: &mut Vec<ClientReceivedMsg>) {
     let mut needtempboardcast = false;
     let mut need_turn_index = false;
-    if let Some(ref mut _g) = gamestates.get_mut(turn_index) {
-        if let GameState::DrawCard = **_g {
-            **_g = GameState::TurnToSubmit;
-            needtempboardcast = true;
-            need_turn_index = true;
+    let player_num = players.len();
+    let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
+    if still_processing{
+    if let (Some(ref _p),Some(ref mut _g)) = (players.get(turn_index.clone()),gamestates.get_mut(turn_index.clone())){
+            if let GameState::PreDrawCard=**_g{
+                needtempboardcast = true;
+                need_turn_index = true;
+                if let Some(_c) = cons.get(turn_index){
+                          let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                        h.set_hand(_p.hand.clone());
+                        _c.tx_send(h, log);
+                }
+                if *turn_index < player_num - 1 {
+                        *turn_index += 1;
+                        while !cons.contains_key(turn_index){
+                            if *turn_index<player_num-1{
+                                *turn_index += 1;
+                            }
+                        }
+                    } else {
+                        *turn_index = 0;
+                    }
+                    **_g=GameState::DrawCard;
+                
+            }
         }
-    }
+       for (_i,_g) in gamestates.iter_mut().enumerate(){
+            if _i !=*turn_index{
+                *_g = GameState::Spell;
+            } else {
+                *_g=GameState::TurnToSubmit;
+            }
+        }
+    } 
     if needtempboardcast {
         for (_, _con) in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
             if need_turn_index {
-
                 let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-                h.set_turn_index(turn_index);
+                h.set_turn_index(turn_index.clone());
                 _con.tx_send(h, log);
             }
             let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                        players: players.clone(),
                                                        gamestates: gamestates.clone(),
                                                        offer_row: offer_row,
-                                                       turn_index: turn_index,
+                                                       turn_index: turn_index.clone(),
                                                        ticks: ticks,
                                                    });
 
@@ -162,7 +186,6 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
                 player_that_responsible = Some(player_id);
                 **_gamestates = GameState::Buy;
                 println!("resolveagain {:?}", players.clone().get(player_id));
-
                 game_logic::resolve_cards::resolve_cards(&mut tempboard,
                                                          player_id,
                                                          &cardmeta,

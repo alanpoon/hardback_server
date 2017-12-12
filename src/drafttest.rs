@@ -411,6 +411,53 @@ impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
         false
     }
 }
+
+pub struct TheEndGameDraftStruct {}
+impl game_logic::game_engine::TheDraft for TheEndGameDraftStruct {
+    fn player_starting(&self,
+                       _p: &mut Player,
+                       _unknown: &mut Vec<usize>,
+                       _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                       owned_deck: &mut Vec<usize>) {
+        let player_index = (owned_deck.len() as f64 / 10.0).floor() as usize;
+        if player_index == 0 {
+            _p.hand = vec![143, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
+            *_unknown = vec![141, 148, 7, 177, 70];
+            _p.vp=59;
+        } else {
+            _p.hand = vec![90, 49, 2, 75, 159]; //v,p,c,g,i
+            *_unknown = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
+        }
+        
+        _p.draft = vec![];
+        owned_deck.extend(_p.hand.clone());
+        owned_deck.extend(_unknown.clone());
+    }
+    fn deck_starting(&self,
+                     _cardmeta: &[cards::ListCard<BoardStruct>; 180],
+                     owned_deck: &Vec<usize>)
+                     -> Vec<usize> {
+        let mut remaining_deck = vec![26, 23, 38, 80, 94, 98, 119, 1]; //a:26 use ink,x:23 can afford,d:38 cannot afford,l:80,94,98,119
+        let mut owned_reserved_deck = owned_deck.clone();
+        owned_reserved_deck.extend(remaining_deck.clone());
+        for &cards::ListCard { letter, ref genre, ref giveables, id, .. } in
+            _cardmeta.iter().rev() {
+            if !owned_reserved_deck.contains(&id) {
+                remaining_deck.push(id);
+            }
+        }
+        remaining_deck
+    }
+    fn ticks(&self) -> Option<u16> {
+        None
+    }
+    fn show_draft(&self) -> (bool, bool) {
+        (false, false)
+    }
+    fn push_notification(&self) -> bool {
+        false
+    }
+}
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -442,5 +489,30 @@ pub enum ShortRec {
     TurnIndex(usize),
     PlayerIndex(usize),
     PushNotification(String),
+    Hand(Vec<usize>),
     None,
+}
+pub fn shortrec_process(index:usize,ownm:OwnedMessage,j:usize)->ShortRec{
+let mut y = ShortRec::None;
+        if let OwnedMessage::Text(z) = ownm {
+            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, player_index,notification,hand, .. }) =
+                ClientReceivedMsg::deserialize_receive(&z) {
+                println!("iterenumerate{:?}:{:?}",j, index);
+                if let Some(Some(Ok(_boardstate))) = boardstate {
+                    y = ShortRec::Board(_boardstate);
+                } else if let Some(Some(_request)) = request {
+                    y = ShortRec::Request(_request);
+                } else if let Some(Some(_turn_index)) = turn_index {
+                    y = ShortRec::TurnIndex(_turn_index);
+                } else if let Some(Some(_player_index)) = player_index {
+                    y = ShortRec::PlayerIndex(_player_index);
+                } else if let Some(Some(_notif)) = notification{
+                    y = ShortRec::PushNotification(_notif);
+                }else if let Some(Some(_hand)) = hand{
+                    y = ShortRec::Hand(_hand);
+                }
+
+            }
+        }
+        y
 }

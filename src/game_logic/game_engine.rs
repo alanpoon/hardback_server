@@ -46,12 +46,13 @@ impl<T> GameEngine<T>
                             rx: mpsc::Receiver<(usize, GameCommand)>,
                             debug_struct: D,
                             log: &mut Vec<ClientReceivedMsg>) {
+                                                                                                                                                                                                                                                                                                                                                                 
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         let mut turn_index = 0;
         let owned_deck = give_outstarting(&mut self.players,
                                           &mut self.unknown,
-                                          &cardmeta,
+                                          &cardmeta,                                                                                                                                                                                            
                                           &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
@@ -77,7 +78,8 @@ impl<T> GameEngine<T>
             }
         }
         let mut count_rec = 0;
-        let mut player_60 = None;
+        let mut player_60:Option<usize> = None;
+        let mut end_game_notified=false;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);
             let now = std::time::Instant::now();
@@ -91,14 +93,17 @@ impl<T> GameEngine<T>
                                                              &mut self.unknown,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
-            game_logic::end_game::first_to_60(&self.players,
+             game_logic::end_game::first_to_60(&self.players,
                                               &self.connections,
                                               &mut player_60,
+                                              &mut end_game_notified,
                                               log);
-            game_logic::end_game::show_result(&self.players,
+           
+           game_logic::end_game::show_result(&self.players,
                                               &mut self.gamestates,
                                               &player_60,
                                               turn_index);
+        
             game_logic::draw_card::uncover_cards::<T>(&mut self.players,
                                                       &mut self.gamestates,
                                                       &self.connections,
@@ -108,12 +113,11 @@ impl<T> GameEngine<T>
                                                       turn_index,
                                                       ticks,
                                                       log);
-
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
                                                      &remaining_cards,
-                                                     turn_index,
+                                                     &mut turn_index,
                                                      ticks,
                                                      log);
 
@@ -241,7 +245,7 @@ impl<T> GameEngine<T>
                             println!("Buy");
                             if let &Some((true, z)) = buy_offer {
                                 //z top of remaining deck
-                                **_gamestate = GameState::DrawCard;
+                                **_gamestate = GameState::PreDrawCard;
                                 game_logic::purchase::buy_card_from(z,
                                                                     &mut remaining_cards,
                                                                     &cardmeta,
@@ -256,7 +260,7 @@ impl<T> GameEngine<T>
                                 }
 
                             } else {
-                                **_gamestate = GameState::DrawCard;
+                                **_gamestate = GameState::PreDrawCard;
                             }
 
                         }
@@ -342,7 +346,7 @@ impl<T> GameEngine<T>
                         _con.tx_send(h, log);
                     }
                 }
-                let mut next_gamestate = GameState::DrawCard;
+                let mut next_gamestate = GameState::PreDrawCard;
                 if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
                     if let Some(_reply) = reply {
                         if let (Some(_p), Some(_gamestate), mut _wait_vec_vec) =
@@ -457,24 +461,33 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
         }
         Some(&None) => {
             remove_first = true;
-            for it in con_vec.iter() {
-                let offer_row =
-                    (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                let (_i, ref con) = it;
-                println!("broadcast {:?}",_i);
-                let k: Result<BoardCodec, String> = Ok(BoardCodec {
-                                                           players: players.clone(),
-                                                           gamestates: gamestates.clone(),
-                                                           offer_row: offer_row,
-                                                           turn_index: turn_index,
-                                                           ticks: ticks,
-                                                       });
-                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-                h.set_boardstate(k);
-                con.tx_send(h, log);
-            }
-
-            println!("there is really none");
+            // if there is preDrawcard, don't broadcast
+                let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
+                if !still_processing{
+                    for it in con_vec.iter() {
+                                    let offer_row =
+                                        (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+                                    let (_i, ref con) = it;
+                                    println!("broadcast {:?}",_i);
+                                    //replace PreDrawCard with DrawCard
+                                    let mut gc = gamestates.clone();
+                                    for  _h in gc.iter_mut(){
+                                        if let &mut GameState::PreDrawCard =_h{
+                                            *_h = GameState::DrawCard;
+                                        }
+                                    }
+                                    let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                                            players: players.clone(),
+                                                                            gamestates: gc,
+                                                                            offer_row: offer_row,
+                                                                            turn_index: turn_index,
+                                                                            ticks: ticks,
+                                                                        });
+                                    let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                                    h.set_boardstate(k);
+                                    con.tx_send(h, log);
+                                }
+                }
         }
         None => {
             println!("there is none");

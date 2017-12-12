@@ -1,0 +1,10 @@
+endgame
+after prob len 0
+gahh [PreDrawCard, Spell]
+turn_index 1
+gahh [DrawCard, Spell]
+
+after prob len 0
+gahh [PreDrawCard]
+turn_index 0
+got draw

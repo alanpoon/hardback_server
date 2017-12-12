@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct,shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -111,23 +111,7 @@ fn normal() {
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-        let mut y = ShortRec::None;
-        if let OwnedMessage::Text(z) = x {
-            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, notification, .. }) =
-                ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate:{:?}", index);
-                if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::Board(_boardstate);
-                } else if let Some(Some(_request)) = request {
-                    y = ShortRec::Request(_request);
-                } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::TurnIndex(_turn_index);
-                } else if let Some(Some(_pn)) = notification {
-                    y = ShortRec::PushNotification(_pn);
-                }
-            }
-        }
-        y
+       shortrec_process(index,x,1)
     });
 
     let mut p = Player::new("DefaultPlayer".to_owned());
@@ -167,14 +151,7 @@ fn normal() {
 
     p.discard = vec![179];
 
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::DrawCard],
-                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
+    assert_eq!(iter_o.next(), Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));                              
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
     //test give out
     p.hand = vec![70, 177, 7, 148, 141];
