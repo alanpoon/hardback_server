@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use websocket::message::OwnedMessage;
 use hardback_server::drafttest::TheTwoPlayerDraftStruct;
-
+use std::collections::HashMap;
 #[derive(Clone)]
 pub struct Connection {
     pub name: String,
@@ -58,13 +58,13 @@ fn two_players() {
                                                     Connection {
                                                         name: "DefaultPlayer".to_owned(),
                                                         player_num: Some(0),
-                                                        sender: con_tx,
+                                                        sender: con_tx1,
                                                     }),
                                                    (1,
                                                     Connection {
                                                         name: "Player 2".to_owned(),
                                                         player_num: Some(1),
-                                                        sender: con_tx,
+                                                        sender: con_tx2,
                                                     })]
             .iter()
             .cloned()

@@ -58,7 +58,7 @@ fn timeless() {
                                                     Connection {
                                                         name: "DefaultPlayer".to_owned(),
                                                         player_num: Some(0),
-                                                        sender: con_tx,
+                                                        sender: con_tx1,
                                                     })]
             .iter()
             .cloned()

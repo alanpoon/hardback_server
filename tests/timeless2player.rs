@@ -8,7 +8,6 @@ extern crate serde_json;
 pub extern crate hardback_codec;
 pub extern crate hardback_server;
 pub use hardback_codec as codec_lib;
-
 use hardback_server::game_logic::game_engine::*;
 use codec_lib::codec::*;
 use std::sync::mpsc;
@@ -58,13 +57,13 @@ fn timeless2player() {
                                                     Connection {
                                                         name: "DefaultPlayer".to_owned(),
                                                         player_num: Some(0),
-                                                        sender: con_tx,
+                                                        sender: con_tx1,
                                                     }),
                                                    (1,
                                                     Connection {
                                                         name: "Player 2".to_owned(),
                                                         player_num: Some(1),
-                                                        sender: con_tx,
+                                                        sender: con_tx2,
                                                     })]
             .iter()
             .cloned()

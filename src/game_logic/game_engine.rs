@@ -460,7 +460,8 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
             for it in con_vec.iter() {
                 let offer_row =
                     (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                let (_, ref con) = it;
+                let (_i, ref con) = it;
+                println!("broadcast {:?}",_i);
                 let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                            players: players.clone(),
                                                            gamestates: gamestates.clone(),
