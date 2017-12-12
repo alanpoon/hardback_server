@@ -1,4 +1,5 @@
 use std::sync::mpsc;
+use std::collections::HashMap;
 use codec_lib::codec::*;
 use drafttest::TheNotifyDraftStruct;
 use draft::TheStartingDraftStruct;
@@ -7,12 +8,12 @@ use lobby::game::Connection;
 use std;
 
 pub struct Table {
-    pub players: Vec<Connection>,
+    pub players: HashMap<usize, Connection>,
     pub numberOfPlayer: usize,
     pub tx: Option<mpsc::Sender<(usize, GameCommand)>>,
 }
 impl Table {
-    pub fn new(players: Vec<Connection>, numberOfPlayer: usize) -> Table {
+    pub fn new(players: HashMap<usize, Connection>, numberOfPlayer: usize) -> Table {
         Table {
             players: players,
             numberOfPlayer: numberOfPlayer,
@@ -23,7 +24,7 @@ impl Table {
         let (tx, rx) = mpsc::channel();
         self.tx = Some(tx);
         let mut player_vec = vec![];
-        for _p in &self.players {
+        for (_, _p) in &self.players {
             let p = Player::new(_p.name.clone());
             player_vec.push(p);
         }

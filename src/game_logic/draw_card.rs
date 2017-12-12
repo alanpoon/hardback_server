@@ -3,7 +3,7 @@ use codec_lib::cards::{self, WaitForInputType};
 use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use game_logic;
-
+use std::collections::HashMap;
 #[cfg(not(test))]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
@@ -103,7 +103,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
     }
 }
 pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
-                                     cons: &Vec<T>,
+                                     cons: &HashMap<usize, T>,
                                      players: &Vec<Player>,
                                      remaining_cards: &Vec<usize>,
                                      turn_index: usize,
@@ -119,7 +119,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
         }
     }
     if needtempboardcast {
-        for _con in cons.iter() {
+        for (_, _con) in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
             if need_turn_index {
 
@@ -144,7 +144,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
 }
 pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
                                  gamestates: &mut Vec<GameState>,
-                                 connections: &Vec<T>,
+                                 connections: &HashMap<usize, T>,
                                  cardmeta: &[cards::ListCard<BoardStruct>; 180],
                                  remaining_cards: &Vec<usize>,
                                  wait_vec: &mut [WaitForInputType; 4],
@@ -201,7 +201,7 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
                                        turn_index,
                                        ticks,
                                        log);
-            if let (_w, Some(_con)) = (_w, connections.get(player_that_responsible)) {
+            if let (_w, Some(_con)) = (_w, connections.get(&player_that_responsible)) {
                 continue_to_prob::<T>(player_that_responsible, _w, _g, _con, ticks, log);
             }
         }

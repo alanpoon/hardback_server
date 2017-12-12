@@ -54,16 +54,21 @@ fn two_players() {
     let (con_tx2, con_rx2) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
     let p2 = Player::new("Player 2".to_owned());
-    let connections = vec![Connection {
-                               name: "DefaultPlayer".to_owned(),
-                               player_num: Some(0),
-                               sender: con_tx1,
-                           },
-                           Connection {
-                               name: "Player 2".to_owned(),
-                               player_num: Some(1),
-                               sender: con_tx2,
-                           }];
+    let connections: HashMap<usize, Connection> = [(0,
+                                                    Connection {
+                                                        name: "DefaultPlayer".to_owned(),
+                                                        player_num: Some(0),
+                                                        sender: con_tx,
+                                                    }),
+                                                   (1,
+                                                    Connection {
+                                                        name: "Player 2".to_owned(),
+                                                        player_num: Some(1),
+                                                        sender: con_tx,
+                                                    })]
+            .iter()
+            .cloned()
+            .collect();
     std::thread::spawn(|| {
                            let mut log: Vec<ClientReceivedMsg> = vec![];
                            GameEngine::new(vec![p, p2], connections).run(rx,

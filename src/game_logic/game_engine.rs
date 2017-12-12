@@ -5,6 +5,7 @@ use codec_lib::cards::*;
 use game_logic::board::BoardStruct;
 use game_logic;
 use std;
+use std::collections::HashMap;
 
 pub trait GameCon {
     fn tx_send(&self, ClientReceivedMsg, &mut Vec<ClientReceivedMsg>);
@@ -22,14 +23,14 @@ pub trait TheDraft {
 }
 pub struct GameEngine<T: GameCon> {
     players: Vec<Player>,
-    connections: Vec<T>,
+    connections: HashMap<usize, T>,
     gamestates: Vec<GameState>,
     unknown: [Vec<usize>; 4],
 }
 impl<T> GameEngine<T>
     where T: GameCon
 {
-    pub fn new(players: Vec<Player>, connections: Vec<T>) -> Self {
+    pub fn new(players: Vec<Player>, connections: HashMap<usize, T>) -> Self {
         let mut gamestates_v = vec![];
         for _ in &players {
             gamestates_v.push(GameState::ShowDraft);
@@ -141,6 +142,7 @@ impl<T> GameEngine<T>
                                        ref buy_lockup,
                                        ref trash_other,
                                        ref putback_discard,
+                                       ref exit_game,
                                        .. },
                         ref mut _board,
                         Some(ref con),
@@ -150,7 +152,7 @@ impl<T> GameEngine<T>
                         false) =
                     (&game_command,
                      &mut temp_board,
-                     self.connections.get(player_id),
+                     self.connections.get(&player_id),
                      self.gamestates.get_mut(player_id),
                      &mut self.unknown[player_id],
                      &mut wait_for_input,
@@ -325,7 +327,7 @@ impl<T> GameEngine<T>
                     if let (_w, Some(_g), Some(_con)) =
                         (&mut wait_for_input[player_id],
                          self.gamestates.get_mut(player_id),
-                         self.connections.get(player_id)) {
+                         self.connections.get(&player_id)) {
                         continue_to_prob::<T>(player_id, _w, _g, _con, ticks, log);
                         println!("after prob len {:?}", _w.len());
 
@@ -334,7 +336,7 @@ impl<T> GameEngine<T>
                 }
                 if let Some(ref _s) = is_notification {
                     println!("there is notification");
-                    for _con in &self.connections {
+                    for (_, _con) in &self.connections {
                         let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
                         h.set_notification(_s.clone());
                         _con.tx_send(h, log);
@@ -374,7 +376,7 @@ impl<T> GameEngine<T>
                                                    log);
 
                         if let (Some(_con), Some(_gamestate)) =
-                            (self.connections.get(player_id), self.gamestates.get_mut(player_id)) {
+                            (self.connections.get(&player_id), self.gamestates.get_mut(player_id)) {
                             continue_to_prob::<T>(player_id,
                                                   &wait_for_input[player_id],
                                                   _gamestate,
@@ -441,7 +443,7 @@ pub fn continue_to_prob<T: GameCon>(player_num: usize,
     }
 }
 pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType,
-                                         con_vec: &Vec<T>,
+                                         con_vec: &HashMap<usize, T>,
                                          remaining_cards: &Vec<usize>,
                                          players: Vec<Player>,
                                          gamestates: Vec<GameState>,
@@ -458,7 +460,7 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
             for it in con_vec.iter() {
                 let offer_row =
                     (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                let ref con = it;
+                let (_, ref con) = it;
                 let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                            players: players.clone(),
                                                            gamestates: gamestates.clone(),

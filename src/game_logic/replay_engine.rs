@@ -2,14 +2,14 @@ use std::sync::mpsc;
 use codec_lib::codec::*;
 use codec_lib::cards;
 use game_logic::board::BoardStruct;
-
+use std::collections::HashMap;
 use std;
 pub trait GameConReplay {
     fn tx_send(&self, ClientReceivedMsg);
 }
 pub struct GameEngine<T: GameConReplay> {
     players: Vec<Player>,
-    connections: Vec<T>,
+    connections: HashMap<usize, T>,
     gamestates: Vec<GameState>,
     turn_index: usize,
 }
@@ -17,11 +17,11 @@ pub struct GameEngine<T: GameConReplay> {
 impl<T> GameEngine<T>
     where T: GameConReplay
 {
-    pub fn new(log: &Vec<ClientReceivedMsg>, connections: Vec<T>) -> Self {
+    pub fn new(log: &Vec<ClientReceivedMsg>, connections: HashMap<usize, T>) -> Self {
         //init
         let mut g = GameEngine {
             players: vec![],
-            connections: vec![],
+            connections: HashMap::new(),
             gamestates: vec![],
             turn_index: 0,
         };
@@ -93,8 +93,8 @@ impl<T> GameEngine<T>
         }
     }
 }
-pub fn broadcast<T: GameConReplay>(msg: &ClientReceivedMsg, connections: &Vec<T>) {
-    for _con in connections {
+pub fn broadcast<T: GameConReplay>(msg: &ClientReceivedMsg, connections: &HashMap<usize, T>) {
+    for (_, _con) in connections {
         _con.tx_send(msg.clone());
     }
 }

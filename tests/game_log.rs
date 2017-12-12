@@ -16,6 +16,7 @@ use codec_lib::codec::*;
 use std::io::prelude::*;
 use std::fs::File;
 use std::sync::mpsc;
+use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct};
 
@@ -49,11 +50,15 @@ fn game_log() {
     let (tx, rx) = mpsc::channel();
     let (con_tx, con_rx) = mpsc::channel();
     let p = Player::new("DefaultPlayer".to_owned());
-    let connections = vec![Connection {
-                               name: "DefaultPlayer".to_owned(),
-                               player_num: Some(0),
-                               sender: con_tx,
-                           }];
+    let connections: HashMap<usize, Connection> = [(0,
+                                                    Connection {
+                                                        name: "DefaultPlayer".to_owned(),
+                                                        player_num: Some(0),
+                                                        sender: con_tx,
+                                                    })]
+            .iter()
+            .cloned()
+            .collect();
 
     std::thread::spawn(|| {
         let mut log: Vec<ClientReceivedMsg> = vec![];

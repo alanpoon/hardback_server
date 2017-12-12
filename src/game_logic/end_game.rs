@@ -1,8 +1,8 @@
 use codec_lib::codec::*;
 use game_logic::game_engine::GameCon;
-
+use std::collections::HashMap;
 pub fn first_to_60<T: GameCon>(players: &Vec<Player>,
-                               connections: &Vec<T>,
+                               connections: &HashMap<usize, T>,
                                player_60: &mut Option<usize>,
                                log: &mut Vec<ClientReceivedMsg>) {
     //with winner
@@ -16,7 +16,7 @@ pub fn first_to_60<T: GameCon>(players: &Vec<Player>,
         let mut _st = "Player ".to_owned();
         _st.push_str(&(player_60.unwrap() + 1).to_string());
         _st.push_str(" has reached [60 vp] The game will end in this round.");
-        for _con in connections {
+        for (_, _con) in connections {
             let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
             h.set_notification(_st.clone());
             _con.tx_send(h, log);

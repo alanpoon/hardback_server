@@ -2,6 +2,7 @@ use codec_lib::codec::*;
 use game_logic::board::BoardStruct;
 use game_logic::game_engine::GameCon;
 use rand::{thread_rng, Rng, SeedableRng, StdRng};
+use std::collections::HashMap;
 pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
                                  _board: &mut BoardStruct,
                                  player_id: usize,
@@ -53,11 +54,11 @@ pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
 }
 pub fn broadcast<T: GameCon>(randseedbool: bool,
                              gamestates: &mut Vec<GameState>,
-                             cons: &Vec<T>,
+                             cons: &HashMap<usize, T>,
                              players: &Vec<Player>,
                              unknown: &mut [Vec<usize>; 4], //player's draft
                              log: &mut Vec<ClientReceivedMsg>) {
-    for (_index, _con) in cons.iter().enumerate() {
+    for (_index, _con) in cons.iter() {
         println!("broadcast_show_draft");
         let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                    players: players.clone(),
@@ -74,9 +75,9 @@ pub fn broadcast<T: GameCon>(randseedbool: bool,
     }
 
 }
-pub fn give_player_index<T: GameCon>(cons: &Vec<T>, log: &mut Vec<ClientReceivedMsg>) {
+pub fn give_player_index<T: GameCon>(cons: &HashMap<usize, T>, log: &mut Vec<ClientReceivedMsg>) {
     let mut c = 0;
-    for _con in cons.iter() {
+    for (_, _con) in cons.iter() {
         let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
         h.set_player_index(c);
         _con.tx_send(h, log);

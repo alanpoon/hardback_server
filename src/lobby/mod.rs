@@ -146,15 +146,16 @@ impl Lobby {
                         if _ready {
                             if let Some(table_n) = tl {
                                 println!("tl");
-                                let mut vec_z = vec![];
+                                let mut vec_z = HashMap::new();
                                 let mut game_can_be_started = false;
                                 if self.connections
                                        .iter()
-                                       .filter(|&(_, c)| {
-                                                   vec_z.push(c.clone());
+                                       .enumerate()
+                                       .filter(|&(_i, (_s, c))| {
+                                                   vec_z.insert(_i, c.clone());
                                                    (c.table == tl)
                                                })
-                                       .filter(|&(_, c)| c.ready == false)
+                                       .filter(|&(_i, (_s, c))| c.ready == false)
                                        .count() == 0 {
                                     tables.insert(table_n, Table::new(vec_z, number_of_player));
                                     if let Some(t) = tables.get_mut(&table_n) {
