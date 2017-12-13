@@ -4,7 +4,7 @@ use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use game_logic;
 use std::collections::HashMap;
-#[cfg(not(test))]
+//#[cfg(not(test))]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
                                  gamestates: &mut Vec<GameState>,
@@ -51,6 +51,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         }
     }
 }
+/*
 #[cfg(test)]
 pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
@@ -100,6 +101,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         }
     }
 }
+*/
 pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      cons: &HashMap<usize, T>,
                                      players: &Vec<Player>,

@@ -27,37 +27,61 @@ pub fn first_to_60<T: GameCon>(players: &Vec<Player>,
     }
 
 }
-pub fn show_result(players: &Vec<Player>,
+pub fn show_result<T: GameCon>(players: &mut Vec<Player>,
                    gamestates: &mut Vec<GameState>,
+                   cons: &HashMap<usize, T>,
                    player_60: &Option<usize>,
-                   turnindex: usize) {
+                   turn_after_winner:&mut usize,
+                   turn_index: usize,
+                    ticks: Option<u16>,
+                    log: &mut Vec<ClientReceivedMsg>) {
     if let &Some(player_index) = player_60 {
-        if (player_index == 0)&(players.len()==1) {
-            if let Some(&GameState::DrawCard) = gamestates.get(player_index) {
-                for _g in gamestates.iter_mut() {
-                    *_g = GameState::ShowResult(player_index);
-                }
-            }
-        } else if player_index>0{
-            if turnindex ==player_index-1{
-                if let Some(&GameState::PreDrawCard) = gamestates.get(turnindex) {
-                let mut top_player = 0;
+         println!("end bah0");
+    let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
+    if still_processing{
+        if *turn_after_winner==1{
+             let mut top_player = 0;
                 let mut highest_score: (usize, usize) = (0, 0); //vp,ink
-                for (_i, _p) in players.iter().enumerate() {
+                for (_i, _p) in players.iter_mut().enumerate() {
+                    println!("i {:?}",_i);
+                    _p.hand = vec![];
+                    _p.arranged = vec![];
+                    _p.draftlen =0;
+                    _p.skip_cards =vec![];
                     if _p.vp + _p.literacy_award >= highest_score.0 {
                         if _p.vp + _p.literacy_award == highest_score.0 {
                             if _p.ink > highest_score.1 {
                                 top_player = _i;
                                 highest_score = (_p.vp + _p.literacy_award, _p.ink);
                             }
+                        }else{
+                            top_player = _i;
+                                highest_score = (_p.vp + _p.literacy_award, _p.ink);
                         }
                     }
                 }
+                println!("top player {:?}",top_player);
                 for _g in gamestates.iter_mut() {
                     *_g = GameState::ShowResult(top_player);
                 }
-            }
-            }
+            for (_, _con) in cons.iter() {
+                let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                        players: players.clone(),
+                                                        gamestates: gamestates.clone(),
+                                                        offer_row: vec![],
+                                                        turn_index: turn_index.clone(),
+                                                        ticks: ticks,
+                                                    });
+
+                let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                h.set_boardstate(k);
+                _con.tx_send(h, log);
         }
+        }
+        if (*turn_after_winner==0) &(turn_index==player_index){
+            *turn_after_winner+=1;
+        }
+        
+    }
     }
 }

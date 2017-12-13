@@ -88,10 +88,14 @@ fn endgame() {
         std::thread::sleep(three_seconds);
         let mut k5 = GameCommand::new();
         k5.submit_word = Some(true);
-         k5.killserver = Some(true);
         _tx.send((1, k5)).unwrap();
         std::thread::sleep(three_seconds);
-        
+        let mut k6 = GameCommand::new();
+        k6.buy_offer = Some((false,0));
+         k6.killserver = Some(true);
+        _tx.send((1, k6)).unwrap();
+        std::thread::sleep(three_seconds);
+         
     });
     let mut iter_o = con_rx1.iter().enumerate().map(|(index, x)| {
         shortrec_process(index,x,1)
@@ -216,5 +220,23 @@ fn endgame() {
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 1,
                                         ticks: None,
-                                    })));                                
+                                    })));
+    p.hand=vec![];
+    p.arranged=vec![];
+    p.draftlen=0;
+    p2.hand=vec![];
+    p2.arranged=vec![];
+    p2.draftlen=0;
+    p2.skip_cards =vec![];
+    p2.ink = p2.coin;
+    p2.coin =0;                         
+    assert_eq!(iter_o.next(),Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone(), p2.clone()],
+                                        gamestates: vec![GameState::ShowResult(0),
+                                                         GameState::ShowResult(0)],
+                                        offer_row: vec![],
+                                        turn_index: 1,
+                                        ticks: None,
+                                    }))); 
+                                        
 }

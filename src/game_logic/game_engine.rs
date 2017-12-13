@@ -80,6 +80,7 @@ impl<T> GameEngine<T>
         let mut count_rec = 0;
         let mut player_60:Option<usize> = None;
         let mut end_game_notified=false;
+        let mut turn_after_winner=0;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);
             let now = std::time::Instant::now();
@@ -99,10 +100,14 @@ impl<T> GameEngine<T>
                                               &mut end_game_notified,
                                               log);
            
-           game_logic::end_game::show_result(&self.players,
+           game_logic::end_game::show_result(&mut self.players,
                                               &mut self.gamestates,
+                                              &self.connections,
                                               &player_60,
-                                              turn_index);
+                                              &mut turn_after_winner,
+                                              turn_index,
+                                              ticks,
+                                              log);
         
             game_logic::draw_card::uncover_cards::<T>(&mut self.players,
                                                       &mut self.gamestates,
