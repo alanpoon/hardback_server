@@ -97,7 +97,6 @@ fn adventure() {
         //assert 7
         let mut k5 = GameCommand::new(); //buy first card, not enough coin
         k5.buy_offer = Some((true, 0));
-        k5.killserver = Some(true);
         tx.send((0, k5)).unwrap();
         std::thread::sleep(three_seconds);
 
@@ -110,6 +109,7 @@ fn adventure() {
         //assert 8 + assert 9
         let mut k6 = GameCommand::new(); //go to drawCard
         k6.reply = Some(1);
+        k6.killserver = Some(true);
         tx.send((0, k6)).unwrap();
         std::thread::sleep(three_seconds);
     });
