@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheAdventureDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheAdventureDraftStruct,shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -103,33 +103,21 @@ fn adventure() {
         //assert 8 + assert 9
         let mut k6 = GameCommand::new(); //go to drawCard
         k6.reply = Some(1);
-        tx.send((0, k6)).unwrap();
-        std::thread::sleep(three_seconds);
-
-        //assert 8 + assert 9
-        let mut k6 = GameCommand::new(); //go to drawCard
-        k6.reply = Some(1);
         k6.killserver = Some(true);
         tx.send((0, k6)).unwrap();
         std::thread::sleep(three_seconds);
+/*
+        //assert 8 + assert 9
+        let mut k6 = GameCommand::new(); //go to drawCard
+        k6.reply = Some(1);
+        
+        tx.send((0, k6)).unwrap();
+        std::thread::sleep(three_seconds);
+        */
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-        let mut y = ShortRec::None;
-        if let OwnedMessage::Text(z) = x {
-            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
-                ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate:{:?}", index);
-                if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::Board(_boardstate);
-                } else if let Some(Some(_request)) = request {
-                    y = ShortRec::Request(_request);
-                } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::TurnIndex(_turn_index);
-                }
-            }
-        }
-        y
+      shortrec_process(index,x,0)
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
@@ -208,24 +196,15 @@ fn adventure() {
                     .to_owned(),
                                        vec!["Yes".to_owned(),
                               "No, I want to end my buy phase".to_owned()],None))));
-
-    //assert 8
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::DrawCard],
-                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
-    //assert 9
+    assert_eq!(iter_o.next(), Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));                              
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
-    p.discard = vec![];
+    //assert 8
+    p.draftlen-=1;
     p.arranged = vec![];
-    p.hand = vec![70, 177, 7, 148, 141];
-    p.draft = vec![];
-    p.draftlen -= 1;
+    p.ink =p.coin;
+    p.coin =0;
     p.skip_cards = vec![];
+    p.hand =vec![70, 177, 7, 148, 141];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
@@ -234,4 +213,5 @@ fn adventure() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
+   
 }

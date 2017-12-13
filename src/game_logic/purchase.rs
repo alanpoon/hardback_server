@@ -49,7 +49,7 @@ pub fn buy_card_from(position_index: usize,
                                               (GameState::Buy,
                                                "No, I want to another card".to_owned(),
                                                Box::new(|_, ref mut rmcards, _| {})),
-                                              (GameState::DrawCard,
+                                              (GameState::PreDrawCard,
                                                "No, I want to end my buy phase.".to_owned(),
                                                Box::new(|_, _, _| {}))])))
 
@@ -64,7 +64,7 @@ pub fn buy_card_from(position_index: usize,
                                  GameState::WaitForReply,
                                  j,
                                  vec![(GameState::Buy, "Yes".to_owned(), Box::new(|_, _, _| {})),
-                                      (GameState::DrawCard,
+                                      (GameState::PreDrawCard,
                                        "No, I want to end my buy phase".to_owned(),
                                        Box::new(|_, _, _| {}))])))
                     }
@@ -111,7 +111,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                         Some(Ok((card_index,
                                  GameState::WaitForReply,
                                  j,
-                                 vec![(GameState::DrawCard,
+                                 vec![(GameState::PreDrawCard,
                                        "Trade in 3 ink for one coin to buy this.".to_owned(),
                                        Box::new(move |ref mut p, _, _| {
                             let coin_left = p.coin;
@@ -125,7 +125,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                                       (GameState::Buy,
                                        "No, I want to buy another card.".to_owned(),
                                        Box::new(|_, _, _| {})),
-                                      (GameState::DrawCard,
+                                      (GameState::PreDrawCard,
                                        "No, I want to end buy phase.".to_owned(),
                                        Box::new(|_, _, _| {}))])))
 
@@ -139,7 +139,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                          GameState::WaitForReply,
                          j,
                          vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _, _| {})),
-                              (GameState::DrawCard,
+                              (GameState::PreDrawCard,
                                "No, I want to end my buy phase".to_owned(),
                                Box::new(|ref mut p, _, _| {}))])))
             }
