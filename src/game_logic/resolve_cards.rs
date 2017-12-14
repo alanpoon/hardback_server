@@ -12,9 +12,7 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-    if let Some(ref mut it) = wait_for_input.get_mut(player_id) {
-        it.push(None);
-    }
+
     let mut valid_card = vec![];
     let mut skip_cards = vec![];
     if let Some(ref _p) = _board.players.get(player_id) {
@@ -208,7 +206,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                                                        &mut Vec<usize>)>)>> =
                         match cardmeta[_c.clone()].trash {
                             GIVEABLE::VP(_x) => {
-                                Some(vec![(GameState::Buy,
+                                Some(vec![(GameState::PreBuy,
                                            "Yes".to_owned(),
                                            Box::new(move |ref mut _p, _, _| {
                                     _p.vp += _x;
@@ -218,12 +216,12 @@ pub fn resolve_trash_giveable(player_id: usize,
                                         .unwrap();
                                     _p.hand.remove(index);
                                 })),
-                                          (GameState::Buy,
+                                          (GameState::PreBuy,
                                            "No".to_owned(),
                                            Box::new(|ref mut _p, _, _| {}))])
                             }
                             GIVEABLE::COIN(_x) => {
-                                Some(vec![(GameState::Buy,
+                                Some(vec![(GameState::PreBuy,
                                            "Yes".to_owned(),
                                            Box::new(move |ref mut _p, _, _| {
                                     _p.coin += _x;
@@ -233,7 +231,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                                         .unwrap();
                                     _p.hand.remove(index);
                                 })),
-                                          (GameState::Buy,
+                                          (GameState::PreBuy,
                                            "No".to_owned(),
                                            Box::new(|ref mut _p, _, _| {}))])
                             }
@@ -241,7 +239,6 @@ pub fn resolve_trash_giveable(player_id: usize,
                         };
                     if let Some(_opts) = vec_option {
                         _wait_vec.push(Some((_c, GameState::WaitForReply, header, _opts)));
-                        _wait_vec.push(None);
                     }
 
                 }
@@ -271,51 +268,50 @@ pub fn giveable_match(z: &mut Player,
             wait_for_input[player_id].push(Some((card_index,
                                                  GameState::WaitForReply,
                                                  choose_bet,
-                                                 vec![(GameState::DrawCard,
+                                                 vec![(GameState::PreDrawCard,
                                                        "Ink".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.ink += 1;
                                                                 })),
-                                                      (GameState::DrawCard,
+                                                      (GameState::PreDrawCard,
                                                        "Ink Remover".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.remover += 1;
                                                                 }))])));
-            wait_for_input[player_id].push(None);
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
             wait_for_input[player_id].push(Some((card_index,
                                                  GameState::WaitForReply,
                                                  choose_bet,
-                                                 vec![(GameState::DrawCard,
+                                                 vec![(GameState::PreDrawCard,
                                                        "Ink".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.ink += 1;
                                                                 })),
-                                                      (GameState::DrawCard,
+                                                      (GameState::PreDrawCard,
                                                        "Ink Remover".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.remover += 1;
                                                                 }))])));
-            wait_for_input[player_id].push(None);
+            
         }
         &cards::GIVEABLE::NONE => {}
         &cards::GIVEABLE::INK => {
             wait_for_input[player_id].push(Some((card_index,
                                                  GameState::WaitForReply,
                                                  choose_bet,
-                                                 vec![(GameState::DrawCard,
+                                                 vec![(GameState::PreDrawCard,
                                                        "Ink".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.ink += 1;
                                                                 })),
-                                                      (GameState::DrawCard,
+                                                      (GameState::PreDrawCard,
                                                        "Ink Remover".to_owned(),
                                                        Box::new(|ref mut _p, _, _| {
                                                                     _p.remover += 1;
                                                                 }))])));
-            wait_for_input[player_id].push(None);
+            
         }
         &cards::GIVEABLE::VPORCOIN(_x) => {
             let j1 = format!("{} vps", _x);
@@ -325,17 +321,17 @@ pub fn giveable_match(z: &mut Player,
             wait_for_input[player_id].push(Some((card_index,
                                                  GameState::WaitForReply,
                                                  choose_bet,
-                                                 vec![(GameState::Buy,
+                                                 vec![(GameState::PreBuy,
                                                        j1,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.vp += _x;
                                                                 })),
-                                                      (GameState::Buy,
+                                                      (GameState::PreBuy,
                                                        j2,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.coin += _x;
                                                                 }))])));
-            wait_for_input[player_id].push(None);
+            
         }
         &cards::GIVEABLE::VPORCOININK(_x) => {
             let j1 = format!("{} VP and 1 ink", _x);
@@ -345,31 +341,31 @@ pub fn giveable_match(z: &mut Player,
             wait_for_input[player_id].push(Some((card_index,
                                                  GameState::WaitForReply,
                                                  choose_bet,
-                                                 vec![(GameState::Buy,
+                                                 vec![(GameState::PreBuy,
                                                        j1,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.vp += _x;
                                                                     _p.ink += 1;
                                                                 })),
-                                                      (GameState::Buy,
+                                                      (GameState::PreBuy,
                                                        j2,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.coin += _x;
                                                                     _p.ink += 1;
                                                                 })),
-                                                      (GameState::Buy,
+                                                      (GameState::PreBuy,
                                                        j3,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.vp += _x;
                                                                     _p.remover += 1;
                                                                 })),
-                                                      (GameState::Buy,
+                                                      (GameState::PreBuy,
                                                        j4,
                                                        Box::new(move |ref mut _p, _, _| {
                                                                     _p.coin += _x;
                                                                     _p.remover += 1;
                                                                 }))])));
-            wait_for_input[player_id].push(None);
+            
         }
     }
 }

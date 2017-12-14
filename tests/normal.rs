@@ -101,13 +101,10 @@ fn normal() {
         //assert 3
         let mut k3 = GameCommand::new();
         k3.buy_offer = Some((true, 0));
+        k3.killserver = Some(true);
         tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
-        //assert 4
-        let mut k4 = GameCommand::new();
-        k4.buy_offer = Some((true, 0));
-        tx.send((0, k4)).unwrap();
-        std::thread::sleep(three_seconds);
+
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
@@ -115,13 +112,21 @@ fn normal() {
     });
 
     let mut p = Player::new("DefaultPlayer".to_owned());
+    p.hand = vec![147, 154, 160, 174, 161];
+    assert_eq!(iter_o.next(),
+            Some(ShortRec::Board(BoardCodec {
+                                    players: vec![p.clone()],
+                                    gamestates: vec![GameState::TurnToSubmit],
+                                    offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                                    turn_index: 0,
+                                    ticks: None,
+                                })));
     //Test arranged
     p.arranged = vec![(147, false, None, false),
                       (154, false, None, false),
                       (160, false, None, false),
                       (174, false, None, false),
                       (161, false, None, false)];
-    p.hand = vec![147, 154, 160, 174, 161];
     p.draft = vec![]; //[141, 148, 7, 177, 70]
     //Test submit word
     assert_eq!(iter_o.next(),
@@ -133,7 +138,11 @@ fn normal() {
                                         ticks: None,
                                     })));
 
-    //Test buy card
+   
+    // test notification
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::PushNotification("Player 1 has formed a word [house]".to_owned())));
+ //Test buy card
     p.vp = 3;
     p.coin = 2;
     p.skip_cards = vec![147, 154, 160, 174, 161];
@@ -145,10 +154,6 @@ fn normal() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-    // test notification
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::PushNotification("Player 1 has formed a word [house]".to_owned())));
-
     p.discard = vec![179];
 
     assert_eq!(iter_o.next(), Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));                              

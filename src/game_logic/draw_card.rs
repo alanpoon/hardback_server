@@ -106,13 +106,37 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      cons: &HashMap<usize, T>,
                                      players: &Vec<Player>,
                                      remaining_cards: &Vec<usize>,
+                                     wait_vec: &mut [WaitForInputType; 4],
                                      turn_index: &mut usize,
                                      ticks: Option<u16>,
                                      log: &mut Vec<ClientReceivedMsg>) {
     let mut needtempboardcast = false;
     let mut need_turn_index = false;
     let player_num = players.len();
-    let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
+ 
+    let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreBuy).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
+      if still_processing{
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
+             needtempboardcast = true;
+             **_g =GameState::Buy;
+        }
+      }
+    let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreTurnToSubmit).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
+    println!("still_processing {:?} wait is empty{:?}",still_processing,wait_vec[turn_index.clone()].len());
+      if still_processing{
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
+             needtempboardcast = true;
+             **_g =GameState::TurnToSubmit;
+        }
+      }
+      let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreSpell).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
+      if still_processing{
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
+             needtempboardcast = true;
+             **_g =GameState::Spell;
+        }
+      }
+     let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
     println!("still_processing {:?}",still_processing);
     if still_processing{
     if let (Some(ref _p),Some(ref mut _g)) = (players.get(turn_index.clone()),gamestates.get_mut(turn_index.clone())){

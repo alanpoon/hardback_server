@@ -63,7 +63,6 @@ impl Board for BoardStruct {
                       (GameState::Spell,"lose a ink remover".to_owned(),
                        Box::new(|ref mut p, _,_| { p.remover -= 1; }))]);
             x.push(Some(_g));
-            x.push(None);
         }).collect::<Vec<()>>();
 
     }
@@ -79,9 +78,8 @@ impl Board for BoardStruct {
                                           vec![(GameState::LockUp,
                        "Yes".to_owned(),
                        Box::new(|ref mut _p, ref mut _rmcards, _| {})),
-                      (GameState::Buy, "No".to_owned(), Box::new(|_, _, _| {}))]);
+                      (GameState::PreBuy, "No".to_owned(), Box::new(|_, _, _| {}))]);
             _w.push(Some(_g));
-            _w.push(None);
         }
 
     }
@@ -98,9 +96,8 @@ impl Board for BoardStruct {
                     (card_id,
                      GameState::WaitForReply,
                      "There are no adjacent wild cards that can be flipped over.".to_owned(),
-                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
+                     vec![(GameState::PreBuy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
-                _w.push(None);
             } else {
                 let _g: WaitForSingleInput =
                     (card_id,
@@ -110,7 +107,6 @@ impl Board for BoardStruct {
                            "Continue".to_owned(),
                            Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
-                _w.push(None);
 
             }
 
@@ -131,16 +127,15 @@ impl Board for BoardStruct {
                      GameState::WaitForReply,
                      "There are no adjacent valid cards that you double their benefits."
                          .to_owned(),
-                     vec![(GameState::Buy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
+                     vec![(GameState::PreBuy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
-                _w.push(None);
             } else {
                 let _g: WaitForSingleInput =
                     (card_id,
                      GameState::WaitForReply,
                      "There are a few valid cards adjacent to this card, can be doubled."
                          .to_owned(),
-                     vec![(GameState::Buy,
+                     vec![(GameState::PreBuy,
                            "Continue".to_owned(),
                            Box::new(move |ref mut p, ref mut rmcards, _| {
                         let cardmeta: [cards::ListCard<BoardStruct>; 180] =
@@ -164,7 +159,6 @@ impl Board for BoardStruct {
                         }
                     }))]);
                 _w.push(Some(_g));
-                _w.push(None);
 
             }
 
@@ -184,9 +178,8 @@ impl Board for BoardStruct {
                                           vec![(GameState::TrashOther(card_id),
                        "Yes".to_owned(),
                        Box::new(move |_, _, _| {})),
-                      (GameState::Buy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
+                      (GameState::PreBuy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
             _w.push(Some(_g));
-            _w.push(None);
         }
     }
     fn one_vp_per_wild(&mut self,
@@ -209,11 +202,10 @@ impl Board for BoardStruct {
             let _g: WaitForSingleInput = (card_id,
                                           GameState::WaitForReply,
                                           j,
-                                          vec![(GameState::Buy,
+                                          vec![(GameState::PreBuy,
                        "Continue".to_owned(),
                        Box::new(move |ref mut p, ref mut rmcards, _| { p.vp += _num_wild; }))]);
             _w.push(Some(_g));
-            _w.push(None);
         }
     }
     fn putback_or_discard_three(&mut self,
@@ -231,7 +223,6 @@ impl Board for BoardStruct {
                        Box::new(move |_,_,_| {
                         }))]);
             _w.push(Some(_g));
-            _w.push(None);
 
         }
     }

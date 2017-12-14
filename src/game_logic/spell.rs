@@ -49,7 +49,6 @@ pub fn use_remover<T: GameCon>(_board: &mut BoardStruct,
                    }))]);
                     wait_for_input[player_id].push(Some(_g));
                 }
-                wait_for_input[player_id].push(None);
             }
 
 
@@ -80,7 +79,6 @@ pub fn take_card_use_ink<T: GameCon>(_board: &mut BoardStruct,
                     _p.arranged.push((r,true,None,false));
                    }))]);
             wait_for_input[player_id].push(Some(_g));
-            wait_for_input[player_id].push(None);
         } else {
             let k: Result<BoardCodec, String> = Err("Gamecommand Error:take_card_use_ink"
                                                         .to_owned());
@@ -99,7 +97,6 @@ pub fn arrange(_board: &mut BoardStruct,
         (_board.players.get_mut(player_id), &mut wait_for_input[player_id]) {
         if let &Some(ref z) = arranged {
             _p.arranged = z.clone();
-            _w.push(None);
         }
     }
 }
@@ -112,7 +109,6 @@ pub fn personal(_board: &mut BoardStruct,
         if let &Some(ref z) = personal {
             _p.arranged = z.arranged.clone();
             _p.hand = z.hand.clone();
-            _w.push(None);
         }
     }
 }

@@ -70,7 +70,7 @@ impl<T> GameEngine<T>
         } else {
             for (index, game_state) in self.gamestates.iter_mut().enumerate() {
                 if index == 0 {
-                    *game_state = GameState::TurnToSubmit;
+                    *game_state = GameState::PreTurnToSubmit;
                 } else {
                     *game_state = GameState::Spell;
                 }
@@ -118,10 +118,12 @@ impl<T> GameEngine<T>
                                                       turn_index,
                                                       ticks,
                                                       log);
+            println!("before ss {:?}",self.gamestates.clone());
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
                                                      &remaining_cards,
+                                                     &mut wait_for_input,
                                                      &mut turn_index,
                                                      ticks,
                                                      log);
@@ -203,6 +205,9 @@ impl<T> GameEngine<T>
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             game_logic::spell::personal(_board, player_id, personal, wait_vec);
+                              if (arranged.is_some())|(take_card_use_ink.is_some())|(use_remover.is_some())|(personal.is_some()) {
+                                **_gamestate = GameState::PreSpell;
+                            }
                         }
                         &mut &mut GameState::TurnToSubmit => {
                             println!("TurnToSubmit");
@@ -213,6 +218,7 @@ impl<T> GameEngine<T>
                                                                       unknown,
                                                                       wait_vec,
                                                                       log);
+                                 
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
                                                                 con,
@@ -221,7 +227,9 @@ impl<T> GameEngine<T>
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             game_logic::spell::personal(_board, player_id, personal, wait_vec);
-
+                            if (arranged.is_some())|(take_card_use_ink.is_some())|(use_remover.is_some())|(personal.is_some()) {
+                                **_gamestate = GameState::PreTurnToSubmit;
+                            }
                             if let Some((true, _kstring)) =
                                 game_logic::spell::turn_to_submit(_board,
                                                                   player_id,
@@ -231,14 +239,9 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_vec);
-
-                                //broadcast those benefits that don't need to wait for user reply
-                                if let Some(ref mut it) = wait_vec.get_mut(player_id) {
-                                    if it.len() == 1 {
-                                        //to pass normal
-                                        if let Some(&None) = it.first() {
-                                            **_gamestate = GameState::Buy;
-                                            if debug_struct.push_notification() {
+                                        if wait_vec[player_id].is_empty(){
+                                            **_gamestate = GameState::PreBuy;
+                                                if debug_struct.push_notification() {
                                                 let mut _st = "Player ".to_owned();
                                                 _st.push_str(&(player_id + 1).to_string());
                                                 _st.push_str(" has formed a word [");
@@ -247,10 +250,6 @@ impl<T> GameEngine<T>
                                                 is_notification = Some(_st);
                                             }
                                         }
-                                    }
-
-                                }
-
                             }
                         }
 
@@ -265,12 +264,6 @@ impl<T> GameEngine<T>
                                                                     _board,
                                                                     player_id,
                                                                     wait_vec);
-                                //broadcast for every purchase
-                                if let Some(ref mut _w) = wait_vec.get_mut(player_id) {
-                                    if _w.len() == 0 {
-                                        _w.push(None);
-                                    }
-                                }
 
                             } else {
                                 **_gamestate = GameState::PreDrawCard;
@@ -287,9 +280,9 @@ impl<T> GameEngine<T>
                                                                     &mut remaining_cards,
                                                                     wait_vec,
                                                                     &mut type_is_reply);
-                                **_gamestate = GameState::Buy;
+                                **_gamestate = GameState::PreBuy;
                             } else {
-                                **_gamestate = GameState::Buy;
+                                **_gamestate = GameState::PreBuy;
                             }
                         }
                         &mut &mut GameState::TrashOther(_) => {
@@ -300,7 +293,7 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          wait_vec,
                                                                          &mut type_is_reply);
-                                **_gamestate = GameState::Buy;
+                                **_gamestate = GameState::PreBuy;
                             }
                         }
                         &mut &mut GameState::PutBackDiscard(ind, responsible) => {
@@ -330,7 +323,7 @@ impl<T> GameEngine<T>
                         temp_board.offer_row.push(x);
                     }
                 }
-                if !type_is_reply {
+                /*if !type_is_reply {
                     continue_to_broadcast::<T>(&mut wait_for_input[player_id],
                                                &self.connections,
                                                &remaining_cards,
@@ -350,6 +343,7 @@ impl<T> GameEngine<T>
                     }
 
                 }
+                */
                 if let Some(ref _s) = is_notification {
                     println!("there is notification");
                     for (_, _con) in &self.connections {

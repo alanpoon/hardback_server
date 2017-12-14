@@ -38,7 +38,7 @@ pub fn buy_card_from(position_index: usize,
                                 Some(Ok((_c,
                                          GameState::WaitForReply,
                                          j,
-                                         vec![(GameState::Buy,
+                                         vec![(GameState::PreBuy,
                                                "Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
                                                Box::new(move |ref mut p,
@@ -46,7 +46,7 @@ pub fn buy_card_from(position_index: usize,
                                                               ref mut _unknown| {
                                                             p.discard.push(rmcards.remove(_c));
                                                         })),
-                                              (GameState::Buy,
+                                              (GameState::PreBuy,
                                                "No, I want to another card".to_owned(),
                                                Box::new(|_, ref mut rmcards, _| {})),
                                               (GameState::PreDrawCard,
@@ -63,7 +63,7 @@ pub fn buy_card_from(position_index: usize,
                         Some(Ok((_c,
                                  GameState::WaitForReply,
                                  j,
-                                 vec![(GameState::Buy, "Yes".to_owned(), Box::new(|_, _, _| {})),
+                                 vec![(GameState::PreBuy, "Yes".to_owned(), Box::new(|_, _, _| {})),
                                       (GameState::PreDrawCard,
                                        "No, I want to end my buy phase".to_owned(),
                                        Box::new(|_, _, _| {}))])))
@@ -77,7 +77,6 @@ pub fn buy_card_from(position_index: usize,
             println!("pushed...");
             //  wait_tx.send(Some(a)).unwrap();
             wait_for_input[player_id].push(Some(a));
-            wait_for_input[player_id].push(None);
         }
     }
 
@@ -122,7 +121,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                             p.lockup.remove(position_index);
 
                         })),
-                                      (GameState::Buy,
+                                      (GameState::PreBuy,
                                        "No, I want to buy another card.".to_owned(),
                                        Box::new(|_, _, _| {})),
                                       (GameState::PreDrawCard,
@@ -138,7 +137,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                 Some(Ok((card_index,
                          GameState::WaitForReply,
                          j,
-                         vec![(GameState::Buy, "Yes".to_owned(), Box::new(|ref mut p, _, _| {})),
+                         vec![(GameState::PreBuy, "Yes".to_owned(), Box::new(|ref mut p, _, _| {})),
                               (GameState::PreDrawCard,
                                "No, I want to end my buy phase".to_owned(),
                                Box::new(|ref mut p, _, _| {}))])))
@@ -161,7 +160,6 @@ pub fn lockup_a_card(position_index: usize,
     if let (Some(ref mut _p), Some(ref mut _w)) =
         (_board.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
         _p.lockup.push(remainingcards[position_index]);
-        _w.push(None);
         remainingcards.remove(position_index);
         *type_is_reply = false;
     }
@@ -236,7 +234,6 @@ pub fn putback_discard(countdown: usize,
         _ => {}
     }
     if countdown == 0 {
-        wait_for_input[player_id].push(None);
     } else if countdown - 1 >= 0usize {
         let _g: WaitForSingleInput =
             (responsible,
@@ -249,7 +246,6 @@ pub fn putback_discard(countdown: usize,
                    "Add to own discard pile.".to_owned(),
                    Box::new(move |_, _, _| {}))]);
         wait_for_input[player_id].push(Some(_g));
-        wait_for_input[player_id].push(None);
     }
 
 
