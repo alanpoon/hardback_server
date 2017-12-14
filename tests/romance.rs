@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct,shortrec_process};
+use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct, shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -93,9 +93,7 @@ fn doubleadjacent() {
         std::thread::sleep(three_seconds);
     });
 
-    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-        shortrec_process(index,x,0)
-    });
+    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| shortrec_process(index, x, 0));
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
     p.coin = 10;

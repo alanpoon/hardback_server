@@ -36,7 +36,7 @@ pub fn buy_card_from(position_index: usize,
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                                 Some(Ok((_c,
-                                         GameState::WaitForReply,
+                                         GameState::PreWaitForReply,
                                          j,
                                          vec![(GameState::PreBuy,
                                                "Trade in 3 ink for one coin to buy this?"
@@ -61,9 +61,11 @@ pub fn buy_card_from(position_index: usize,
                         let j = "You can't afford to buy this card. Do you want to buy another card?"
                             .to_owned();
                         Some(Ok((_c,
-                                 GameState::WaitForReply,
+                                 GameState::PreWaitForReply,
                                  j,
-                                 vec![(GameState::PreBuy, "Yes".to_owned(), Box::new(|_, _, _| {})),
+                                 vec![(GameState::PreBuy,
+                                       "Yes".to_owned(),
+                                       Box::new(|_, _, _| {})),
                                       (GameState::PreDrawCard,
                                        "No, I want to end my buy phase".to_owned(),
                                        Box::new(|_, _, _| {}))])))
@@ -108,7 +110,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                         let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                         let cost = cardmeta[card_index].cost.clone();
                         Some(Ok((card_index,
-                                 GameState::WaitForReply,
+                                 GameState::PreWaitForReply,
                                  j,
                                  vec![(GameState::PreDrawCard,
                                        "Trade in 3 ink for one coin to buy this.".to_owned(),
@@ -135,9 +137,11 @@ pub fn buy_card_from_lockup(position_index: usize,
                 let j = "You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned();
                 Some(Ok((card_index,
-                         GameState::WaitForReply,
+                         GameState::PreWaitForReply,
                          j,
-                         vec![(GameState::PreBuy, "Yes".to_owned(), Box::new(|ref mut p, _, _| {})),
+                         vec![(GameState::PreBuy,
+                               "Yes".to_owned(),
+                               Box::new(|ref mut p, _, _| {})),
                               (GameState::PreDrawCard,
                                "No, I want to end my buy phase".to_owned(),
                                Box::new(|ref mut p, _, _| {}))])))
@@ -237,7 +241,7 @@ pub fn putback_discard(countdown: usize,
     } else if countdown - 1 >= 0usize {
         let _g: WaitForSingleInput =
             (responsible,
-             GameState::WaitForReply,
+             GameState::PreWaitForReply,
              "Do you want to put back the card or add to your own discard pile?".to_owned(),
              vec![(GameState::PutBackDiscard(countdown - 1, responsible),
                    "Put back the card".to_owned(),

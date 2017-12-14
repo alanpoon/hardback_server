@@ -423,12 +423,12 @@ impl game_logic::game_engine::TheDraft for TheEndGameDraftStruct {
         if player_index == 0 {
             _p.hand = vec![143, 135, 108, 110, 111]; //105 is doubleadjacent,110 is trash other card,111 is keep_or_discard_three
             *_unknown = vec![141, 148, 7, 177, 70];
-            _p.vp=59;
+            _p.vp = 59;
         } else {
             _p.hand = vec![90, 49, 2, 75, 159]; //v,p,c,g,i
             *_unknown = vec![84, 130, 12, 34, 91]; //p,e,m,y,w
         }
-        
+
         _p.draft = vec![];
         owned_deck.extend(_p.hand.clone());
         owned_deck.extend(_unknown.clone());
@@ -492,27 +492,32 @@ pub enum ShortRec {
     Hand(Vec<usize>),
     None,
 }
-pub fn shortrec_process(index:usize,ownm:OwnedMessage,j:usize)->ShortRec{
-let mut y = ShortRec::None;
-        if let OwnedMessage::Text(z) = ownm {
-            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, player_index,notification,hand, .. }) =
-                ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate{:?}:{:?}",j, index);
-                if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::Board(_boardstate);
-                } else if let Some(Some(_request)) = request {
-                    y = ShortRec::Request(_request);
-                } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::TurnIndex(_turn_index);
-                } else if let Some(Some(_player_index)) = player_index {
-                    y = ShortRec::PlayerIndex(_player_index);
-                } else if let Some(Some(_notif)) = notification{
-                    y = ShortRec::PushNotification(_notif);
-                }else if let Some(Some(_hand)) = hand{
-                    y = ShortRec::Hand(_hand);
-                }
-
+pub fn shortrec_process(index: usize, ownm: OwnedMessage, j: usize) -> ShortRec {
+    let mut y = ShortRec::None;
+    if let OwnedMessage::Text(z) = ownm {
+        if let Ok(ClientReceivedMsg { boardstate,
+                                      request,
+                                      turn_index,
+                                      player_index,
+                                      notification,
+                                      hand,
+                                      .. }) = ClientReceivedMsg::deserialize_receive(&z) {
+            println!("iterenumerate{:?}:{:?}", j, index);
+            if let Some(Some(Ok(_boardstate))) = boardstate {
+                y = ShortRec::Board(_boardstate);
+            } else if let Some(Some(_request)) = request {
+                y = ShortRec::Request(_request);
+            } else if let Some(Some(_turn_index)) = turn_index {
+                y = ShortRec::TurnIndex(_turn_index);
+            } else if let Some(Some(_player_index)) = player_index {
+                y = ShortRec::PlayerIndex(_player_index);
+            } else if let Some(Some(_notif)) = notification {
+                y = ShortRec::PushNotification(_notif);
+            } else if let Some(Some(_hand)) = hand {
+                y = ShortRec::Hand(_hand);
             }
+
         }
-        y
+    }
+    y
 }

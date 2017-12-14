@@ -12,7 +12,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
     use rand::Rng;
     use rand;
     let player_num = players.len();
-    println!("gahh {:?}",gamestates.clone());
+    println!("gahh {:?}", gamestates.clone());
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
         let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
@@ -51,57 +51,7 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
         }
     }
 }
-/*
-#[cfg(test)]
-pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
-                                 unknown: &mut [Vec<usize>; 4],
-                                 gamestates: &mut Vec<GameState>,
-                                 turn_index: &mut usize) {
 
-    let player_num = players.len();
-    for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
-        let ((ref _index, ref mut _p), ref mut game_state) = it;
-        //((x,y), z)
-        match game_state {
-            &mut &mut GameState::PreDrawCard => {
-                _p.discard.extend(_p.hand.clone());
-                _p.hand = vec![];
-                for _ in 0usize..5usize {
-                    if let Some(n) = unknown[_index.clone()].pop() {
-                        _p.hand.push(n);
-                    } else {
-                        unknown[_index.clone()] = _p.discard.clone();
-                        _p.discard = vec![];
-                        if let Some(n) = unknown[_index.clone()].pop() {
-                            _p.hand.push(n);
-                        }
-                    }
-                }
-
-                _p.arranged = vec![];
-                _p.skip_cards = vec![];
-                _p.draftlen = unknown[_index.clone()].len();
-                if _p.draftlen == 0 {
-                    unknown[_index.clone()] = _p.discard.clone();
-                    _p.discard = vec![];
-                    _p.draftlen = unknown[_index.clone()].len();
-                }
-                if *turn_index < player_num - 1 {
-                    *turn_index += 1;
-                } else {
-                    *turn_index = 0;
-                }
-                //unused coins will be converted into ink
-                _p.ink += _p.coin;
-                _p.coin = 0;
-              //  **game_state=GameState::DrawCard;
-                println!("change");
-            }
-            _ => {}
-        }
-    }
-}
-*/
 pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                      cons: &HashMap<usize, T>,
                                      players: &Vec<Player>,
@@ -113,64 +63,110 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
     let mut needtempboardcast = false;
     let mut need_turn_index = false;
     let player_num = players.len();
- 
-    let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreBuy).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
-      if still_processing{
-        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
-             needtempboardcast = true;
-             **_g =GameState::Buy;
+    let still_processing = !gamestates.iter()
+                                .filter(|x| x == &&GameState::PreWaitForReply)
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {
+
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            **_g = GameState::WaitForReply;
         }
-      }
-    let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreTurnToSubmit).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
-    println!("still_processing {:?} wait is empty{:?}",still_processing,wait_vec[turn_index.clone()].len());
-      if still_processing{
-        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
-             needtempboardcast = true;
-             **_g =GameState::TurnToSubmit;
+        continue_to_broadcast::<T>(&cons,
+                                   &remaining_cards,
+                                   players.clone(),
+                                   gamestates.clone(),
+                                   turn_index.clone(),
+                                   ticks,
+                                   log);
+        if let (Some(&Some(ref __w)), Some(con)) =
+            (wait_vec[turn_index.clone()].first(), cons.get(&turn_index.clone())) {
+            let &(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
+            let mut temp_vec: Vec<String> = vec![];
+            for &(_, ref sz, _) in _option_vec {
+                temp_vec.push(sz.clone());
+            }
+            let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+            h.set_request((turn_index.clone(), _card_index, _header.clone(), temp_vec, ticks));
+            con.tx_send(h, log);
         }
-      }
-      let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreSpell).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
-      if still_processing{
-        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()){
-             needtempboardcast = true;
-             **_g =GameState::Spell;
+
+    }
+    let still_processing = !gamestates.iter()
+                                .filter(|x| x == &&GameState::PreBuy)
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            needtempboardcast = true;
+            **_g = GameState::Buy;
+
         }
-      }
-     let still_processing = (!gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty()) & (wait_vec[turn_index.clone()].is_empty());
-    println!("still_processing {:?}",still_processing);
-    if still_processing{
-    if let (Some(ref _p),Some(ref mut _g)) = (players.get(turn_index.clone()),gamestates.get_mut(turn_index.clone())){
-            if let GameState::PreDrawCard=**_g{
+    }
+    let still_processing = !gamestates.iter()
+                                .filter(|x| x == &&GameState::PreTurnToSubmit)
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    println!("still_processing {:?} wait is empty{:?}",
+             still_processing,
+             wait_vec[turn_index.clone()].len());
+    if still_processing {
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            needtempboardcast = true;
+            **_g = GameState::TurnToSubmit;
+        }
+    }
+    let still_processing = !gamestates.iter()
+                                .filter(|x| x == &&GameState::PreSpell)
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            needtempboardcast = true;
+            **_g = GameState::Spell;
+        }
+    }
+
+
+    let still_processing = !gamestates.iter()
+                                .filter(|x| x == &&GameState::PreDrawCard)
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {
+        if let (Some(ref _p), Some(ref mut _g)) =
+            (players.get(turn_index.clone()), gamestates.get_mut(turn_index.clone())) {
+            if let GameState::PreDrawCard = **_g {
                 needtempboardcast = true;
                 need_turn_index = true;
-                if let Some(_c) = cons.get(turn_index){
-                          let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-                        h.set_hand(_p.hand.clone());
-                        _c.tx_send(h, log);
+                if let Some(_c) = cons.get(turn_index) {
+                    let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+                    h.set_hand(_p.hand.clone());
+                    _c.tx_send(h, log);
                 }
+                println!("turn index has changed");
                 if *turn_index < player_num - 1 {
-                        *turn_index += 1;
-                        while !cons.contains_key(turn_index){
-                            if *turn_index<player_num-1{
-                                *turn_index += 1;
-                            }
+                    *turn_index += 1;
+                    while !cons.contains_key(turn_index) {
+                        if *turn_index < player_num - 1 {
+                            *turn_index += 1;
                         }
-                    } else {
-                        *turn_index = 0;
                     }
-                    **_g=GameState::DrawCard;
-                
+                } else {
+                    *turn_index = 0;
+                }
+                **_g = GameState::DrawCard;
+
             }
         }
-        
-       for (_i,_g) in gamestates.iter_mut().enumerate(){
-            if _i !=*turn_index{
+
+        for (_i, _g) in gamestates.iter_mut().enumerate() {
+            if _i != *turn_index {
                 *_g = GameState::Spell;
             } else {
-                *_g=GameState::TurnToSubmit;
+                *_g = GameState::TurnToSubmit;
             }
         }
-    } 
+    }
     if needtempboardcast {
         for (_, _con) in cons.iter() {
             let offer_row = (0..7).zip(remaining_cards.iter()).map(|(_, c)| c.clone()).collect();
@@ -226,17 +222,16 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
             let (_tb_p, mut _p) = it;
             *_p = _tb_p.clone();
         }
-            continue_to_broadcast::<T>(&mut wait_vec[player_that_responsible],
-                                       &connections,
-                                       &remaining_cards,
-                                       players.clone(),
-                                       gamestates.clone(),
-                                       turn_index,
-                                       ticks,
-                                       log);
-            if let ( Some(_con), Some(_g)) = ( connections.get(&player_that_responsible),gamestates.get_mut(player_that_responsible)) {
-                continue_to_prob::<T>(player_that_responsible, &mut wait_vec[player_that_responsible], _g, _con, ticks, log);
-            }
+
+        if let (Some(_con), Some(_g)) =
+            (connections.get(&player_that_responsible), gamestates.get_mut(player_that_responsible)) {
+            continue_to_prob::<T>(player_that_responsible,
+                                  &mut wait_vec[player_that_responsible],
+                                  _g,
+                                  _con,
+                                  ticks,
+                                  log);
+        }
     }
 
 

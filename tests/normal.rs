@@ -17,7 +17,7 @@ use hardback_server::game_logic::board::BoardStruct;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct,shortrec_process};
+use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct, shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -107,20 +107,18 @@ fn normal() {
 
     });
 
-    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-       shortrec_process(index,x,1)
-    });
+    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| shortrec_process(index, x, 1));
 
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.hand = vec![147, 154, 160, 174, 161];
     assert_eq!(iter_o.next(),
-            Some(ShortRec::Board(BoardCodec {
-                                    players: vec![p.clone()],
-                                    gamestates: vec![GameState::TurnToSubmit],
-                                    offer_row: vec![179, 178, 176, 175, 173, 172, 171],
-                                    turn_index: 0,
-                                    ticks: None,
-                                })));
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![179, 178, 176, 175, 173, 172, 171],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
     //Test arranged
     p.arranged = vec![(147, false, None, false),
                       (154, false, None, false),
@@ -138,11 +136,11 @@ fn normal() {
                                         ticks: None,
                                     })));
 
-   
+
     // test notification
     assert_eq!(iter_o.next(),
                Some(ShortRec::PushNotification("Player 1 has formed a word [house]".to_owned())));
- //Test buy card
+    //Test buy card
     p.vp = 3;
     p.coin = 2;
     p.skip_cards = vec![147, 154, 160, 174, 161];
@@ -156,7 +154,8 @@ fn normal() {
                                     })));
     p.discard = vec![179];
 
-    assert_eq!(iter_o.next(), Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));                              
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
     //test give out
     p.hand = vec![70, 177, 7, 148, 141];

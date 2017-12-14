@@ -46,13 +46,13 @@ impl<T> GameEngine<T>
                             rx: mpsc::Receiver<(usize, GameCommand)>,
                             debug_struct: D,
                             log: &mut Vec<ClientReceivedMsg>) {
-                                                                                                                                                                                                                                                                                                                                                                 
+
         let mut last_update = std::time::Instant::now();
         let cardmeta: [cards::ListCard<BoardStruct>; 180] = cards::populate::<BoardStruct>();
         let mut turn_index = 0;
         let owned_deck = give_outstarting(&mut self.players,
                                           &mut self.unknown,
-                                          &cardmeta,                                                                                                                                                                                            
+                                          &cardmeta,
                                           &debug_struct);
         let mut remaining_cards = debug_struct.deck_starting(&cardmeta, &owned_deck);
         let mut wait_for_input: [WaitForInputType; 4] = [vec![], vec![], vec![], vec![]];
@@ -78,9 +78,9 @@ impl<T> GameEngine<T>
             }
         }
         let mut count_rec = 0;
-        let mut player_60:Option<usize> = None;
-        let mut end_game_notified=false;
-        let mut turn_after_winner=0;
+        let mut player_60: Option<usize> = None;
+        let mut end_game_notified = false;
+        let mut turn_after_winner = 0;
         'game: loop {
             let sixteen_ms = std::time::Duration::new(1, 0);
             let now = std::time::Instant::now();
@@ -94,13 +94,13 @@ impl<T> GameEngine<T>
                                                              &mut self.unknown,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
-             game_logic::end_game::first_to_60(&self.players,
+            game_logic::end_game::first_to_60(&self.players,
                                               &self.connections,
                                               &mut player_60,
                                               &mut end_game_notified,
                                               log);
-           
-           game_logic::end_game::show_result(&mut self.players,
+
+            game_logic::end_game::show_result(&mut self.players,
                                               &mut self.gamestates,
                                               &self.connections,
                                               &player_60,
@@ -108,8 +108,8 @@ impl<T> GameEngine<T>
                                               turn_index,
                                               ticks,
                                               log);
-        
-            game_logic::draw_card::uncover_cards::<T>(&mut self.players,
+
+            /*  game_logic::draw_card::uncover_cards::<T>(&mut self.players,
                                                       &mut self.gamestates,
                                                       &self.connections,
                                                       &cardmeta,
@@ -118,7 +118,8 @@ impl<T> GameEngine<T>
                                                       turn_index,
                                                       ticks,
                                                       log);
-            println!("before ss {:?}",self.gamestates.clone());
+                                                      */
+            println!("before ss {:?}", self.gamestates.clone());
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,
@@ -139,12 +140,15 @@ impl<T> GameEngine<T>
                 let &GameCommand { reply, killserver, .. } = &game_command;
                 if let Some(_) = reply {
                     type_is_reply = true;
-                           let z = wait_for_input[player_id].iter().map(|x|{
-                            if let &Some(ref _x) = x{
-                                Some((_x.1.clone(),_x.2.clone()))
-                            } else{None}
-                        }).collect::<Vec<Option<(GameState,String)>>>();
-                        println!("zzz :{:?}", z);
+                    let z = wait_for_input[player_id]
+                        .iter()
+                        .map(|x| if let &Some(ref _x) = x {
+                                 Some((_x.1.clone(), _x.2.clone()))
+                             } else {
+                                 None
+                             })
+                        .collect::<Vec<Option<(GameState, String)>>>();
+                    println!("zzz :{:?}", z);
                 }
 
                 if let (&GameCommand { ref go_to_shuffle,
@@ -174,8 +178,6 @@ impl<T> GameEngine<T>
                      &mut self.unknown[player_id],
                      &mut wait_for_input,
                      type_is_reply.clone()) {
-                                          
-                 
                     match _gamestate {
                         &mut &mut GameState::ShowDraft => {
                             game_logic::show_draft::go_to_shuffle::<T>(debug_struct.show_draft().1,
@@ -205,7 +207,9 @@ impl<T> GameEngine<T>
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             game_logic::spell::personal(_board, player_id, personal, wait_vec);
-                              if (arranged.is_some())|(take_card_use_ink.is_some())|(use_remover.is_some())|(personal.is_some()) {
+                            if (arranged.is_some()) | (take_card_use_ink.is_some()) |
+                               (use_remover.is_some()) |
+                               (personal.is_some()) {
                                 **_gamestate = GameState::PreSpell;
                             }
                         }
@@ -218,7 +222,7 @@ impl<T> GameEngine<T>
                                                                       unknown,
                                                                       wait_vec,
                                                                       log);
-                                 
+
                             game_logic::spell::use_remover::<T>(_board,
                                                                 player_id,
                                                                 con,
@@ -227,7 +231,9 @@ impl<T> GameEngine<T>
                                                                 log);
                             game_logic::spell::arrange(_board, player_id, arranged, wait_vec);
                             game_logic::spell::personal(_board, player_id, personal, wait_vec);
-                            if (arranged.is_some())|(take_card_use_ink.is_some())|(use_remover.is_some())|(personal.is_some()) {
+                            if (arranged.is_some()) | (take_card_use_ink.is_some()) |
+                               (use_remover.is_some()) |
+                               (personal.is_some()) {
                                 **_gamestate = GameState::PreTurnToSubmit;
                             }
                             if let Some((true, _kstring)) =
@@ -239,17 +245,17 @@ impl<T> GameEngine<T>
                                                                          player_id,
                                                                          &cardmeta,
                                                                          wait_vec);
-                                        if wait_vec[player_id].is_empty(){
-                                            **_gamestate = GameState::PreBuy;
-                                                if debug_struct.push_notification() {
-                                                let mut _st = "Player ".to_owned();
-                                                _st.push_str(&(player_id + 1).to_string());
-                                                _st.push_str(" has formed a word [");
-                                                _st.push_str(&_kstring);
-                                                _st.push_str("]");
-                                                is_notification = Some(_st);
-                                            }
-                                        }
+                                if wait_vec[player_id].is_empty() {
+                                    **_gamestate = GameState::PreBuy;
+                                    if debug_struct.push_notification() {
+                                        let mut _st = "Player ".to_owned();
+                                        _st.push_str(&(player_id + 1).to_string());
+                                        _st.push_str(" has formed a word [");
+                                        _st.push_str(&_kstring);
+                                        _st.push_str("]");
+                                        is_notification = Some(_st);
+                                    }
+                                }
                             }
                         }
 
@@ -287,7 +293,7 @@ impl<T> GameEngine<T>
                         }
                         &mut &mut GameState::TrashOther(_) => {
                             if let &Some((true, z)) = trash_other {
-                     
+
                                 game_logic::purchase::trash_another_card(z,
                                                                          _board,
                                                                          player_id,
@@ -323,27 +329,15 @@ impl<T> GameEngine<T>
                         temp_board.offer_row.push(x);
                     }
                 }
-                /*if !type_is_reply {
-                    continue_to_broadcast::<T>(&mut wait_for_input[player_id],
-                                               &self.connections,
-                                               &remaining_cards,
-                                               self.players.clone(),
-                                               self.gamestates.clone(),
-                                               turn_index,
-                                               ticks,
-                                               log);
-
-                    if let (_w, Some(_g), Some(_con)) =
-                        (&mut wait_for_input[player_id],
-                         self.gamestates.get_mut(player_id),
-                         self.connections.get(&player_id)) {
-                        continue_to_prob::<T>(player_id, _w, _g, _con, ticks, log);
 
 
-                    }
-
+                if let (Some(&Some(ref __w)), Some(ref mut _g)) =
+                    (wait_for_input[player_id.clone()].first(),
+                     self.gamestates.get_mut(player_id.clone())) {
+                    let &(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
+                    **_g = wait_state.clone();
                 }
-                */
+
                 if let Some(ref _s) = is_notification {
                     println!("there is notification");
                     for (_, _con) in &self.connections {
@@ -355,6 +349,7 @@ impl<T> GameEngine<T>
                 let mut next_gamestate = GameState::PreDrawCard;
                 if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
                     if let Some(_reply) = reply {
+
                         if let (Some(_p), Some(_gamestate), mut _wait_vec_vec) =
                             (self.players.get_mut(player_id),
                              self.gamestates.get_mut(player_id),
@@ -365,37 +360,23 @@ impl<T> GameEngine<T>
                                     (*_closure)(_p,
                                                 &mut remaining_cards,
                                                 &mut self.unknown[player_id]);
+                                    println!("inside closure, {:?} .{:?}",
+                                             _wait_vec.0.clone(),
+                                             _wait_vec.2.clone());
                                     next_gamestate = next_gstate.clone();
                                 }
-                            }
-                        }
-                        let len = wait_for_input[player_id].len();
-                        println!("reply's wait vec len:{}", len);
-                        if wait_for_input[player_id].len() == 1 {
-                            if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
-                                *_gamestate = next_gamestate;
-                            }
-                        }
-                        continue_to_broadcast::<T>(&mut wait_for_input[player_id],
-                                                   &self.connections,
-                                                   &remaining_cards,
-                                                   self.players.clone(),
-                                                   self.gamestates.clone(),
-                                                   turn_index,
-                                                   ticks,
-                                                   log);
 
-                        if let (Some(_con), Some(_gamestate)) =
-                            (self.connections.get(&player_id), self.gamestates.get_mut(player_id)) {
-                            continue_to_prob::<T>(player_id,
-                                                  &wait_for_input[player_id],
-                                                  _gamestate,
-                                                  &_con,
-                                                  ticks,
-                                                  log);
+
+                            }
                         }
-                        println!("End of reply's wait vec len:{}",
-                                 wait_for_input[player_id].len());
+
+                    }
+                    let len = wait_for_input[player_id].len();
+
+                    if wait_for_input[player_id].is_empty() {
+                        if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
+                            *_gamestate = next_gamestate;
+                        }
                     }
                 }
 
@@ -452,56 +433,34 @@ pub fn continue_to_prob<T: GameCon>(player_num: usize,
         false
     }
 }
-pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType,
-                                         con_vec: &HashMap<usize, T>,
+pub fn continue_to_broadcast<T: GameCon>(con_vec: &HashMap<usize, T>,
                                          remaining_cards: &Vec<usize>,
                                          players: Vec<Player>,
                                          gamestates: Vec<GameState>,
                                          turn_index: usize,
                                          ticks: Option<u16>,
                                          log: &mut Vec<ClientReceivedMsg>) {
-    let mut remove_first = false;
-    match wait_for_input_p.first() {
-        Some(&Some(ref x)) => {
-            println!("there is some {:?}", x.0.clone());
+    for it in con_vec.iter() {
+        let offer_row = (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
+        let (_i, ref con) = it;
+
+        //replace PreDrawCard with DrawCard
+        let mut gc = gamestates.clone();
+        for _h in gc.iter_mut() {
+            if let &mut GameState::PreDrawCard = _h {
+                *_h = GameState::DrawCard;
+            }
         }
-        Some(&None) => {
-            remove_first = true;
-            // if there is preDrawcard, don't broadcast
-                let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
-                if !still_processing{
-                    for it in con_vec.iter() {
-                                    let offer_row =
-                                        (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
-                                    let (_i, ref con) = it;
-                                
-                                    //replace PreDrawCard with DrawCard
-                                    let mut gc = gamestates.clone();
-                                    for  _h in gc.iter_mut(){
-                                        if let &mut GameState::PreDrawCard =_h{
-                                            *_h = GameState::DrawCard;
-                                        }
-                                    }
-                                    let k: Result<BoardCodec, String> = Ok(BoardCodec {
-                                                                            players: players.clone(),
-                                                                            gamestates: gc,
-                                                                            offer_row: offer_row,
-                                                                            turn_index: turn_index,
-                                                                            ticks: ticks,
-                                                                        });
-                                    let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-                                    h.set_boardstate(k);
-                                    con.tx_send(h, log);
-                                }
-                }
-        }
-        None => {
-            println!("there is none");
-        }
-    }
-    if let Some(&None) = wait_for_input_p.first() {}
-    if remove_first {
-        wait_for_input_p.remove(0);
-        println!("remove_first");
+        let k: Result<BoardCodec, String> = Ok(BoardCodec {
+                                                   players: players.clone(),
+                                                   gamestates: gc,
+                                                   offer_row: offer_row,
+                                                   turn_index: turn_index,
+                                                   ticks: ticks,
+                                               });
+        let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
+        h.set_boardstate(k);
+        con.tx_send(h, log);
+        println!("plll {:?}", players.clone());
     }
 }

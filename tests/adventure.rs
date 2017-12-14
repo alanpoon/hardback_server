@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheAdventureDraftStruct,shortrec_process};
+use hardback_server::drafttest::{ShortRec, TheAdventureDraftStruct, shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -106,7 +106,7 @@ fn adventure() {
         k6.killserver = Some(true);
         tx.send((0, k6)).unwrap();
         std::thread::sleep(three_seconds);
-/*
+        /*
         //assert 8 + assert 9
         let mut k6 = GameCommand::new(); //go to drawCard
         k6.reply = Some(1);
@@ -116,17 +116,24 @@ fn adventure() {
         */
     });
 
-    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-      shortrec_process(index,x,0)
-    });
+    let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| shortrec_process(index, x, 0));
     let mut p = Player::new("DefaultPlayer".to_owned());
+    p.hand = vec![7, 14, 20, 18, 4];
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
     //Test arranged
     p.arranged = vec![(7, false, Some("h".to_owned()), false),
                       (14, false, Some("o".to_owned()), false), //two_cent_per_adv
                       (20, false, Some("u".to_owned()), false),
                       (18, false, None, false),
                       (4, false, None, false)];
-    p.hand = vec![7, 14, 20, 18, 4];
+
     p.draft = vec![]; //141, 148, 7, 177, 70
     //assert 1
 
@@ -146,7 +153,7 @@ fn adventure() {
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit],
+                                        gamestates: vec![GameState::WaitForReply],
                                         offer_row: vec![26, 23, 38, 80, 94, 98, 119],
                                         turn_index: 0,
                                         ticks: None,
@@ -192,19 +199,29 @@ fn adventure() {
 
     //assert 7
     assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::WaitForReply],
+                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+    //assert 8
+    assert_eq!(iter_o.next(),
                Some(ShortRec::Request((0,26,"You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned(),
                                        vec!["Yes".to_owned(),
                               "No, I want to end my buy phase".to_owned()],None))));
-    assert_eq!(iter_o.next(), Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));                              
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Hand(vec![70, 177, 7, 148, 141])));
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));
     //assert 8
-    p.draftlen-=1;
+    p.draftlen -= 1;
     p.arranged = vec![];
-    p.ink =p.coin;
-    p.coin =0;
+    p.ink = p.coin;
+    p.coin = 0;
     p.skip_cards = vec![];
-    p.hand =vec![70, 177, 7, 148, 141];
+    p.hand = vec![70, 177, 7, 148, 141];
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {
                                         players: vec![p.clone()],
@@ -213,5 +230,5 @@ fn adventure() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-   
+
 }
