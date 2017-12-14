@@ -14,7 +14,7 @@ use codec_lib::codec::*;
 use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
-use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct};
+use hardback_server::drafttest::{ShortRec, TheRomanceDraftStruct,shortrec_process};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -94,21 +94,7 @@ fn doubleadjacent() {
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| {
-        let mut y = ShortRec::None;
-        if let OwnedMessage::Text(z) = x {
-            if let Ok(ClientReceivedMsg { boardstate, request, turn_index, .. }) =
-                ClientReceivedMsg::deserialize_receive(&z) {
-                println!("iterenumerate:{:?}", index + 1);
-                if let Some(Some(Ok(_boardstate))) = boardstate {
-                    y = ShortRec::Board(_boardstate);
-                } else if let Some(Some(_request)) = request {
-                    y = ShortRec::Request(_request);
-                } else if let Some(Some(_turn_index)) = turn_index {
-                    y = ShortRec::TurnIndex(_turn_index);
-                }
-            }
-        }
-        y
+        shortrec_process(index,x,0)
     });
     let mut p = Player::new("DefaultPlayer".to_owned());
     //Test arranged
@@ -119,7 +105,7 @@ fn doubleadjacent() {
                       (110, false, Some("p".to_owned()), false),
                       (111, false, Some("t".to_owned()), false)];
     p.hand = vec![105, 135, 108, 110, 111];
-    p.draft = vec![141, 148, 7, 177, 70];
+
     //assert 1
     assert_eq!(iter_o.next(),
                Some(ShortRec::Board(BoardCodec {

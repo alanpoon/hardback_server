@@ -113,6 +113,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
     let mut need_turn_index = false;
     let player_num = players.len();
     let still_processing = !gamestates.iter().filter(|x|x==&&GameState::PreDrawCard).collect::<Vec<&GameState>>().is_empty();
+    println!("still_processing {:?}",still_processing);
     if still_processing{
     if let (Some(ref _p),Some(ref mut _g)) = (players.get(turn_index.clone()),gamestates.get_mut(turn_index.clone())){
             if let GameState::PreDrawCard=**_g{
@@ -137,6 +138,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                 
             }
         }
+        
        for (_i,_g) in gamestates.iter_mut().enumerate(){
             if _i !=*turn_index{
                 *_g = GameState::Spell;
@@ -184,7 +186,6 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
         (0..tempboard.players.len()).zip(gamestates.iter_mut()) {
         match _gamestates {
             &mut &mut GameState::ResolveAgain(_, _) => {
-
                 player_that_responsible = Some(player_id);
                 **_gamestates = GameState::Buy;
                 println!("resolveagain {:?}", players.clone().get(player_id));
@@ -201,35 +202,17 @@ pub fn uncover_cards<T: GameCon>(players: &mut Vec<Player>,
             let (_tb_p, mut _p) = it;
             *_p = _tb_p.clone();
         }
-
-        let game_state_c = gamestates.clone();
-        println!("game_sssstate {:?}", game_state_c);
-        match wait_vec[player_that_responsible].first() {
-            Some(&Some(ref x)) => {
-                println!("there is some {:?}", x.0.clone());
-            }
-            Some(&None) => {
-                println!("there is really none");
-            }
-            _ => {
-                println!("there is no first");
-            }
-
-        }
-        if let (Some(ref mut _g), ref mut _w) =
-            (gamestates.get_mut(player_that_responsible), &mut wait_vec[player_that_responsible]) {
-            continue_to_broadcast::<T>(_w,
+            continue_to_broadcast::<T>(&mut wait_vec[player_that_responsible],
                                        &connections,
                                        &remaining_cards,
                                        players.clone(),
-                                       game_state_c.clone(),
+                                       gamestates.clone(),
                                        turn_index,
                                        ticks,
                                        log);
-            if let (_w, Some(_con)) = (_w, connections.get(&player_that_responsible)) {
-                continue_to_prob::<T>(player_that_responsible, _w, _g, _con, ticks, log);
+            if let ( Some(_con), Some(_g)) = ( connections.get(&player_that_responsible),gamestates.get_mut(player_that_responsible)) {
+                continue_to_prob::<T>(player_that_responsible, &mut wait_vec[player_that_responsible], _g, _con, ticks, log);
             }
-        }
     }
 
 

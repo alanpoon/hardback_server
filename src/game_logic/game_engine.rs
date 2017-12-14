@@ -137,6 +137,12 @@ impl<T> GameEngine<T>
                 let &GameCommand { reply, killserver, .. } = &game_command;
                 if let Some(_) = reply {
                     type_is_reply = true;
+                           let z = wait_for_input[player_id].iter().map(|x|{
+                            if let &Some(ref _x) = x{
+                                Some((_x.1.clone(),_x.2.clone()))
+                            } else{None}
+                        }).collect::<Vec<Option<(GameState,String)>>>();
+                        println!("zzz :{:?}", z);
                 }
 
                 if let (&GameCommand { ref go_to_shuffle,
@@ -166,6 +172,8 @@ impl<T> GameEngine<T>
                      &mut self.unknown[player_id],
                      &mut wait_for_input,
                      type_is_reply.clone()) {
+                                          
+                 
                     match _gamestate {
                         &mut &mut GameState::ShowDraft => {
                             game_logic::show_draft::go_to_shuffle::<T>(debug_struct.show_draft().1,
@@ -286,6 +294,7 @@ impl<T> GameEngine<T>
                         }
                         &mut &mut GameState::TrashOther(_) => {
                             if let &Some((true, z)) = trash_other {
+                     
                                 game_logic::purchase::trash_another_card(z,
                                                                          _board,
                                                                          player_id,
@@ -322,7 +331,6 @@ impl<T> GameEngine<T>
                     }
                 }
                 if !type_is_reply {
-                    println!("before broadcast len {:?}", wait_for_input[player_id].len());
                     continue_to_broadcast::<T>(&mut wait_for_input[player_id],
                                                &self.connections,
                                                &remaining_cards,
@@ -331,14 +339,13 @@ impl<T> GameEngine<T>
                                                turn_index,
                                                ticks,
                                                log);
-                    println!("after broadcast len {:?}", wait_for_input[player_id].len());
 
                     if let (_w, Some(_g), Some(_con)) =
                         (&mut wait_for_input[player_id],
                          self.gamestates.get_mut(player_id),
                          self.connections.get(&player_id)) {
                         continue_to_prob::<T>(player_id, _w, _g, _con, ticks, log);
-                        println!("after prob len {:?}", _w.len());
+
 
                     }
 
@@ -473,7 +480,7 @@ pub fn continue_to_broadcast<T: GameCon>(wait_for_input_p: &mut WaitForInputType
                                     let offer_row =
                                         (0..7).zip(remaining_cards.iter()).map(|(e, c)| c.clone()).collect();
                                     let (_i, ref con) = it;
-                                    println!("broadcast {:?}",_i);
+                                
                                     //replace PreDrawCard with DrawCard
                                     let mut gc = gamestates.clone();
                                     for  _h in gc.iter_mut(){
