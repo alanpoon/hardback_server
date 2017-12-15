@@ -111,14 +111,6 @@ fn normal() {
 
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.hand = vec![147, 154, 160, 174, 161];
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit],
-                                        offer_row: vec![179, 178, 176, 175, 173, 172, 171],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
     //Test arranged
     p.arranged = vec![(147, false, None, false),
                       (154, false, None, false),

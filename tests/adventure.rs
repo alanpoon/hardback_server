@@ -119,14 +119,6 @@ fn adventure() {
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| shortrec_process(index, x, 0));
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.hand = vec![7, 14, 20, 18, 4];
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit],
-                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
     //Test arranged
     p.arranged = vec![(7, false, Some("h".to_owned()), false),
                       (14, false, Some("o".to_owned()), false), //two_cent_per_adv

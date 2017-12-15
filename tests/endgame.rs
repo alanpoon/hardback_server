@@ -110,22 +110,7 @@ fn endgame() {
     p.vp = 59;
     let mut p2 = Player::new("Player 2".to_owned());
     p2.hand = vec![90, 49, 2, 75, 159];
-    assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone(), p2.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit, GameState::Spell],
-                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
-    assert_eq!(iter_o2.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone(), p2.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit, GameState::Spell],
-                                        offer_row: vec![26, 23, 38, 80, 94, 98, 119],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
+
     //Test arranged
     p.arranged = vec![(143, false, None, false)];
     //assert 1

@@ -70,7 +70,7 @@ impl<T> GameEngine<T>
         } else {
             for (index, game_state) in self.gamestates.iter_mut().enumerate() {
                 if index == 0 {
-                    *game_state = GameState::PreTurnToSubmit;
+                    *game_state = GameState::TurnToSubmit;
                 } else {
                     *game_state = GameState::Spell;
                 }
