@@ -346,7 +346,7 @@ impl<T> GameEngine<T>
                         _con.tx_send(h, log);
                     }
                 }
-                let mut next_gamestate = GameState::PreDrawCard;
+                let mut next_gamestate = None;
                 if let (&GameCommand { reply, .. }, true) = (&game_command, type_is_reply) {
                     if let Some(_reply) = reply {
 
@@ -363,7 +363,7 @@ impl<T> GameEngine<T>
                                     println!("inside closure, {:?} .{:?}",
                                              _wait_vec.0.clone(),
                                              _wait_vec.2.clone());
-                                    next_gamestate = next_gstate.clone();
+                                    next_gamestate = Some(next_gstate.clone());
                                 }
 
 
@@ -371,11 +371,9 @@ impl<T> GameEngine<T>
                         }
 
                     }
-                    let len = wait_for_input[player_id].len();
-
-                    if wait_for_input[player_id].is_empty() {
-                        if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
-                            *_gamestate = next_gamestate;
+                    if let (Some(_k),true) = (next_gamestate,wait_for_input[player_id].is_empty()){
+                         if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
+                            *_gamestate = _k;
                         }
                     }
                 }

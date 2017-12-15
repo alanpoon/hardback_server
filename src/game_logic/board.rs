@@ -174,9 +174,9 @@ impl Board for BoardStruct {
             println!("trash by {:?}", card_id.clone());
             let _g: WaitForSingleInput =
                 (card_id.clone(),
-                 GameState::TrashOther(card_id),
+                 GameState::PreWaitForReply,
                  "Do you want to trash another card for one cent?".to_owned(),
-                 vec![(GameState::TrashOther(card_id),
+                 vec![(GameState::PreTrashOther(card_id),
                        "Yes".to_owned(),
                        Box::new(move |_, _, _| {})),
                       (GameState::PreBuy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
@@ -218,12 +218,13 @@ impl Board for BoardStruct {
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let _g: WaitForSingleInput =
                 (card_id,
-                GameState::PreWaitForReply,
+                GameState::PrePutBackDiscard(2,card_id),
                  "You may draw three cards from the top of deck and choose to keep or discard each of them.".to_owned(),
-                 vec![(GameState::PutBackDiscard(2,card_id),
+                 vec![(GameState::PrePutBackDiscard(2,card_id),
                        "Continue".to_owned(),
                        Box::new(move |_,_,_| {
                         }))]);
+                        println!("did push putback_or_discard_three");
             _w.push(Some(_g));
 
         }

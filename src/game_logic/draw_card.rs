@@ -126,8 +126,30 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
             **_g = GameState::Spell;
         }
     }
-
-
+    let still_processing = !gamestates.iter()
+                                .filter(|x| if let &&GameState::PreTrashOther(_) =x{true}else{false} )
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {   
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            if let GameState::PreTrashOther(z) = _g.clone().clone(){
+                    needtempboardcast = true;
+            **_g = GameState::TrashOther(z);
+            }
+        }
+    }
+     let still_processing = !gamestates.iter()
+                                .filter(|x| if let &&GameState::PrePutBackDiscard(_,_) =x{true}else{false} )
+                                .collect::<Vec<&GameState>>()
+                                .is_empty();
+    if still_processing {   
+        if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
+            if let GameState::PrePutBackDiscard(z,j) = _g.clone().clone(){
+                    needtempboardcast = true;
+            **_g = GameState::PutBackDiscard(z,j);
+            }
+        }
+    }
     let still_processing = !gamestates.iter()
                                 .filter(|x| x == &&GameState::PreDrawCard)
                                 .collect::<Vec<&GameState>>()
