@@ -44,12 +44,10 @@ pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
         h.set_boardstate(k);
         con.tx_send(h, log);
         if player_id == 0 {
-            *_gamestate = GameState::PreTurnToSubmit;
+            *_gamestate = GameState::TurnToSubmit;
         } else {
-            *_gamestate = GameState::PreSpell;
+            *_gamestate = GameState::Spell;
         }
-
-
     }
 }
 pub fn broadcast<T: GameCon>(randseedbool: bool,

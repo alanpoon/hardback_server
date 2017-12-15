@@ -36,13 +36,14 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                 _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
-                if _p.draftlen == 0 {
+                /*if _p.draftlen == 0 {
                     let mut rng = rand::thread_rng();
                     unknown[_index.clone()] = _p.discard.clone();
                     rng.shuffle(&mut unknown[_index.clone()]);
                     _p.discard = vec![];
                     _p.draftlen = unknown[_index.clone()].len();
                 }
+                */
                 //unused coins will be converted into ink
                 _p.ink += _p.coin;
                 _p.coin = 0;

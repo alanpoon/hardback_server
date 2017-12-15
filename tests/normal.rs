@@ -152,10 +152,9 @@ fn normal() {
     //test give out
     p.hand = vec![70, 177, 7, 148, 141];
     p.arranged = vec![];
-    //p.discard.extend(vec![147, 154, 160, 174, 161]);
-    p.discard = vec![];
+    p.discard.extend(vec![147, 154, 160, 174, 161]);
     p.skip_cards = vec![];
-    p.draftlen = 6;
+    p.draftlen = 0;
     p.ink += p.coin;
     p.coin = 0;
     assert_eq!(iter_o.next(),
