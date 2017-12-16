@@ -10,8 +10,8 @@ pub extern crate hardback_codec;
 #[allow(non_snake_case)]
 pub use hardback_codec as codec_lib;
 pub use hardback_server as logic_lib;
-const CONNECTION: &'static str = "127.0.0.1:8080";
-
+//const CONNECTION: &'static str = "127.0.0.1:8080";
+const CONNECTION: &'static str = "0.0.0.0:8080";
 
 fn main() {
 

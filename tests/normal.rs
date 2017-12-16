@@ -101,10 +101,21 @@ fn normal() {
         //assert 3
         let mut k3 = GameCommand::new();
         k3.buy_offer = Some((true, 0));
-        k3.killserver = Some(true);
         tx.send((0, k3)).unwrap();
         std::thread::sleep(three_seconds);
-
+        let mut k4 = GameCommand::new();
+        k4.arranged = Some(vec![(177, false, None, false)]);
+        tx.send((0, k4)).unwrap();
+        std::thread::sleep(three_seconds);
+        let mut k5 = GameCommand::new();
+        k5.submit_word = Some(true);        
+        tx.send((0, k5)).unwrap();
+        std::thread::sleep(three_seconds);
+        let mut k6 = GameCommand::new();
+        k6.buy_offer = Some((true, 0));
+        k6.killserver = Some(true);
+        tx.send((0, k6)).unwrap();
+        std::thread::sleep(three_seconds);
     });
 
     let mut iter_o = con_rx.iter().enumerate().map(|(index, x)| shortrec_process(index, x, 1));
@@ -165,5 +176,29 @@ fn normal() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-
+                                    //
+p.arranged = vec![(177,false,None,false)];
+assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::TurnToSubmit],
+                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    })));
+assert_eq!(iter_o.next(),
+               Some(ShortRec::PushNotification("Player 1 has formed a word [t]".to_owned())));                                    
+p.coin+=1;
+p.skip_cards.push(177);
+assert_eq!(iter_o.next(),
+               Some(ShortRec::Board(BoardCodec {
+                                        players: vec![p.clone()],
+                                        gamestates: vec![GameState::Buy],
+                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                        turn_index: 0,
+                                        ticks: None,
+                                    }))); 
+    assert_eq!(iter_o.next(),
+               Some(ShortRec::Hand(vec![70, 160, 147, 177, 179])));
+    assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));                                   
 }

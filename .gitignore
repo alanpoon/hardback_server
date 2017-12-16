@@ -1,3 +1,6 @@
 target/
 **/*.rs.bk
 foo.txt
+aws_script.txt
+hardback
+production.sh
