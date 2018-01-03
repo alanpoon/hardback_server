@@ -534,12 +534,15 @@ pub fn redraw(p: &mut Player, unknown: &mut Vec<usize>, randseed: &[usize]) {
             rng.shuffle(unknown);
             if let Some(n) = unknown.pop() {
                 p.hand.push(n);
+            }else{
+                println!("not enough cards");
             }
+         
         }
     }
     p.arranged = vec![];
     p.skip_cards = vec![];
     p.draftlen = unknown.len();
-    p.ink += p.coin;
+    p.ink =p.ink+ (p.coin as f32/3.0).floor() as usize;
     p.coin = 0;
 }

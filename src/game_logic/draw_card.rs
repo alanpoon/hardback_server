@@ -53,16 +53,8 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                 _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
-                /*if _p.draftlen == 0 {
-                    let mut rng = rand::thread_rng();
-                    unknown[_index.clone()] = _p.discard.clone();
-                    rng.shuffle(&mut unknown[_index.clone()]);
-                    _p.discard = vec![];
-                    _p.draftlen = unknown[_index.clone()].len();
-                }
-                */
                 //unused coins will be converted into ink
-                _p.ink += _p.coin;
+                _p.ink =_p.ink+ (_p.coin as f32/3.0).floor() as usize;
                 _p.coin = 0;
             }
             _ => {}
