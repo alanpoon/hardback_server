@@ -71,7 +71,7 @@ impl game_logic::game_engine::TheDraft for TheStartingDraftStruct {
     fn ticks(&self) -> Option<u16> {
         Some(0)
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (true, None)
     }
     fn push_notification(&self) -> bool {

@@ -15,11 +15,11 @@ pub fn go_to_shuffle<T: GameCon>(randseed: Option<&[usize]>,
     if let &Some(true) = go_to_shuffle {
         if let Some(ref mut _p) = _board.players.get_mut(player_id) {
             *unknown = _p.draft.clone();
-            if let Some(_randseed) = randseed{
+            if let Some(_randseed) = randseed {
                 let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                 rng.shuffle(unknown);
-            }else{
-                 let mut rng = thread_rng();
+            } else {
+                let mut rng = thread_rng();
                 rng.shuffle(unknown);
             }
             _p.hand = unknown.split_off(5);
@@ -49,8 +49,7 @@ pub fn go_to_shuffle<T: GameCon>(randseed: Option<&[usize]>,
         }
     }
 }
-pub fn broadcast<T: GameCon>(randseedbool: Option<&[usize]>,
-                             gamestates: &mut Vec<GameState>,
+pub fn broadcast<T: GameCon>(gamestates: &mut Vec<GameState>,
                              cons: &HashMap<usize, T>,
                              players: &Vec<Player>,
                              unknown: &mut [Vec<usize>; 4], //player's draft

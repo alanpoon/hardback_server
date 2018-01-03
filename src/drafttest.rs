@@ -5,6 +5,7 @@ use game_logic::game_engine::GameCon;
 use game_logic::board::BoardStruct;
 use websocket::message::OwnedMessage;
 use std::sync::mpsc;
+use rand::{SeedableRng, StdRng, Rng};
 pub struct TheNormalDraftStruct {}
 impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn player_starting(&self,
@@ -33,8 +34,8 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
-        (false, None)
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
+        (false, Some(&[1, 2, 3, 4]))
     }
     fn push_notification(&self) -> bool {
         true
@@ -67,9 +68,9 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         //(notify player_turn,random shuffle or not)
-        (true, Some(&[1,2,3,4]))
+        (true, Some(&[1, 2, 3, 4]))
     }
     fn push_notification(&self) -> bool {
         false
@@ -106,7 +107,7 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -146,7 +147,7 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -187,7 +188,7 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -226,7 +227,7 @@ impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -266,7 +267,7 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -318,7 +319,7 @@ impl game_logic::game_engine::TheDraft for TheTimelessDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -360,7 +361,7 @@ impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -404,7 +405,7 @@ impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -451,7 +452,7 @@ impl game_logic::game_engine::TheDraft for TheEndGameDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+    fn show_draft(&self) -> (bool, Option<&[usize]>) {
         (false, None)
     }
     fn push_notification(&self) -> bool {
@@ -520,4 +521,25 @@ pub fn shortrec_process(index: usize, ownm: OwnedMessage, j: usize) -> ShortRec 
         }
     }
     y
+}
+pub fn redraw(p: &mut Player, unknown: &mut Vec<usize>, randseed: &[usize]) {
+    p.hand=vec![];
+    for _ in 0usize..5usize {
+        if let Some(n) = unknown.pop() {
+            p.hand.push(n);
+        } else {
+            let mut rng: StdRng = SeedableRng::from_seed(randseed);
+            *unknown = p.discard.clone();
+            p.discard = vec![];
+            rng.shuffle(unknown);
+            if let Some(n) = unknown.pop() {
+                p.hand.push(n);
+            }
+        }
+    }
+    p.arranged = vec![];
+    p.skip_cards = vec![];
+    p.draftlen = unknown.len();
+    p.ink += p.coin;
+    p.coin = 0;
 }

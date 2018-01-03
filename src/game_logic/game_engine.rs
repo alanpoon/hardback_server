@@ -60,8 +60,7 @@ impl<T> GameEngine<T>
         let ticks: Option<u16> = debug_struct.ticks();
         if let (true, _randseed) = debug_struct.show_draft() {
             game_logic::show_draft::give_player_index(&self.connections, log);
-            game_logic::show_draft::broadcast(_randseed,
-                                              &mut self.gamestates,
+            game_logic::show_draft::broadcast(&mut self.gamestates,
                                               &self.connections,
                                               &self.players,
                                               &mut self.unknown,
@@ -372,8 +371,9 @@ impl<T> GameEngine<T>
                         }
 
                     }
-                    if let (Some(_k),true) = (next_gamestate,wait_for_input[player_id].is_empty()){
-                         if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
+                    if let (Some(_k), true) = (next_gamestate,
+                                               wait_for_input[player_id].is_empty()) {
+                        if let Some(_gamestate) = self.gamestates.get_mut(player_id) {
                             *_gamestate = _k;
                         }
                     }
