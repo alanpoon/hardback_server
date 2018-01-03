@@ -3,7 +3,7 @@ use game_logic::board::BoardStruct;
 use game_logic::game_engine::GameCon;
 use rand::{thread_rng, Rng, SeedableRng, StdRng};
 use std::collections::HashMap;
-pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
+pub fn go_to_shuffle<T: GameCon>(randseed: Option<&[usize]>,
                                  _board: &mut BoardStruct,
                                  player_id: usize,
                                  con: &T,
@@ -15,12 +15,11 @@ pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
     if let &Some(true) = go_to_shuffle {
         if let Some(ref mut _p) = _board.players.get_mut(player_id) {
             *unknown = _p.draft.clone();
-            if randseedbool.clone() {
-                let seed: &[_] = &[1, 2, 3, 4];
-                let mut rng: StdRng = SeedableRng::from_seed(seed);
+            if let Some(_randseed) = randseed{
+                let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                 rng.shuffle(unknown);
-            } else {
-                let mut rng = thread_rng();
+            }else{
+                 let mut rng = thread_rng();
                 rng.shuffle(unknown);
             }
             _p.hand = unknown.split_off(5);
@@ -50,7 +49,7 @@ pub fn go_to_shuffle<T: GameCon>(randseedbool: bool,
         }
     }
 }
-pub fn broadcast<T: GameCon>(randseedbool: bool,
+pub fn broadcast<T: GameCon>(randseedbool: Option<&[usize]>,
                              gamestates: &mut Vec<GameState>,
                              cons: &HashMap<usize, T>,
                              players: &Vec<Player>,

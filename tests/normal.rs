@@ -18,6 +18,7 @@ use std::sync::mpsc;
 use std::collections::HashMap;
 use websocket::message::OwnedMessage;
 use hardback_server::drafttest::{ShortRec, TheNormalDraftStruct, shortrec_process};
+use rand::{thread_rng, Rng, SeedableRng, StdRng};
 
 #[derive(Clone)]
 pub struct Connection {
@@ -122,6 +123,7 @@ fn normal() {
 
     let mut p = Player::new("DefaultPlayer".to_owned());
     p.hand = vec![147, 154, 160, 174, 161];
+    let mut unknown:Vec<usize> = vec![];
     //Test arranged
     p.arranged = vec![(147, false, None, false),
                       (154, false, None, false),
@@ -177,27 +179,27 @@ fn normal() {
                                         ticks: None,
                                     })));
                                     //
-p.arranged = vec![(177,false,None,false)];
-assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::TurnToSubmit],
-                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    })));
-assert_eq!(iter_o.next(),
-               Some(ShortRec::PushNotification("Player 1 has formed a word [t]".to_owned())));                                    
-p.coin+=1;
-p.skip_cards.push(177);
-assert_eq!(iter_o.next(),
-               Some(ShortRec::Board(BoardCodec {
-                                        players: vec![p.clone()],
-                                        gamestates: vec![GameState::Buy],
-                                        offer_row: vec![178, 176, 175, 173, 172, 171, 170],
-                                        turn_index: 0,
-                                        ticks: None,
-                                    }))); 
+    p.arranged = vec![(177,false,None,false)];
+    assert_eq!(iter_o.next(),
+                Some(ShortRec::Board(BoardCodec {
+                                            players: vec![p.clone()],
+                                            gamestates: vec![GameState::TurnToSubmit],
+                                            offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                            turn_index: 0,
+                                            ticks: None,
+                                        })));
+    assert_eq!(iter_o.next(),
+                Some(ShortRec::PushNotification("Player 1 has formed a word [t]".to_owned())));                                    
+    p.coin+=1;
+    p.skip_cards.push(177);
+    assert_eq!(iter_o.next(),
+                Some(ShortRec::Board(BoardCodec {
+                                            players: vec![p.clone()],
+                                            gamestates: vec![GameState::Buy],
+                                            offer_row: vec![178, 176, 175, 173, 172, 171, 170],
+                                            turn_index: 0,
+                                            ticks: None,
+                                        }))); 
     assert_eq!(iter_o.next(),
                Some(ShortRec::Hand(vec![70, 160, 147, 177, 179])));
     assert_eq!(iter_o.next(), Some(ShortRec::TurnIndex(0)));                                   

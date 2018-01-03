@@ -5,12 +5,12 @@ use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use game_logic;
 use std::collections::HashMap;
 //#[cfg(not(test))]
-pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
+pub fn redraw_cards_to_hand_size(randseed:Option<&[usize]>,
+                                 players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
-    use rand::Rng;
-    use rand;
+    use rand::{SeedableRng, StdRng,Rng,thread_rng};
     let player_num = players.len();
     println!("gahh {:?}", gamestates.clone());
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
@@ -20,11 +20,12 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
             &mut &mut GameState::PreDrawCard => {
                 _p.discard.extend(_p.hand.clone());
                 _p.hand = vec![];
-                for _ in 0usize..5usize {
+                if let Some(_randseed) =randseed{
+                    for _ in 0usize..5usize {
                     if let Some(n) = unknown[_index.clone()].pop() {
                         _p.hand.push(n);
                     } else {
-                        let mut rng = rand::thread_rng();
+                         let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                         unknown[_index.clone()] = _p.discard.clone();
                         _p.discard = vec![];
                         rng.shuffle(&mut unknown[_index.clone()]);
@@ -33,6 +34,22 @@ pub fn redraw_cards_to_hand_size(players: &mut Vec<Player>,
                         }
                     }
                 }
+                } else{
+                    for _ in 0usize..5usize {
+                    if let Some(n) = unknown[_index.clone()].pop() {
+                        _p.hand.push(n);
+                    } else {
+                        let mut rng = thread_rng();
+                        unknown[_index.clone()] = _p.discard.clone();
+                        _p.discard = vec![];
+                        rng.shuffle(&mut unknown[_index.clone()]);
+                        if let Some(n) = unknown[_index.clone()].pop() {
+                            _p.hand.push(n);
+                        }
+                    }
+                }
+                }
+                
                 _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();

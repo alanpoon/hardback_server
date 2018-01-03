@@ -33,8 +33,8 @@ impl game_logic::game_engine::TheDraft for TheNormalDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         true
@@ -67,9 +67,9 @@ impl game_logic::game_engine::TheDraft for TheNotifyDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
         //(notify player_turn,random shuffle or not)
-        (true, true)
+        (true, Some(&[1,2,3,4]))
     }
     fn push_notification(&self) -> bool {
         false
@@ -106,8 +106,8 @@ impl game_logic::game_engine::TheDraft for TheAdventureDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -146,8 +146,8 @@ impl game_logic::game_engine::TheDraft for TheHorrorDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -187,8 +187,8 @@ impl game_logic::game_engine::TheDraft for TheMysteryDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -226,8 +226,8 @@ impl game_logic::game_engine::TheDraft for TheMysteryUnCoverDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -266,8 +266,8 @@ impl game_logic::game_engine::TheDraft for TheRomanceDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -318,8 +318,8 @@ impl game_logic::game_engine::TheDraft for TheTimelessDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -360,8 +360,8 @@ impl game_logic::game_engine::TheDraft for TheOverlayDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -404,8 +404,8 @@ impl game_logic::game_engine::TheDraft for TheTwoPlayerDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false
@@ -451,8 +451,8 @@ impl game_logic::game_engine::TheDraft for TheEndGameDraftStruct {
     fn ticks(&self) -> Option<u16> {
         None
     }
-    fn show_draft(&self) -> (bool, bool) {
-        (false, false)
+    fn show_draft(&self) -> (bool,  Option<&[usize]>) {
+        (false, None)
     }
     fn push_notification(&self) -> bool {
         false

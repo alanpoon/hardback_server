@@ -18,7 +18,7 @@ pub trait TheDraft {
                        &mut Vec<usize>);
     fn deck_starting(&self, &[cards::ListCard<BoardStruct>; 180], &Vec<usize>) -> Vec<usize>;
     fn ticks(&self) -> Option<u16>;
-    fn show_draft(&self) -> (bool, bool); //show_draft,withrandseed
+    fn show_draft(&self) -> (bool, Option<&[usize]>); //show_draft,withrandseed
     fn push_notification(&self) -> bool;
 }
 pub struct GameEngine<T: GameCon> {
@@ -90,7 +90,8 @@ impl<T> GameEngine<T>
                 std::thread::sleep(sixteen_ms - duration_since_last_update);
             }
 
-            game_logic::draw_card::redraw_cards_to_hand_size(&mut self.players,
+            game_logic::draw_card::redraw_cards_to_hand_size(debug_struct.show_draft().1,
+                                                             &mut self.players,
                                                              &mut self.unknown,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
