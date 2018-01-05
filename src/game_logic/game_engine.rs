@@ -119,7 +119,6 @@ impl<T> GameEngine<T>
                                                       ticks,
                                                       log);
                                                       */
-            println!("before ss {:?}", self.gamestates.clone());
             game_logic::draw_card::update_gamestates(&mut self.gamestates,
                                                      &self.connections,
                                                      &self.players,

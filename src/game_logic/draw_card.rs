@@ -12,7 +12,6 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                                  turn_index: &mut usize) {
     use rand::{SeedableRng, StdRng, Rng, thread_rng};
     let player_num = players.len();
-    println!("gahh {:?}", gamestates.clone());
     for mut it in players.iter_mut().enumerate().zip(gamestates.iter_mut()) {
         let ((ref _index, ref mut _p), ref mut game_state) = it;
         //((x,y), z)
@@ -49,12 +48,15 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                         }
                     }
                 }
-
+                if _p.hand.len() < 5 {
+                    println!("draw error {:?}", _p.clone());
+                    println!("draw error unknonw {:?}", unknown[_index.clone()].clone());
+                }
                 _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
                 //unused coins will be converted into ink
-                _p.ink =_p.ink+ (_p.coin as f32/3.0).floor() as usize;
+                _p.ink = _p.ink + (_p.coin as f32 / 3.0).floor() as usize;
                 _p.coin = 0;
             }
             _ => {}
@@ -117,9 +119,6 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                 .filter(|x| x == &&GameState::PreTurnToSubmit)
                                 .collect::<Vec<&GameState>>()
                                 .is_empty();
-    println!("still_processing {:?} wait is empty{:?}",
-             still_processing,
-             wait_vec[turn_index.clone()].len());
     if still_processing {
         if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
             needtempboardcast = true;

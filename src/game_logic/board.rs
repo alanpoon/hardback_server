@@ -72,10 +72,11 @@ impl Board for BoardStruct {
                     wait_for_input: &mut [WaitForInputType; 4]) {
         if let Some(_w) = wait_for_input.get_mut(player_id) {
 
-            let _g: WaitForSingleInput = (card_id,
-                                          GameState::PreWaitForReply,
-                                          "Do you want to lock up any offer row card?".to_owned(),
-                                          vec![(GameState::LockUp,
+            let _g: WaitForSingleInput =
+                (card_id,
+                 GameState::PreWaitForReply,
+                 "Do you want to lock up any offer row card?".to_owned(),
+                 vec![(GameState::LockUp,
                        "Yes".to_owned(),
                        Box::new(|ref mut _p, ref mut _rmcards, _| {})),
                       (GameState::PreBuy, "No".to_owned(), Box::new(|_, _, _| {}))]);
@@ -171,11 +172,11 @@ impl Board for BoardStruct {
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             println!("trash by {:?}", card_id.clone());
-            let _g: WaitForSingleInput = (card_id.clone(),
-                                          GameState::PreWaitForReply,
-                                          "Do you want to trash another card for one cent?"
-                                              .to_owned(),
-                                          vec![(GameState::PreTrashOther(card_id),
+            let _g: WaitForSingleInput =
+                (card_id.clone(),
+                 GameState::PreWaitForReply,
+                 "Do you want to trash another card for one cent?".to_owned(),
+                 vec![(GameState::PreTrashOther(card_id),
                        "Yes".to_owned(),
                        Box::new(move |_, _, _| {})),
                       (GameState::PreBuy, "No".to_owned(), Box::new(move |_, _, _| {}))]);
@@ -199,10 +200,11 @@ impl Board for BoardStruct {
                 .len();
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
-            let _g: WaitForSingleInput = (card_id,
-                                          GameState::PreWaitForReply,
-                                          j,
-                                          vec![(GameState::PreBuy,
+            let _g: WaitForSingleInput =
+                (card_id,
+                 GameState::PreWaitForReply,
+                 j,
+                 vec![(GameState::PreBuy,
                        "Continue".to_owned(),
                        Box::new(move |ref mut p, ref mut rmcards, _| { p.vp += _num_wild; }))]);
             _w.push(Some(_g));

@@ -523,7 +523,7 @@ pub fn shortrec_process(index: usize, ownm: OwnedMessage, j: usize) -> ShortRec 
     y
 }
 pub fn redraw(p: &mut Player, unknown: &mut Vec<usize>, randseed: &[usize]) {
-    p.hand=vec![];
+    p.hand = vec![];
     for _ in 0usize..5usize {
         if let Some(n) = unknown.pop() {
             p.hand.push(n);
@@ -534,15 +534,15 @@ pub fn redraw(p: &mut Player, unknown: &mut Vec<usize>, randseed: &[usize]) {
             rng.shuffle(unknown);
             if let Some(n) = unknown.pop() {
                 p.hand.push(n);
-            }else{
+            } else {
                 println!("not enough cards");
             }
-         
+
         }
     }
     p.arranged = vec![];
     p.skip_cards = vec![];
     p.draftlen = unknown.len();
-    p.ink =p.ink+ (p.coin as f32/3.0).floor() as usize;
+    p.ink = p.ink + (p.coin as f32 / 3.0).floor() as usize;
     p.coin = 0;
 }
