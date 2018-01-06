@@ -152,8 +152,6 @@ fn normal() {
                                         turn_index: 0,
                                         ticks: None,
                                     })));
-
-
     // test notification
     assert_eq!(iter_o.next(),
                Some(ShortRec::PushNotification("Player 1 has formed a word [house]".to_owned())));

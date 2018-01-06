@@ -26,6 +26,7 @@ pub struct GameEngine<T: GameCon> {
     connections: HashMap<usize, T>,
     gamestates: Vec<GameState>,
     unknown: [Vec<usize>; 4],
+    init_hand: [Vec<usize>; 4],
 }
 impl<T> GameEngine<T>
     where T: GameCon
@@ -40,6 +41,7 @@ impl<T> GameEngine<T>
             connections: connections,
             gamestates: gamestates_v,
             unknown: [vec![], vec![], vec![], vec![]],
+            init_hand:[vec![],vec![],vec![],vec![]]
         }
     }
     pub fn run<D: TheDraft>(&mut self,
@@ -92,6 +94,7 @@ impl<T> GameEngine<T>
             game_logic::draw_card::redraw_cards_to_hand_size(debug_struct.show_draft().1,
                                                              &mut self.players,
                                                              &mut self.unknown,
+                                                             &mut self.init_hand,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
             game_logic::end_game::first_to_60(&self.players,

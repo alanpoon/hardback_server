@@ -4,10 +4,11 @@ use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use game_logic;
 use std::collections::HashMap;
-//#[cfg(not(test))]
+
 pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                                  players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
+                                 init_hand:&mut [Vec<usize>;4],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
     use rand::{SeedableRng, StdRng, Rng, thread_rng};
@@ -17,41 +18,42 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
         //((x,y), z)
         match game_state {
             &mut &mut GameState::PreDrawCard => {
-                _p.discard.extend(_p.hand.clone());
-                _p.hand = vec![];
+                _p.discard.extend(init_hand[_index.clone()].clone());
+                let mut new_hand =vec![];
                 if let Some(_randseed) = randseed {
                     for _ in 0usize..5usize {
                         if let Some(n) = unknown[_index.clone()].pop() {
-                            _p.hand.push(n);
+                            new_hand.push(n);
                         } else {
                             let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                             unknown[_index.clone()] = _p.discard.clone();
                             _p.discard = vec![];
                             rng.shuffle(&mut unknown[_index.clone()]);
                             if let Some(n) = unknown[_index.clone()].pop() {
-                                _p.hand.push(n);
+                                new_hand.push(n);
                             }
                         }
                     }
                 } else {
                     for _ in 0usize..5usize {
                         if let Some(n) = unknown[_index.clone()].pop() {
-                            _p.hand.push(n);
+                            new_hand.push(n);
                         } else {
                             let mut rng = thread_rng();
-                            unknown[_index.clone()] = _p.discard.clone();
+                            unknown[_index.clone()].extend(_p.discard.clone());
                             _p.discard = vec![];
                             rng.shuffle(&mut unknown[_index.clone()]);
                             if let Some(n) = unknown[_index.clone()].pop() {
-                                _p.hand.push(n);
+                                new_hand.push(n);
                             }
                         }
                     }
                 }
                 if _p.hand.len() < 5 {
-                    println!("draw error {:?}", _p.clone());
                     println!("draw error unknonw {:?}", unknown[_index.clone()].clone());
                 }
+                _p.hand=new_hand.clone();
+                init_hand[_index.clone()]=new_hand;
                 _p.skip_cards = vec![];
                 _p.arranged = vec![];
                 _p.draftlen = unknown[_index.clone()].len();
@@ -80,7 +82,6 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                 .collect::<Vec<&GameState>>()
                                 .is_empty();
     if still_processing {
-
         if let Some(ref mut _g) = gamestates.get_mut(turn_index.clone()) {
             **_g = GameState::WaitForReply;
         }
