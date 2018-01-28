@@ -95,6 +95,7 @@ impl<T> GameEngine<T>
                                                              &mut self.players,
                                                              &mut self.unknown,
                                                              &mut self.init_hand,
+                                                             &cardmeta,
                                                              &mut self.gamestates,
                                                              &mut turn_index);
             game_logic::end_game::first_to_60(&self.players,

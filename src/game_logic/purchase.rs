@@ -35,15 +35,18 @@ pub fn buy_card_from(position_index: usize,
                             }
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
+                                let card_cost=cardmeta[_c].cost;
                                 Some(Ok((_c,
                                          GameState::PreWaitForReply,
                                          j,
-                                         vec![(GameState::PreBuy,
+                                         vec![(GameState::PreDrawCard,
                                                "Trade in 3 ink for one coin to buy this?"
                                                    .to_owned(),
                                                Box::new(move |ref mut p,
                                                               ref mut rmcards,
                                                               ref mut _unknown| {
+                                                              p.ink-=(card_cost-p.coin)*3;
+                                                              p.coin=0;
                                                             p.discard.push(rmcards.remove(_c));
                                                         })),
                                               (GameState::PreBuy,

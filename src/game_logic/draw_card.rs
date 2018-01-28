@@ -9,6 +9,7 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                                  players: &mut Vec<Player>,
                                  unknown: &mut [Vec<usize>; 4],
                                  init_hand:&mut [Vec<usize>;4],
+                                 cardmeta:&[cards::ListCard<BoardStruct>; 180],
                                  gamestates: &mut Vec<GameState>,
                                  turn_index: &mut usize) {
     use rand::{SeedableRng, StdRng, Rng, thread_rng};
@@ -18,6 +19,11 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
         //((x,y), z)
         match game_state {
             &mut &mut GameState::PreDrawCard => {
+                //remove cards that are timeless from discard pile
+                let timeless_arr = _p.discard.clone().iter().filter(|&&x|cardmeta[x].timeless).map(|x|x.clone()).collect::<Vec<usize>>();
+                 println!("d_c {:?},timeless_arr:{:?}",_p.discard.clone(),timeless_arr.clone());
+                _p.timeless_classic.extend(timeless_arr);
+                _p.discard = _p.discard.clone().iter().filter(|&&x|!cardmeta[x].timeless).map(|x|x.clone()).collect::<Vec<usize>>();
                 _p.discard.extend(init_hand[_index.clone()].clone());
                 let mut new_hand =vec![];
                 if let Some(_randseed) = randseed {
