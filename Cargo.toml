@@ -12,7 +12,7 @@ rust_wordnik = {git="https://github.com/alanpoon/rust_wordnik.git"}
 websocket = { version ="0.20.2"}
 tokio-core ="0.1.9"
 futures ={ version = "0.1.14"}
-hardback_codec ={path="../hardback_codec"}
+hardback_codec ={git="https://github.com/alanpoon/hardback_codec.git"}
 itertools = "0.6.3"
 
 [[bin]]
