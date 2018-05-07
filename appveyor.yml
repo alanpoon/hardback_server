@@ -1,0 +1,44 @@
+environment:
+    global:
+        PROJECT_NAME: hardback_server
+    matrix:
+        - TARGET: i686-pc-windows-gnu
+        - TARGET: x86_64-pc-windows-msvc
+        - TARGET: x86_64-pc-windows-gnu
+
+install:
+    - set PATH=C:\msys64\usr\bin;%PATH%
+    - set PATH=C:\msys64\mingw32\bin;%PATH%
+    - if "%TARGET%" == "x86_64-pc-windows-gnu" set PATH=C:\msys64\mingw64\bin;%PATH%
+    - curl -sSf -o rustup-init.exe https://win.rustup.rs
+    - rustup-init.exe --default-host %TARGET% --default-toolchain stable -y
+    - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+    - rustc -Vv
+    - cargo -V
+
+build: false
+
+test_script:
+    - cmd: 'cargo build --release'
+
+cache:
+    - target -> Cargo.lock
+    - C:\Users\appveyor\.cargo\registry -> Cargo.lock
+
+before_deploy:
+    - mkdir staging
+    - mkdir staging/assets
+    - dir
+    - xcopy assets /E staging/assets
+    - copy target\release\hardback_server.exe staging
+    - cd staging
+    - 7z a ../%PROJECT_NAME%-%TARGET%.zip *
+    - appveyor PushArtifact ../%PROJECT_NAME%-%TARGET%.zip
+
+deploy:
+    provider: GitHub
+    auth_token:
+        secure: DOOGyeUs8hT+YyvDk4P+ZvvWOXaE9vhSr/uCuxDSpg0XCqm6TdqcfET2v3ivGAB4
+    artifact: /.*\.zip/
+    repository: alanpoon/hardback_server
+    draft: true

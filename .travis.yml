@@ -1,0 +1,30 @@
+--- 
+before_deploy: 
+  - "mv target/release/hardback_server ."
+  - "tar -zcvf $zipname hardback_server"
+cache: cargo
+deploy: 
+  skip_cleanup: true
+  overwrite: true
+  api_key: 
+    secure: oRuucAJ3LWQ7LPQAmmRtvWOXCMY+3C1KaztVWpP0f+l8tZtE5BSeYXYRm9Ve/ZB5yo11kkmc+Uq15Q2EOcjWeXCZ8St0AWKIS8xeW8YpcoRs7r3TjJ9JAxMvYHWuONxLOO9kHDvCt3q2laxfMvce2RIy0eAqe4JL0xzfFHDidsjt41toNXSmO/u1QOfNF/Hf2bvAdM9Gjk8QZ/L42c6DGOKKHrLQuahm/gM+dORVmLROtT81kvK5qRU4DJH4MkO2aB24QYn9SNlxCjwtlrK6lOXZ3UsFfCGi532l4Eukd/iqnlsOs1TULpk0zZqxM9UERghke+a5o21tGCpaoNzh3Qb36+IQFzVc5eczWPQCuohYRQpEDh3Iz1FFm3q8ZyXIceP0hsgsOBZCybxCoqSADrdEn/inFlw8dAxrKY4swHd3b1kLBnVYEVwcjyMFCWyS0+ppcpTUucGWnBbVLNnVvmDj9iXpslmmbgtzacuy/7IL+BARuJtf6U4W7G2v7RQUQyhjA4Js6NYLjOjhc5GFK8rqTDPSSST+KMPPgQqLh36aFgRaDPssoebx5CeI09+0Qm5LKevQKV46TsqQcbhEOmGmi7daUHY6Fkmgt0TBeVZDefbiNwE4GBMhHQgpeqiGefZO97vbAv8OAy4dotqgy2TpV8Gz3xLwtV7WEH1OG7E=
+  file: $zipname
+  provider: releases
+  true: 
+    branch: master
+    repo: alanpoon/hardback_server
+env: 
+  - zipname="hardback_server-$TRAVIS_OS_NAME.tar.gz"
+language: rust
+matrix: 
+  allow_failures: 
+    - 
+      os: osx
+os: 
+  - linux
+  - osx
+rust: 
+  - stable
+script: 
+  - "cargo build --release"
+sudo: false
