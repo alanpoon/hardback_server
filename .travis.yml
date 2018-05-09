@@ -1,7 +1,30 @@
-deploy:
+--- 
+before_deploy: 
+  - "mv target/release/hardback_server ."
+  - "tar -zcvf $zipname hardback_server"
+cache: cargo
+deploy: 
+  skip_cleanup: true
+  overwrite: true
+  api_key: 
+    secure: c9Jvn9dX9CObd06/kvzvCM8WSvC+sBZay1e/0zNH4dpQfl1qjW9P9GkexzOLhRCBpQPO1ybdQGVnmRnEhhkOzFd6A7XBtRefpzfTQIVBTcAoiGQ3fcol8PjqgUb1nRevvf7GGZo/lNNzXAKX2hJ2vdecA6N8bmFsxyCE5h5L7qmYuwXw6LxdUIvtY4sBubwtT+cAjqOyckeV8aHwltV5tyYVLZL51HrUiSt0ny6BX1keMAEXvnzdW/dhl7uxHkkx+F+gvCHeU5ZuV0BOQZI7QCEVbGMIcaGmdSLjTWYZvXuFk/+8blb8aRTVYdHpBcKM4WFekrJJtQJlZJf/6j3NIgiGr0TuvQ3Iz4EUQIFOkbLIyh7upt9ce6qBwzQyhsD+uqn4ggHVSE3KqNkSJQ6zkG+g0W2jKzOQ2+pRAXgfLd9izcEOkPJf43eA9DWcfdgMKr8EAWUs5JEO60nUVljfRdCgmUegq5995c+gvbd2QL6hQLbOGjg8KO/FoKW/mDkR6RqHEFOUvxt9qK0QL/0ffvYuxJGJCYG/bVtwFrDuekig9IODm2N52xuCellPK2BEbP0BQBdCI3syYvY0u6G4CYmsTxU0S99A6GhVYeuDYTI/sGXgEgnxGDEMHrKN6WPXbUioBxM2Fes9LgMSNvGyr5hl+x9oC9jZTiRKjsF/2M4=
+  file: $zipname
   provider: releases
-  api_key:
-    secure: P+qpYsRXgB7QoMvqs6bWsw820G9rs+Ye6kSAbS5btEFH4enGgRbwHImc606gjQNEFEegLTCTe4hIMW8JaUmJ72Lze4KmiMJ6Bcis5C3Gd8XTdC9TJH9Xz0Qc4RYxe3vbOQX0Gl7zXSBXatuC+zztdrhAqI+OjopVW+qveDuxB0hgQS76GFB1yO/HdgCyDehMxFRopKFFMLUvt8LEMwrNjw/cnlwkr71//REV9PJ7PyCvrs3f5V2F9QPytaEU7l6ocUQmafGFJbAnqFcfyqfAd0g7iJmKNK5q9Tb4z1+Ree9cBxhLDP2SpzDqh93bNeUtWJpeLYvOf7WzFR0MYLtaUIu9ux61WNmAJuvzyJYrmhoQwgeTZeV2r2BtGx/90ChevknTc0A1fdUyb1zsOQ6IA6VVgAyhhc9c/FsdDZYamNUAeJvtvushCG8+WmKbnXhFPJF9rNCZPrGuLf8eUP0uoBAjIHExNPHKimHe09vWIvKfBmOtqOO0WgFHsd3Qt3YpFgmHWISfcY7Xd3FRDM5IYqVAjnb1oa3b0zR6I0ML9SiBHNXLMnlHEsdPj4bmdat48sZLBS/ym+o372QpRUlgV6I22F5zem4ltJEc2XwegFvP5iPYQEqtTLEhHZZY+UK2BQHmESN+DQP3o8g9Mrb+6YanL6UfFWAmWDGEsKPx6sA=
-  file: log.txt
-  on:
+  true: 
+    branch: master
     repo: alanpoon/hardback_server
+env: 
+  - zipname="hardback_server-$TRAVIS_OS_NAME.tar.gz"
+language: rust
+matrix: 
+  allow_failures: 
+    - 
+      os: osx
+os: 
+  - linux
+  - osx
+rust: 
+  - stable
+script: 
+  - "cargo build --release"
+sudo: false
