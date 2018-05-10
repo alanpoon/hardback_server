@@ -27,10 +27,8 @@ cache:
 
 before_deploy:
     - mkdir staging
-    - mkdir staging/assets
     - dir
-    - xcopy assets /E staging/assets
-    - copy target\release\hardback_server.exe staging
+    - copy target/release/hardback_server.exe staging
     - cd staging
     - 7z a ../%PROJECT_NAME%-%TARGET%.zip *
     - appveyor PushArtifact ../%PROJECT_NAME%-%TARGET%.zip
