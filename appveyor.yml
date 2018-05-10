@@ -38,7 +38,7 @@ before_deploy:
 deploy:
     provider: GitHub
     auth_token:
-        secure: DOOGyeUs8hT+YyvDk4P+ZvvWOXaE9vhSr/uCuxDSpg0XCqm6TdqcfET2v3ivGAB4
+        secure: rLjxLy59w/rqmkwIVyyFDR0IsuRmzDvg8JQdhoNufKtPwmEM7o/ug+IqjE2jHsjp
     artifact: /.*\.zip/
     repository: alanpoon/hardback_server
     draft: true
