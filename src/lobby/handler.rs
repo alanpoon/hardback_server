@@ -3,13 +3,13 @@ use futures::{Stream, Future, Sink};
 use tokio_core::reactor::Core;
 use websocket::message::OwnedMessage;
 use websocket::server::InvalidConnection;
-use websocket::async::Server;
+use websocket::async::{Handle,Server};
 use std;
 use lobby::game::GameRxType;
 pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
     let mut core = Core::new().unwrap();
-    let handle = core.handle();
-
+    let handle = Handle::default();
+    let h  = core.handle();
     // bind to the server
     let server = Server::bind(con, &handle).unwrap();
 
@@ -66,8 +66,8 @@ pub fn run(con: &'static str, game_rx: std::sync::mpsc::Sender<GameRxType>) {
             .map(|_| ());
                 reader.select(writer).map(|_| ()).map_err(|(err, _)| err)
                 });
-
-	          handle.spawn(f.map_err(move |e| println!("{}: '{:?}'", addr, e))
+            
+	          h.spawn(f.map_err(move |e| println!("{}: '{:?}'", addr, e))
 	                       .map(move |_| {
                                   let j = format!("{}",addrz2);
                                   game_rx_c2.clone().send(GameRxType::Close(j)).unwrap();
