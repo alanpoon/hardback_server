@@ -27,11 +27,11 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                 _p.discard.extend(init_hand[_index.clone()].clone());
                 let mut new_hand =vec![];
                 if let Some(_randseed) = randseed {
+                    let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                     for _ in 0usize..5usize {
                         if let Some(n) = unknown[_index.clone()].pop() {
                             new_hand.push(n);
                         } else {
-                            let mut rng: StdRng = SeedableRng::from_seed(_randseed);
                             unknown[_index.clone()] = _p.discard.clone();
                             _p.discard = vec![];
                             rng.shuffle(&mut unknown[_index.clone()]);
@@ -41,11 +41,11 @@ pub fn redraw_cards_to_hand_size(randseed: Option<&[usize]>,
                         }
                     }
                 } else {
+                    let mut rng = thread_rng();
                     for _ in 0usize..5usize {
                         if let Some(n) = unknown[_index.clone()].pop() {
                             new_hand.push(n);
                         } else {
-                            let mut rng = thread_rng();
                             unknown[_index.clone()].extend(_p.discard.clone());
                             _p.discard = vec![];
                             rng.shuffle(&mut unknown[_index.clone()]);

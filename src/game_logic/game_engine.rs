@@ -194,7 +194,6 @@ impl<T> GameEngine<T>
                                                                        log);
                         }
                         &mut &mut GameState::Spell => {
-                            println!("spell");
                             game_logic::spell::take_card_use_ink::<T>(_board,
                                                                       player_id,
                                                                       con,

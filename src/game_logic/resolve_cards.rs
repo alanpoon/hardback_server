@@ -40,8 +40,6 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
         skip_cards = _p.skip_cards.clone();
     }
 
-    println!("wad are the cards skipped{:?}", skip_cards.clone());
-
     let mut adv_vec = vec![];
     let mut hor_vec = vec![];
     let mut mys_vec = vec![];
@@ -132,10 +130,6 @@ pub fn resolve_giveable(card_index: usize,
                        &cardmeta[card_index].giveables,
                        card_index,
                        wait_for_input);
-        println!("card_index:{:?}, player.vp:{}, player.coin:{}",
-                 card_index,
-                 z.vp.clone(),
-                 z.coin.clone());
     }
     //resolve closure
     if let Some(ref _closure) = cardmeta[card_index].giveablefn {

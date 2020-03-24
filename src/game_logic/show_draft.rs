@@ -55,7 +55,6 @@ pub fn broadcast<T: GameCon>(gamestates: &mut Vec<GameState>,
                              unknown: &mut [Vec<usize>; 4], //player's draft
                              log: &mut Vec<ClientReceivedMsg>) {
     for (_index, _con) in cons.iter() {
-        println!("broadcast_show_draft");
         let k: Result<BoardCodec, String> = Ok(BoardCodec {
                                                    players: players.clone(),
                                                    gamestates: gamestates.clone(),
