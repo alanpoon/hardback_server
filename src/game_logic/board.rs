@@ -1,4 +1,4 @@
-use codec_lib::codec::{GameState, Player};
+use crate::codec_lib::codec::{GameState, Player};
 use codec_lib::cards::*;
 use codec_lib::cards;
 use game_logic::resolve_cards;
@@ -55,7 +55,7 @@ impl Board for BoardStruct {
              let j = format!("Player {} has played a card to force other players to lose a ink or ink remover.",
                             player_id);
             let _g: WaitForSingleInput=
-                (card_id,
+            WaitForSingleInput(card_id,
                 GameState::PreWaitForReply,
                  j,
                  vec![(GameState::Spell,"lose a ink".to_owned(),
@@ -73,7 +73,7 @@ impl Board for BoardStruct {
         if let Some(_w) = wait_for_input.get_mut(player_id) {
 
             let _g: WaitForSingleInput =
-                (card_id,
+            WaitForSingleInput(card_id,
                  GameState::PreWaitForReply,
                  "Do you want to lock up any offer row card?".to_owned(),
                  vec![(GameState::LockUp,
@@ -94,14 +94,14 @@ impl Board for BoardStruct {
             let index = _p.arranged.iter().position(|x| x.0 == card_id);
             if !there_is_wild_beside(_p, index) {
                 let _g: WaitForSingleInput =
-                    (card_id,
+                WaitForSingleInput(card_id,
                      GameState::PreWaitForReply,
                      "There are no adjacent wild cards that can be flipped over.".to_owned(),
                      vec![(GameState::PreBuy, "Continue".to_owned(), Box::new(move |_, _, _| {}))]);
                 _w.push(Some(_g));
             } else {
                 let _g: WaitForSingleInput =
-                    (card_id,
+                WaitForSingleInput(card_id,
                      GameState::PreWaitForReply,
                      "There are a few wild cards adjacent to this card, can be opened".to_owned(),
                      vec![(GameState::ResolveAgain(index, card_id),
@@ -124,7 +124,7 @@ impl Board for BoardStruct {
             let (there_is, cards_to_double) = there_is_valid_beside(_p, index);
             if !there_is {
                 let _g: WaitForSingleInput =
-                    (card_id,
+                WaitForSingleInput(card_id,
                      GameState::PreWaitForReply,
                      "There are no adjacent valid cards that you double their benefits."
                          .to_owned(),
@@ -132,7 +132,7 @@ impl Board for BoardStruct {
                 _w.push(Some(_g));
             } else {
                 let _g: WaitForSingleInput =
-                    (card_id,
+                WaitForSingleInput(card_id,
                      GameState::PreWaitForReply,
                      "There are a few valid cards adjacent to this card, can be doubled."
                          .to_owned(),
@@ -173,7 +173,7 @@ impl Board for BoardStruct {
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             //println!("trash by {:?}", card_id.clone());
             let _g: WaitForSingleInput =
-                (card_id.clone(),
+            WaitForSingleInput(card_id.clone(),
                  GameState::PreWaitForReply,
                  "Do you want to trash another card for one cent?".to_owned(),
                  vec![(GameState::PreTrashOther(card_id),
@@ -201,7 +201,7 @@ impl Board for BoardStruct {
             let _num_wild = num_wild.clone();
             let j = format!("You gain {} vp from this card.", num_wild);
             let _g: WaitForSingleInput =
-                (card_id,
+            WaitForSingleInput(card_id,
                  GameState::PreWaitForReply,
                  j,
                  vec![(GameState::PreBuy,
@@ -217,7 +217,7 @@ impl Board for BoardStruct {
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
             let _g: WaitForSingleInput =
-                (card_id,
+            WaitForSingleInput(card_id,
                 GameState::PrePutBackDiscard(2,card_id),
                  "You may draw three cards from the top of deck and choose to keep or discard each of them.".to_owned(),
                  vec![(GameState::PrePutBackDiscard(2,card_id),

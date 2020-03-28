@@ -336,7 +336,7 @@ impl<T> GameEngine<T>
                 if let (Some(&Some(ref __w)), Some(ref mut _g)) =
                     (wait_for_input[player_id.clone()].first(),
                      self.gamestates.get_mut(player_id.clone())) {
-                    let &(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
+                    let &WaitForSingleInput(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
                     **_g = wait_state.clone();
                 }
 
@@ -420,7 +420,7 @@ pub fn continue_to_prob<T: GameCon>(player_num: usize,
                                     -> bool {
     if let Some(&Some(ref __w)) = wait_for_input_p.first() {
         let mut temp_vec: Vec<String> = vec![];
-        let &(card_index, ref wait_state, ref header, ref option_vec) = __w;
+        let &WaitForSingleInput(card_index, ref wait_state, ref header, ref option_vec) = __w;
         *_g = wait_state.clone();
         for &(_, ref sz, _) in option_vec {
             temp_vec.push(sz.clone());

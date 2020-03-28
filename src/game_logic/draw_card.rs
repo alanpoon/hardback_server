@@ -1,5 +1,5 @@
 use codec_lib::codec::*;
-use codec_lib::cards::{self, WaitForInputType};
+use codec_lib::cards::{self, WaitForInputType,WaitForSingleInput};
 use game_logic::board::BoardStruct;
 use game_logic::game_engine::{continue_to_prob, continue_to_broadcast, GameCon};
 use game_logic;
@@ -100,7 +100,7 @@ pub fn update_gamestates<T: GameCon>(gamestates: &mut Vec<GameState>,
                                    log);
         if let (Some(&Some(ref __w)), Some(con)) =
             (wait_vec[turn_index.clone()].first(), cons.get(&turn_index.clone())) {
-            let &(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
+            let &WaitForSingleInput(_card_index, ref wait_state, ref _header, ref _option_vec) = __w;
             let mut temp_vec: Vec<String> = vec![];
             for &(_, ref sz, _) in _option_vec {
                 temp_vec.push(sz.clone());

@@ -36,7 +36,7 @@ pub fn buy_card_from(position_index: usize,
                             false => {
                                 let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                                 let card_cost=cardmeta[_c].cost;
-                                Some(Ok((_c,
+                                Some(Ok(WaitForSingleInput(_c,
                                          GameState::PreWaitForReply,
                                          j,
                                          vec![(GameState::PreDrawCard,
@@ -63,7 +63,7 @@ pub fn buy_card_from(position_index: usize,
                         println!("You can't afford t");
                         let j = "You can't afford to buy this card. Do you want to buy another card?"
                             .to_owned();
-                        Some(Ok((_c,
+                        Some(Ok(WaitForSingleInput(_c,
                                  GameState::PreWaitForReply,
                                  j,
                                  vec![(GameState::PreBuy,
@@ -112,7 +112,7 @@ pub fn buy_card_from_lockup(position_index: usize,
                     false => {
                         let j = "You do not have enough coin to buy this card, you may trade in 3 ink for one coin to buy this".to_owned();
                         let cost = cardmeta[card_index].cost.clone();
-                        Some(Ok((card_index,
+                        Some(Ok(WaitForSingleInput(card_index,
                                  GameState::PreWaitForReply,
                                  j,
                                  vec![(GameState::PreDrawCard,
@@ -139,7 +139,7 @@ pub fn buy_card_from_lockup(position_index: usize,
             false => {
                 let j = "You can't afford to buy this card. Do you want to buy another card?"
                     .to_owned();
-                Some(Ok((card_index,
+                Some(Ok(WaitForSingleInput(card_index,
                          GameState::PreWaitForReply,
                          j,
                          vec![(GameState::PreBuy,
@@ -243,7 +243,7 @@ pub fn putback_discard(countdown: usize,
     if countdown == 0 {
     } else if countdown - 1 >= 0usize {
         let _g: WaitForSingleInput =
-            (responsible,
+        WaitForSingleInput(responsible,
              GameState::PreWaitForReply,
              "Do you want to put back the card or add to your own discard pile?".to_owned(),
              vec![(GameState::PutBackDiscard(countdown - 1, responsible),

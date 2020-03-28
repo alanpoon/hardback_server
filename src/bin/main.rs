@@ -5,10 +5,10 @@ extern crate rust_wordnik;
 extern crate serde_json;
 extern crate rand;
 pub extern crate hardback_server;
-pub extern crate hardback_codec;
+pub extern crate hardback_boardstruct;
 
 #[allow(non_snake_case)]
-pub use hardback_codec as codec_lib;
+pub use hardback_boardstruct::codec_lib as codec_lib;
 pub use hardback_server as logic_lib;
 const CONNECTION: &'static str = "127.0.0.1:8080";
 

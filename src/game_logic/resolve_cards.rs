@@ -1,6 +1,6 @@
 use codec_lib::codec::*;
 use codec_lib::cards;
-use codec_lib::cards::{GIVEABLE, WaitForInputType};
+use codec_lib::cards::{GIVEABLE, WaitForInputType,WaitForSingleInput};
 use game_logic::board::BoardStruct;
 #[derive(Clone)]
 pub enum CardType {
@@ -232,7 +232,7 @@ pub fn resolve_trash_giveable(player_id: usize,
                             _ => None,
                         };
                     if let Some(_opts) = vec_option {
-                        _wait_vec.push(Some((_c, GameState::PreWaitForReply, header, _opts)));
+                        _wait_vec.push(Some(WaitForSingleInput(_c, GameState::PreWaitForReply, header, _opts)));
                     }
 
                 }
@@ -259,7 +259,7 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::COININK(_x) => {
             z.coin += _x;
-            wait_for_input[player_id].push(Some((card_index,
+            wait_for_input[player_id].push(Some(WaitForSingleInput(card_index,
                                                  GameState::PreWaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::PreDrawCard,
@@ -275,7 +275,7 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::VPINK(_x) => {
             z.vp += _x;
-            wait_for_input[player_id].push(Some((card_index,
+            wait_for_input[player_id].push(Some(WaitForSingleInput(card_index,
                                                  GameState::PreWaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::PreDrawCard,
@@ -292,7 +292,7 @@ pub fn giveable_match(z: &mut Player,
         }
         &cards::GIVEABLE::NONE => {}
         &cards::GIVEABLE::INK => {
-            wait_for_input[player_id].push(Some((card_index,
+            wait_for_input[player_id].push(Some(WaitForSingleInput(card_index,
                                                  GameState::PreWaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::PreDrawCard,
@@ -312,7 +312,7 @@ pub fn giveable_match(z: &mut Player,
             let j2 = format!("{} coins", _x);
             let header = "You have the options to choose between vps and coins. Which one do you want?"
                 .to_owned();
-            wait_for_input[player_id].push(Some((card_index,
+            wait_for_input[player_id].push(Some(WaitForSingleInput(card_index,
                                                  GameState::PreWaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::PreBuy,
@@ -332,7 +332,7 @@ pub fn giveable_match(z: &mut Player,
             let j2 = format!("{} Coin and 1 ink", _x);
             let j3 = format!("{} VP and 1 ink remover", _x);
             let j4 = format!("{} Coin and 1 ink remover", _x);
-            wait_for_input[player_id].push(Some((card_index,
+            wait_for_input[player_id].push(Some(WaitForSingleInput(card_index,
                                                  GameState::PreWaitForReply,
                                                  choose_bet,
                                                  vec![(GameState::PreBuy,
