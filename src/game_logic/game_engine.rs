@@ -134,7 +134,6 @@ impl<T> GameEngine<T>
 
             while let Ok((player_id, game_command)) = rx.try_recv() {
                 count_rec = 0;
-                println!("receive from client {}", count_rec);
                 count_rec += 1;
 
                 let mut temp_board = BoardStruct::new(self.players.clone(), &remaining_cards);
@@ -243,6 +242,7 @@ impl<T> GameEngine<T>
                                                                   player_id,
                                                                   &cardmeta,
                                                                   submit_word) {
+                                                                      
                                 game_logic::resolve_cards::resolve_cards(_board,
                                                                          player_id,
                                                                          &cardmeta,
@@ -460,8 +460,8 @@ pub fn continue_to_broadcast<T: GameCon>(con_vec: &HashMap<usize, T>,
                                                    ticks: ticks,
                                                });
         let mut h = ClientReceivedMsg::deserialize_receive("{}").unwrap();
-        h.set_boardstate(k);
+        h.set_boardstate(k.clone());
         con.tx_send(h, log);
-        println!("plll {:?}", players.clone());
+        println!("plll {:?}", k);
     }
 }

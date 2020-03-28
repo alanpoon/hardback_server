@@ -171,7 +171,7 @@ impl Board for BoardStruct {
                    wait_for_input: &mut [WaitForInputType; 4]) {
         if let (Some(ref mut _p), Some(ref mut _w)) =
             (self.players.get_mut(player_id), wait_for_input.get_mut(player_id)) {
-            println!("trash by {:?}", card_id.clone());
+            //println!("trash by {:?}", card_id.clone());
             let _g: WaitForSingleInput =
                 (card_id.clone(),
                  GameState::PreWaitForReply,

@@ -12,7 +12,6 @@ pub fn resolve_cards(mut _board: &mut BoardStruct,
                      player_id: usize,
                      cardmeta: &[cards::ListCard<BoardStruct>; 180],
                      wait_for_input: &mut [WaitForInputType; 4]) {
-
     let mut valid_card = vec![];
     let mut skip_cards = vec![];
     if let Some(ref _p) = _board.players.get(player_id) {
@@ -363,6 +362,7 @@ pub fn giveable_match(z: &mut Player,
 
         }
     }
+    println!("resolve player.coin {:?}",z.coin);
 }
 pub fn resolve_purchase(card_index: usize,
                         _p: &mut Player,

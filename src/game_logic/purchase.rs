@@ -22,8 +22,8 @@ pub fn buy_card_from(position_index: usize,
     if let Some(_p) = _board.players.get_mut(player_id) {
         println!("player coin {}", _p.coin.clone());
         let res: Option<Result<WaitForSingleInput, String>> = match from.get(position_index) {
-
             Some(&_c) => {
+                println!("purchasing!_c {:?} player coin {:?}",_c,_p.coin);
                 match cardmeta[_c].cost as f64 <= _p.coin as f64 + (_p.ink as f64 / 3.0).floor() {
                     true => {
                         match cardmeta[_c].cost <= _p.coin {
